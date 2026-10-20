@@ -16,9 +16,12 @@ from gt7_constants import STROKE_CLEARANCE_FLOOR_MM
 from lib.formulas import (
     normalize_group,
     calculate_wheel_rate,
+    calculate_sprung_mass,
     calculate_aerodynamic_heave,
     calculate_braking_pitch_dive,
-    calculate_cornering_roll_deflection
+    calculate_cornering_roll_deflection,
+    calculate_acceleration_squat_dive,
+    calculate_combined_trail_braking_load
 )
 
 def calculate_ride_height(
@@ -293,4 +296,116 @@ def simulate_high_speed_trail_braking(
         'dynamic_rake_mm': round(dyn_rake, 1),
         'bottoming_or_fender_hit': bottoming,
         'recommended_front_rh_bump_mm': bump_rh
+    }
+
+def solve_suspension_equilibrium(
+    mass_kg: float,
+    front_ratio: float,
+    power_hp: float,
+    torque_nm: float,
+    drivetrain: str,
+    hcg_m: float,
+    wheelbase_m: float,
+    track_width_m: float,
+    mu: float,
+    fn_f: float,
+    fn_r: float,
+    arb_f: int,
+    arb_r: int,
+    df_f: int = 0,
+    df_r: int = 0,
+    height_range: Optional[Tuple[int, int]] = None,
+    height_front_range: Optional[Tuple[int, int]] = None,
+    height_rear_range: Optional[Tuple[int, int]] = None,
+    speed_kmh: float = 200.0,
+    is_widebody: bool = False,
+    group: str = 'Road Car',
+    body_style: str = 'Coupe',
+    bumpiness: str = 'medium',
+    is_dirt: bool = False
+) -> Dict[str, Any]:
+    """
+    Solve closed-form physical suspension equilibrium:
+    Calculates optimal static ride heights (h_f, h_r) and dynamic clearances satisfying:
+    1. Pitch dive + corner roll + aero heave <= Available stroke margin under trail-braking.
+    2. Rear squat under peak engine acceleration does not cause negative aerodynamic rake.
+    """
+    grp = normalize_group(group)
+    if height_front_range and height_rear_range:
+        h_min_f, h_max_f = height_front_range
+        h_min_r, h_max_r = height_rear_range
+    elif height_range:
+        h_min_f, h_max_f = height_range
+        h_min_r, h_max_r = height_range
+    elif grp in ['Gr.X', 'Gr.1']:
+        h_min_f, h_max_f = (45, 80)
+        h_min_r, h_max_r = (50, 85)
+    elif grp in ['Gr.2', 'Gr.3']:
+        h_min_f, h_max_f = (55, 95)
+        h_min_r, h_max_r = (60, 100)
+    elif grp == 'Gr.4':
+        h_min_f, h_max_f = (75, 120)
+        h_min_r, h_max_r = (80, 125)
+    elif is_dirt or grp == 'Gr.B':
+        h_min_f, h_max_f = (130, 175)
+        h_min_r, h_max_r = (135, 180)
+    elif body_style in ['SUV', 'Pickup']:
+        h_min_f, h_max_f = (120, 170)
+        h_min_r, h_max_r = (125, 175)
+    else:
+        h_min_f, h_max_f = (90, 140)
+        h_min_r, h_max_r = (95, 145)
+
+    tot_s, c_f, c_r = calculate_sprung_mass(mass_kg, front_ratio, group)
+    kw_f = calculate_wheel_rate(fn_f, c_f)
+    kw_r = calculate_wheel_rate(fn_r, c_r)
+
+    squat_res = calculate_acceleration_squat_dive(
+        torque_nm=torque_nm, power_hp=power_hp, mass_kg=mass_kg,
+        drivetrain=drivetrain, hcg_m=hcg_m, wheelbase_m=wheelbase_m,
+        wheel_rate_f=kw_f, wheel_rate_r=kw_r
+    )
+    dz_squat_r = squat_res['squat_rear_mm']
+    dz_lift_f = squat_res['lift_front_mm']
+
+    lltd_f = float(arb_f) / max(1.0, float(arb_f + arb_r))
+    trail_res = calculate_combined_trail_braking_load(
+        mass_kg=mass_kg, mu=mu, hcg_m=hcg_m, wheelbase_m=wheelbase_m,
+        track_width_m=track_width_m, lltd_f=lltd_f, arb_f=arb_f,
+        wheel_rate_f=kw_f, speed_kmh=speed_kmh, df_front=float(df_f)
+    )
+    dz_trail_f = trail_res['total_deflection_mm']
+
+    dz_aero_r = calculate_aerodynamic_heave(float(df_r), speed_kmh, kw_r)
+
+    stroke_floor = STROKE_CLEARANCE_FLOOR_MM['widebody'] if is_widebody else STROKE_CLEARANCE_FLOOR_MM['standard']
+    bump_margin = 14.0 if bumpiness == 'high' else (12.0 if bumpiness == 'medium' else 10.0)
+
+    h_f_target = h_min_f + max(0.0, dz_trail_f + bump_margin - stroke_floor)
+    opt_h_f = min(h_max_f, max(h_min_f, int(round(h_f_target))))
+
+    z_avail_f = float(opt_h_f - h_min_f) + stroke_floor
+    dyn_clearance_f = z_avail_f - dz_trail_f
+    trail_feasible = (dyn_clearance_f >= 10.0)
+
+    base_rake = 6 if front_ratio <= 0.50 else min(14, round(6.0 + 16.0 * (front_ratio - 0.50)))
+    rake_needed = max(float(base_rake), round(dz_squat_r * 0.75 + dz_lift_f * 0.50 + 4.0))
+    opt_h_r = min(h_max_r, max(h_min_r, int(round(opt_h_f + rake_needed))))
+
+    dyn_rake_accel = (opt_h_r - dz_squat_r) - (opt_h_f + dz_lift_f)
+    dyn_rake_brake = (opt_h_r - dz_aero_r) - (opt_h_f - dz_trail_f)
+
+    fn_boost = round(max(0.0, (12.0 - dyn_clearance_f) * 0.04), 2) if not trail_feasible else 0.0
+
+    return {
+        'optimal_rh_front': int(opt_h_f),
+        'optimal_rh_rear': int(opt_h_r),
+        'trail_braking_feasible': trail_feasible,
+        'min_dynamic_clearance_mm': round(dyn_clearance_f, 1),
+        'total_trail_compression_front_mm': round(dz_trail_f, 1),
+        'acceleration_squat_rear_mm': round(dz_squat_r, 1),
+        'acceleration_lift_front_mm': round(dz_lift_f, 1),
+        'dynamic_rake_accel_mm': round(dyn_rake_accel, 1),
+        'dynamic_rake_brake_mm': round(dyn_rake_brake, 1),
+        'recommended_front_fn_boost_hz': fn_boost
     }

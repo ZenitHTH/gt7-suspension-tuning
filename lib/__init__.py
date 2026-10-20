@@ -24,7 +24,8 @@ from lib.wheels import (
 from lib.aero_body import (
     calculate_ride_height,
     calculate_aerodynamics,
-    simulate_high_speed_trail_braking
+    simulate_high_speed_trail_braking,
+    solve_suspension_equilibrium
 )
 from lib.drivetrain import (
     calculate_differential_lsd,

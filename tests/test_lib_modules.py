@@ -16,7 +16,12 @@ from lib.formulas import (
 from lib.springs import calculate_natural_frequencies, calculate_anti_roll_bars
 from lib.shocks import calculate_dampers
 from lib.wheels import calculate_wheel_alignment, calculate_brake_bias, get_tire_mu
-from lib.aero_body import calculate_ride_height, calculate_aerodynamics, simulate_high_speed_trail_braking
+from lib.aero_body import (
+    calculate_ride_height,
+    calculate_aerodynamics,
+    simulate_high_speed_trail_braking,
+    solve_suspension_equilibrium
+)
 from lib.drivetrain import calculate_differential_lsd, calculate_top_speed
 from lib.trims import apply_closed_loop_trim, build_quick_trims
 
@@ -57,6 +62,21 @@ class TestLibModules(unittest.TestCase):
         self.assertIn('front_wear_factor', wear)
         self.assertIn('rear_wear_factor', wear)
         self.assertGreater(wear['front_wear_factor'], 1.0)
+
+    def test_suspension_equilibrium_solver(self):
+        res = solve_suspension_equilibrium(
+            mass_kg=1400.0, front_ratio=0.54, power_hp=500.0, torque_nm=650.0,
+            drivetrain='FR', hcg_m=0.45, wheelbase_m=2.6, track_width_m=1.6,
+            mu=1.35, fn_f=2.6, fn_r=2.8, arb_f=4, arb_r=6,
+            df_f=120, df_r=200, height_front_range=(90, 140), height_rear_range=(95, 145),
+            speed_kmh=220.0
+        )
+        self.assertIn('optimal_rh_front', res)
+        self.assertIn('optimal_rh_rear', res)
+        self.assertIn('trail_braking_feasible', res)
+        self.assertIn('min_dynamic_clearance_mm', res)
+        self.assertGreaterEqual(res['optimal_rh_front'], 90)
+        self.assertGreaterEqual(res['min_dynamic_clearance_mm'], 0.0)
 
     def test_springs_and_shocks(self):
         fn_f, fn_r, ratio = calculate_natural_frequencies(1.35, 0.50, 'medium', 'Road Car', 1350.0)

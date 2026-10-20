@@ -40,6 +40,23 @@ def format_setup_sheet(setup_dict: Dict[str, Any]) -> str:
             f"(ยุบรวม {sim['total_outside_front_compression_mm']} มม. | ระยะเหลือ {sim['dynamic_outside_front_clearance_mm']} มม. | Rake ขณะวิ่ง {sim['dynamic_rake_mm']} มม.)"
         )
 
+    if telem.get('equilibrium_proof'):
+        eq = telem['equilibrium_proof']
+        eq_status = '✅ ผ่าน (Compliance Pass)' if eq['trail_braking_feasible'] else '⚠️ เสี่ยง Bump Stop (Compliance Warn)'
+        lines.append(f"• สมดุลฟิสิกส์ Trail-Braking & ทอร์กส่งกำลัง (Equilibrium Proof): {eq_status}")
+        lines.append(
+            f"  ↳ แรงบิดกดท้าย (Acceleration Squat): {eq['acceleration_squat_rear_mm']} มม. | หน้าลอย (Lift): {eq['acceleration_lift_front_mm']} มม. | Rake ตอนกดคันเร่ง: {eq['dynamic_rake_accel_mm']} มม."
+        )
+        lines.append(
+            f"  ↳ ระยะยุบเหลือขณะ Trail-Braking: {eq['min_dynamic_clearance_mm']} มม. (ยุบรวม {eq['total_trail_compression_front_mm']} มม. | Rake ตอนเบรกเลี้ยว: {eq['dynamic_rake_brake_mm']} มม.)"
+        )
+
+    if telem.get('tire_wear_analysis'):
+        tw = telem['tire_wear_analysis']
+        lines.append(
+            f"• การวิเคราะห์การสึกหรอของยาง (Tire Wear Index): หน้า {tw['front_wear_factor']}x | หลัง {tw['rear_wear_factor']}x (สัดส่วนความสึกหรอ หลัง/หน้า: {tw['relative_rear_bias']})"
+        )
+
     lines.extend([
         '─' * 86,
         f"{'ค่าปรับตั้ง (GT7 ภาษาไทย)':<35} {'English Menu':<22} {'หน้า (Front)':<14} {'หลัง (Rear)':<14}",

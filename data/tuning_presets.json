@@ -1,0 +1,572 @@
+{
+  "version": "1.71+",
+  "archetypes": {
+    "FF_HOT_HATCH": {
+      "name": "Front-Engine Front-Wheel Drive (FF)",
+      "typical_balance": "62:38",
+      "ride_height_mm": {
+        "front": 100,
+        "rear": 110
+      },
+      "natural_frequency_hz": {
+        "front": 3.0,
+        "rear": 2.65
+      },
+      "anti_roll_bar": {
+        "front": 2,
+        "rear": 8
+      },
+      "damping_compression_pct": {
+        "front": 35,
+        "rear": 35
+      },
+      "damping_expansion_pct": {
+        "front": 45,
+        "rear": 45
+      },
+      "camber_deg": {
+        "front": -3.2,
+        "rear": -1.2
+      },
+      "toe_deg": {
+        "front": "Out 0.12",
+        "rear": "In 0.05"
+      },
+      "lsd": {
+        "initial_torque": 5,
+        "accel_sensitivity": 24,
+        "braking_sensitivity": 22
+      },
+      "brake_bias": 1,
+      "notes": "Soft front ARB and stiff rear ARB counteract understeer and enable agile tail rotation on trail-braking."
+    },
+    "FR_LIGHTWEIGHT_ROADSTER": {
+      "name": "Lightweight FR Roadster (50:50 Balance)",
+      "typical_balance": "50:50",
+      "ride_height_mm": {
+        "front": 100,
+        "rear": 105
+      },
+      "natural_frequency_hz": {
+        "front": 2.45,
+        "rear": 2.55
+      },
+      "anti_roll_bar": {
+        "front": 4,
+        "rear": 5
+      },
+      "damping_compression_pct": {
+        "front": 30,
+        "rear": 30
+      },
+      "damping_expansion_pct": {
+        "front": 42,
+        "rear": 42
+      },
+      "camber_deg": {
+        "front": -2.4,
+        "rear": -1.6
+      },
+      "toe_deg": {
+        "front": "Out 0.04",
+        "rear": "In 0.12"
+      },
+      "lsd": {
+        "initial_torque": 4,
+        "accel_sensitivity": 22,
+        "braking_sensitivity": 30
+      },
+      "brake_bias": 0,
+      "notes": "Compliant frequencies for roadsters prevent mid-corner chassis skitter."
+    },
+    "FR_HIGH_HP_SEDAN": {
+      "name": "FR High-HP / Turbo Sedan (57:43 Balance)",
+      "typical_balance": "57:43",
+      "ride_height_mm": {
+        "front": 100,
+        "rear": 110
+      },
+      "natural_frequency_hz": {
+        "front": 2.95,
+        "rear": 2.8
+      },
+      "anti_roll_bar": {
+        "front": 3,
+        "rear": 7
+      },
+      "damping_compression_pct": {
+        "front": 32,
+        "rear": 32
+      },
+      "damping_expansion_pct": {
+        "front": 48,
+        "rear": 48
+      },
+      "camber_deg": {
+        "front": -3.0,
+        "rear": -1.5
+      },
+      "toe_deg": {
+        "front": "Out 0.10",
+        "rear": "In 0.14"
+      },
+      "lsd": {
+        "initial_torque": 5,
+        "accel_sensitivity": 28,
+        "braking_sensitivity": 58
+      },
+      "brake_bias": -2,
+      "notes": "Positive rake and rear brake bias eliminate turn-in push; high LSD brake sensitivity stabilizes high-speed decel."
+    },
+    "MR_SUPERCAR": {
+      "name": "Mid-Engine Rear-Wheel Drive (MR Supercar)",
+      "typical_balance": "42:58",
+      "ride_height_mm": {
+        "front": 95,
+        "rear": 100
+      },
+      "natural_frequency_hz": {
+        "front": 2.75,
+        "rear": 2.95
+      },
+      "anti_roll_bar": {
+        "front": 5,
+        "rear": 7
+      },
+      "damping_compression_pct": {
+        "front": 32,
+        "rear": 32
+      },
+      "damping_expansion_pct": {
+        "front": 44,
+        "rear": 44
+      },
+      "camber_deg": {
+        "front": -2.6,
+        "rear": -1.8
+      },
+      "toe_deg": {
+        "front": "Out 0.05",
+        "rear": "In 0.24"
+      },
+      "lsd": {
+        "initial_torque": 6,
+        "accel_sensitivity": 32,
+        "braking_sensitivity": 56
+      },
+      "brake_bias": 0,
+      "notes": "High rear toe-in and high LSD braking prevent sudden lift-off snap spins."
+    },
+    "RR_PORSCHE_911": {
+      "name": "Rear-Engine Rear-Wheel Drive (RR 911 / Abarth)",
+      "typical_balance": "38:62",
+      "ride_height_mm": {
+        "front": 95,
+        "rear": 102
+      },
+      "natural_frequency_hz": {
+        "front": 2.6,
+        "rear": 3.05
+      },
+      "anti_roll_bar": {
+        "front": 7,
+        "rear": 5
+      },
+      "damping_compression_pct": {
+        "front": 30,
+        "rear": 30
+      },
+      "damping_expansion_pct": {
+        "front": 48,
+        "rear": 48
+      },
+      "camber_deg": {
+        "front": -2.8,
+        "rear": -2.0
+      },
+      "toe_deg": {
+        "front": "Out 0.06",
+        "rear": "In 0.30"
+      },
+      "lsd": {
+        "initial_torque": 7,
+        "accel_sensitivity": 36,
+        "braking_sensitivity": 65
+      },
+      "brake_bias": 0,
+      "notes": "Rear pendulum mass requires strong rear toe-in (0.30°) and stiff front ARB."
+    },
+    "AWD_SPORTS": {
+      "name": "All-Wheel Drive Sports / Rally (AWD / 4WD)",
+      "typical_balance": "55:45",
+      "torque_split_front_rear": "35:65",
+      "ride_height_mm": {
+        "front": 100,
+        "rear": 105
+      },
+      "natural_frequency_hz": {
+        "front": 2.85,
+        "rear": 2.75
+      },
+      "anti_roll_bar": {
+        "front": 3,
+        "rear": 7
+      },
+      "damping_compression_pct": {
+        "front": 32,
+        "rear": 32
+      },
+      "damping_expansion_pct": {
+        "front": 45,
+        "rear": 45
+      },
+      "camber_deg": {
+        "front": -2.8,
+        "rear": -1.6
+      },
+      "toe_deg": {
+        "front": "Out 0.08",
+        "rear": "In 0.14"
+      },
+      "lsd_front": {
+        "initial_torque": 5,
+        "accel_sensitivity": 18,
+        "braking_sensitivity": 22
+      },
+      "lsd_rear": {
+        "initial_torque": 7,
+        "accel_sensitivity": 35,
+        "braking_sensitivity": 48
+      },
+      "brake_bias": -1,
+      "notes": "Rear torque bias (35:65) and soft front LSD eliminate power understeer."
+    },
+    "HIGH_CG_SUV": {
+      "name": "High-CG SUV / Off-Road AWD",
+      "typical_balance": "57:43",
+      "torque_split_front_rear": "40:60",
+      "ride_height_mm": {
+        "front": 135,
+        "rear": 142
+      },
+      "natural_frequency_hz": {
+        "front": 2.5,
+        "rear": 2.65
+      },
+      "anti_roll_bar": {
+        "front": 6,
+        "rear": 8
+      },
+      "damping_compression_pct": {
+        "front": 36,
+        "rear": 36
+      },
+      "damping_expansion_pct": {
+        "front": 56,
+        "rear": 56
+      },
+      "camber_deg": {
+        "front": -2.4,
+        "rear": -1.4
+      },
+      "toe_deg": {
+        "front": "Out 0.05",
+        "rear": "In 0.22"
+      },
+      "lsd_front": {
+        "initial_torque": 6,
+        "accel_sensitivity": 20,
+        "braking_sensitivity": 24
+      },
+      "lsd_rear": {
+        "initial_torque": 7,
+        "accel_sensitivity": 35,
+        "braking_sensitivity": 62
+      },
+      "brake_bias": -1,
+      "notes": "Tall ride height with stiff ARBs prevents rollover and bump-stop slamming."
+    },
+    "HEAVY_EV_AWD": {
+      "name": "Heavyweight Electric Vehicle AWD (2+ Tons)",
+      "typical_balance": "50:50",
+      "torque_split_front_rear": "45:55",
+      "ride_height_mm": {
+        "front": 95,
+        "rear": 100
+      },
+      "natural_frequency_hz": {
+        "front": 3.1,
+        "rear": 3.0
+      },
+      "anti_roll_bar": {
+        "front": 7,
+        "rear": 5
+      },
+      "damping_compression_pct": {
+        "front": 36,
+        "rear": 36
+      },
+      "damping_expansion_pct": {
+        "front": 48,
+        "rear": 48
+      },
+      "camber_deg": {
+        "front": -3.2,
+        "rear": -1.8
+      },
+      "toe_deg": {
+        "front": "Out 0.12",
+        "rear": "In 0.25"
+      },
+      "lsd_front": {
+        "initial_torque": 5,
+        "accel_sensitivity": 18,
+        "braking_sensitivity": 22
+      },
+      "lsd_rear": {
+        "initial_torque": 7,
+        "accel_sensitivity": 36,
+        "braking_sensitivity": 45
+      },
+      "brake_bias": -2,
+      "notes": "Max spring rate and negative camber control high inertial tire scrub."
+    },
+    "GR3_RACECAR": {
+      "name": "Gr.3 / GT3 Downforce Racecar",
+      "typical_balance": "48:52",
+      "ride_height_mm": {
+        "front": 65,
+        "rear": 70
+      },
+      "natural_frequency_hz": {
+        "front": 3.4,
+        "rear": 3.6
+      },
+      "anti_roll_bar": {
+        "front": 6,
+        "rear": 8
+      },
+      "damping_compression_pct": {
+        "front": 38,
+        "rear": 38
+      },
+      "damping_expansion_pct": {
+        "front": 52,
+        "rear": 52
+      },
+      "camber_deg": {
+        "front": -3.5,
+        "rear": -2.4
+      },
+      "toe_deg": {
+        "front": "Out 0.10",
+        "rear": "In 0.20"
+      },
+      "lsd": {
+        "initial_torque": 6,
+        "accel_sensitivity": 32,
+        "braking_sensitivity": 54
+      },
+      "brake_bias": 0,
+      "notes": "Stiff aerodynamic spring platform supporting high aero downforce loads."
+    },
+    "CLASSIC_MUSCLE_FR": {
+      "name": "Classic American Muscle Car (1960s-1970s FR 58:42)",
+      "typical_balance": "58:42",
+      "ride_height_mm": {
+        "front": 98,
+        "rear": 110
+      },
+      "natural_frequency_hz": {
+        "front": 2.65,
+        "rear": 2.75
+      },
+      "anti_roll_bar": {
+        "front": 2,
+        "rear": 8
+      },
+      "damping_compression_pct": {
+        "front": 28,
+        "rear": 33
+      },
+      "damping_expansion_pct": {
+        "front": 44,
+        "rear": 48
+      },
+      "camber_deg": {
+        "front": -3.2,
+        "rear": -1.4
+      },
+      "toe_deg": {
+        "front": "Out 0.14",
+        "rear": "In 0.08"
+      },
+      "lsd": {
+        "initial_torque": 5,
+        "accel_sensitivity": 28,
+        "braking_sensitivity": 26
+      },
+      "brake_bias": -2,
+      "notes": "Balanced anti-understeer geometry for heavy front-engine muscle cars: compliant LSD braking (26 to stabilize live axle on 0-100 scale), wide ARB asymmetry (2/8), aggressive front toe-out (0.14), positive rake (+12mm), and moderate rear brake bias (-2) enabling trail braking without deep-braking ABS chatter."
+    },
+    "REDBULL_X2019_COMPETITION": {
+      "name": "Gran Turismo Red Bull X2019 Competition (Gr.X MR 46:54)",
+      "typical_balance": "46:54",
+      "ride_height_mm": {
+        "front": 48,
+        "rear": 55
+      },
+      "slider_ranges": {
+        "body_height_front": [
+          45,
+          50
+        ],
+        "body_height_rear": [
+          50,
+          60
+        ],
+        "natural_frequency_front": [
+          4.0,
+          6.0
+        ],
+        "natural_frequency_rear": [
+          4.0,
+          6.0
+        ],
+        "downforce_front": [
+          800,
+          1200
+        ],
+        "downforce_rear": [
+          1200,
+          1600
+        ]
+      },
+      "natural_frequency_hz": {
+        "front": 5.3,
+        "rear": 5.5
+      },
+      "anti_roll_bar": {
+        "front": 4,
+        "rear": 6
+      },
+      "damping_compression_pct": {
+        "front": 33,
+        "rear": 37
+      },
+      "damping_expansion_pct": {
+        "front": 48,
+        "rear": 54
+      },
+      "camber_deg": {
+        "front": -3.3,
+        "rear": -2.0
+      },
+      "toe_deg": {
+        "front": "Out 0.04",
+        "rear": "In 0.16"
+      },
+      "downforce": {
+        "front": 1040,
+        "rear": 1440
+      },
+      "lsd": {
+        "initial_torque": 6,
+        "accel_sensitivity": 18,
+        "braking_sensitivity": 52
+      },
+      "brake_bias": 0,
+      "notes": "Gr.X extreme downforce formula spec: +7mm positive rake with 3mm bottoming buffer, stiff 5.30/5.50 Hz aero platform, strict LSD Accel clamp (18 on 0-100 scale) to handle 1,255 HP/ton, and locked LSD braking (52) for MR trail-braking stability."
+    },
+    "GRB_RALLY_DIRT": {
+      "name": "Gr.B 4WD Rally Car - Dirt / Jump Spec",
+      "typical_balance": "54:46",
+      "torque_split_front_rear": "40:60",
+      "ride_height_mm": {
+        "front": 175,
+        "rear": 175
+      },
+      "natural_frequency_hz": {
+        "front": 1.55,
+        "rear": 1.5
+      },
+      "anti_roll_bar": {
+        "front": 1,
+        "rear": 1
+      },
+      "damping_compression_pct": {
+        "front": 26,
+        "rear": 26
+      },
+      "damping_expansion_pct": {
+        "front": 76,
+        "rear": 78
+      },
+      "camber_deg": {
+        "front": 0.0,
+        "rear": 0.0
+      },
+      "toe_deg": {
+        "front": "0.00",
+        "rear": "In 0.18"
+      },
+      "lsd_front": {
+        "initial_torque": 5,
+        "accel_sensitivity": 12,
+        "braking_sensitivity": 12
+      },
+      "lsd_rear": {
+        "initial_torque": 5,
+        "accel_sensitivity": 15,
+        "braking_sensitivity": 15
+      },
+      "brake_bias": 0,
+      "notes": "Dirt and jump spec: Natural frequency near floor (1.50-1.55 Hz) and max expansion damping (76-78%) stop kangaroo hopping. Soft ARB (1/1) and open LSDs eliminate landing tank-slapper kicks."
+    },
+    "GRB_RALLY_TARMAC": {
+      "name": "Gr.B 4WD Rally Car - Tarmac Circuit Spec",
+      "typical_balance": "54:46",
+      "torque_split_front_rear": "35:65",
+      "ride_height_mm": {
+        "front": 90,
+        "rear": 98
+      },
+      "natural_frequency_hz": {
+        "front": 2.6,
+        "rear": 2.72
+      },
+      "anti_roll_bar": {
+        "front": 3,
+        "rear": 7
+      },
+      "damping_compression_pct": {
+        "front": 32,
+        "rear": 34
+      },
+      "damping_expansion_pct": {
+        "front": 48,
+        "rear": 50
+      },
+      "camber_deg": {
+        "front": -3.2,
+        "rear": -1.6
+      },
+      "toe_deg": {
+        "front": "Out 0.08",
+        "rear": "In 0.12"
+      },
+      "lsd_front": {
+        "initial_torque": 5,
+        "accel_sensitivity": 14,
+        "braking_sensitivity": 18
+      },
+      "lsd_rear": {
+        "initial_torque": 7,
+        "accel_sensitivity": 28,
+        "braking_sensitivity": 40
+      },
+      "brake_bias": -1,
+      "notes": "Tarmac conversion: 35:65 center torque split eliminates 50:50 push. Soft front ARB (3) and stiff rear ARB (7) rotate chassis into apexes on high-G racing tires."
+    }
+  }
+}

@@ -1,0 +1,46 @@
+import unittest
+import sys
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, BASE_DIR)
+sys.path.insert(0, os.path.join(BASE_DIR, 'scripts'))
+
+from lib.formulas import calculate_wheel_rate, calculate_sprung_mass
+from lib.springs import calculate_natural_frequencies, calculate_anti_roll_bars
+from lib.shocks import calculate_dampers
+from lib.wheels import calculate_wheel_alignment, calculate_brake_bias, get_tire_mu
+from lib.aero_body import calculate_ride_height, calculate_aerodynamics, simulate_high_speed_trail_braking
+from lib.drivetrain import calculate_differential_lsd, calculate_top_speed
+from lib.trims import apply_closed_loop_trim, build_quick_trims
+
+class TestLibModules(unittest.TestCase):
+    def test_formulas(self):
+        kw = calculate_wheel_rate(2.5, 300.0)
+        self.assertGreater(kw, 50000.0)
+        tot_s, c_f, c_r = calculate_sprung_mass(1000.0, 0.50, 'Road Car')
+        self.assertEqual(tot_s, 880.0)
+
+    def test_springs_and_shocks(self):
+        fn_f, fn_r, ratio = calculate_natural_frequencies(1.35, 0.50, 'medium', 'Road Car', 1350.0)
+        self.assertGreater(fn_f, 1.5)
+        self.assertGreater(ratio, 1.0)
+        c_f, c_r, e_f, e_r = calculate_dampers('medium', 200.0, False, 'FR', 0.50)
+        self.assertLessEqual(c_f, 40)
+        self.assertLessEqual(c_r, 40)
+
+    def test_wheels_and_aero(self):
+        self.assertEqual(get_tire_mu('SS'), 1.35)
+        rh_f, rh_r = calculate_ride_height(is_widebody=True)
+        self.assertGreaterEqual(rh_f, 100)
+        aero = calculate_aerodynamics(wf=0.50, group='Gr.3')
+        self.assertIn('front', aero)
+
+    def test_drivetrain_and_trims(self):
+        lsd_r, _ = calculate_differential_lsd(400.0, 250.0, 0.50, 'FR')
+        self.assertIn('init', lsd_r)
+        spd = calculate_top_speed(300.0, 200.0)
+        self.assertGreaterEqual(spd, 230)
+
+if __name__ == '__main__':
+    unittest.main()

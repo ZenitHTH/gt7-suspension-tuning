@@ -1,0 +1,1612 @@
+[
+  {
+    "engine": "690T-Giulia",
+    "target_id": "2051",
+    "target_car": "Hyundai Genesis Coupe 3.8 '13",
+    "donor_id": "3411",
+    "donor_car": "Alfa Romeo Giulia GTAm '20"
+  },
+  {
+    "engine": "690T-Giulia",
+    "target_id": "2173",
+    "target_car": "Mazda Atenza Sedan XD L Package '15",
+    "donor_id": "3411",
+    "donor_car": "Alfa Romeo Giulia GTAm '20"
+  },
+  {
+    "engine": "690T-Giulia",
+    "target_id": "2154",
+    "target_car": "Toyota 86 GT '15",
+    "donor_id": "3411",
+    "donor_car": "Alfa Romeo Giulia GTAm '20"
+  },
+  {
+    "engine": "M159-AMG-GT3-'20",
+    "target_id": "575",
+    "target_car": "Mercedes-Benz 190 E 2.5-16 Evolution II '91",
+    "donor_id": "3531",
+    "donor_car": "AMG GT3 '20"
+  },
+  {
+    "engine": "M159-AMG-GT3-'20",
+    "target_id": "2170",
+    "target_car": "AMG A 45 AMG '13",
+    "donor_id": "3531",
+    "donor_car": "AMG GT3 '20"
+  },
+  {
+    "engine": "R5-20vT-Quattro-Pikes",
+    "target_id": "3403",
+    "target_car": "Volkswagen Golf I GTI '83",
+    "donor_id": "1927",
+    "donor_car": "Audi Sport quattro S1 Pikes Peak '87"
+  },
+  {
+    "engine": "R5-20vT-Quattro-Pikes",
+    "target_id": "3573",
+    "target_car": "Citroen BX 19 TRS '87",
+    "donor_id": "1927",
+    "donor_car": "Audi Sport quattro S1 Pikes Peak '87"
+  },
+  {
+    "engine": "BYH-R8",
+    "target_id": "2169",
+    "target_car": "Audi TTS Coupe '14",
+    "donor_id": "1365",
+    "donor_car": "Audi R8 4.2 '07"
+  },
+  {
+    "engine": "BYH-R8",
+    "target_id": "207",
+    "target_car": "Toyota MR2 GT-S '97",
+    "donor_id": "1365",
+    "donor_car": "Audi R8 4.2 '07"
+  },
+  {
+    "engine": "P65B44-Z4",
+    "target_id": "3389",
+    "target_car": "BMW M3 '03",
+    "donor_id": "1902",
+    "donor_car": "BMW Z4 GT3 '11"
+  },
+  {
+    "engine": "P65B44-Z4",
+    "target_id": "3422",
+    "target_car": "BMW 3.0 CSL '73",
+    "donor_id": "1902",
+    "donor_car": "BMW Z4 GT3 '11"
+  },
+  {
+    "engine": "P65B44-Z4",
+    "target_id": "1399",
+    "target_car": "BMW M3 '07",
+    "donor_id": "1902",
+    "donor_car": "BMW Z4 GT3 '11"
+  },
+  {
+    "engine": "P65B44-Z4",
+    "target_id": "2074",
+    "target_car": "BMW M4 '14",
+    "donor_id": "1902",
+    "donor_car": "BMW Z4 GT3 '11"
+  },
+  {
+    "engine": "8.0-WR16-64v4T-Chiron",
+    "target_id": "3412",
+    "target_car": "Audi R8 Coupé V10 plus '16",
+    "donor_id": "3473",
+    "donor_car": "Bugatti Chiron '16"
+  },
+  {
+    "engine": "8.0-WR16-64v4T-Chiron",
+    "target_id": "1480",
+    "target_car": "Chevrolet Corvette ZR1 (C6) '09",
+    "donor_id": "3473",
+    "donor_car": "Bugatti Chiron '16"
+  },
+  {
+    "engine": "8.0-WR16-64v4T-Chiron",
+    "target_id": "3486",
+    "target_car": "Dodge Challenger SRT Demon '18",
+    "donor_id": "3473",
+    "donor_car": "Bugatti Chiron '16"
+  },
+  {
+    "engine": "8.0-WR16-64v4T-Chiron",
+    "target_id": "1956",
+    "target_car": "Dodge Viper GTS '13",
+    "donor_id": "3473",
+    "donor_car": "Bugatti Chiron '16"
+  },
+  {
+    "engine": "8.0-WR16-64v4T-Chiron",
+    "target_id": "2171",
+    "target_car": "Lamborghini Huracan LP 610-4 '15",
+    "donor_id": "3473",
+    "donor_car": "Bugatti Chiron '16"
+  },
+  {
+    "engine": "8.0-WR16-64v4T-Chiron",
+    "target_id": "2139",
+    "target_car": "Lexus RC F '14",
+    "donor_id": "3473",
+    "donor_car": "Bugatti Chiron '16"
+  },
+  {
+    "engine": "8.0-WR16-64v4T-Chiron",
+    "target_id": "3345",
+    "target_car": "Nissan GT-R NISMO '17",
+    "donor_id": "3473",
+    "donor_car": "Bugatti Chiron '16"
+  },
+  {
+    "engine": "8.0-WR16-64v4T-Chiron",
+    "target_id": "3553",
+    "target_car": "Nissan GT-R Premium edition T-spec '24",
+    "donor_id": "3473",
+    "donor_car": "Bugatti Chiron '16"
+  },
+  {
+    "engine": "LT4-Camaro",
+    "target_id": "31",
+    "target_car": "Chevrolet Camaro Z28 '69",
+    "donor_id": "3387",
+    "donor_car": "Chevrolet Camaro ZL1 1LE Package '18"
+  },
+  {
+    "engine": "LT4-Camaro",
+    "target_id": "187",
+    "target_car": "TVR Tuscan Speed 6 '00",
+    "donor_id": "3387",
+    "donor_car": "Chevrolet Camaro ZL1 1LE Package '18"
+  },
+  {
+    "engine": "LS9-Corvette",
+    "target_id": "1985",
+    "target_car": "Pontiac Firebird Trans Am '78",
+    "donor_id": "1480",
+    "donor_car": "Chevrolet Corvette ZR1 (C6) '09"
+  },
+  {
+    "engine": "LT1-Corvette",
+    "target_id": "2148",
+    "target_car": "Mazda Roadster S (ND) '15",
+    "donor_id": "1916",
+    "donor_car": "Chevrolet Corvette C7 '14"
+  },
+  {
+    "engine": "LT5-Corvette-C7",
+    "target_id": "3464",
+    "target_car": "Chevrolet Corvette (C1) '58",
+    "donor_id": "3449",
+    "donor_car": "Chevrolet Corvette C7 ZR1 '19"
+  },
+  {
+    "engine": "LT5-Corvette-C7",
+    "target_id": "818",
+    "target_car": "Chevrolet Corvette (C2) '63",
+    "donor_id": "3449",
+    "donor_car": "Chevrolet Corvette C7 ZR1 '19"
+  },
+  {
+    "engine": "LT5-Corvette-C7",
+    "target_id": "1542",
+    "target_car": "Chevrolet Corvette Convertible (C3) '69",
+    "donor_id": "3449",
+    "donor_car": "Chevrolet Corvette C7 ZR1 '19"
+  },
+  {
+    "engine": "LT5-Corvette-C7",
+    "target_id": "41",
+    "target_car": "Chevrolet Corvette Stingray (C3) '69",
+    "donor_id": "3449",
+    "donor_car": "Chevrolet Corvette C7 ZR1 '19"
+  },
+  {
+    "engine": "LT5-Corvette-C7",
+    "target_id": "78",
+    "target_car": "Nissan Silvia K's Aero (S14) '96",
+    "donor_id": "3449",
+    "donor_car": "Chevrolet Corvette C7 ZR1 '19"
+  },
+  {
+    "engine": "LT5-Corvette-C7",
+    "target_id": "3513",
+    "target_car": "Nissan Silvia K's Type S (S14) '94",
+    "donor_id": "3449",
+    "donor_car": "Chevrolet Corvette C7 ZR1 '19"
+  },
+  {
+    "engine": "LT5-Corvette-C7",
+    "target_id": "3413",
+    "target_car": "Subaru BRZ STI Sport '18",
+    "donor_id": "3449",
+    "donor_car": "Chevrolet Corvette C7 ZR1 '19"
+  },
+  {
+    "engine": "LT5-Corvette-C7",
+    "target_id": "3295",
+    "target_car": "Toyota 86 GT 'Limited' '16",
+    "donor_id": "3449",
+    "donor_car": "Chevrolet Corvette C7 ZR1 '19"
+  },
+  {
+    "engine": "LT5-Corvette-C7",
+    "target_id": "942",
+    "target_car": "Chevrolet Corvette ZR-1 (C4) '89",
+    "donor_id": "3449",
+    "donor_car": "Chevrolet Corvette C7 ZR1 '19"
+  },
+  {
+    "engine": "Demon-Challenger",
+    "target_id": "3538",
+    "target_car": "Dodge Charger R/T 426 Hemi '68",
+    "donor_id": "3486",
+    "donor_car": "Dodge Challenger SRT Demon '18"
+  },
+  {
+    "engine": "Demon-Challenger",
+    "target_id": "3384",
+    "target_car": "Mitsubishi GTO Twin Turbo '91",
+    "donor_id": "3486",
+    "donor_car": "Dodge Challenger SRT Demon '18"
+  },
+  {
+    "engine": "Demon-Challenger",
+    "target_id": "3368",
+    "target_car": "Toyota Tundra TRD Pro '19",
+    "donor_id": "3486",
+    "donor_car": "Dodge Challenger SRT Demon '18"
+  },
+  {
+    "engine": "Demon-Challenger",
+    "target_id": "1543",
+    "target_car": "Dodge Challenger R/T '70",
+    "donor_id": "3486",
+    "donor_car": "Dodge Challenger SRT Demon '18"
+  },
+  {
+    "engine": "Demon-Challenger",
+    "target_id": "3535",
+    "target_car": "Toyota GR Corolla MORIZO Edition '22",
+    "donor_id": "3486",
+    "donor_car": "Dodge Challenger SRT Demon '18"
+  },
+  {
+    "engine": "Demon-Challenger",
+    "target_id": "3451",
+    "target_car": "Toyota GR Yaris RZ 'High performance' '20",
+    "donor_id": "3486",
+    "donor_car": "Dodge Challenger SRT Demon '18"
+  },
+  {
+    "engine": "Hellcat-Charger",
+    "target_id": "1543",
+    "target_car": "Dodge Challenger R/T '70",
+    "donor_id": "2152",
+    "donor_car": "Dodge Charger SRT Hellcat '15"
+  },
+  {
+    "engine": "Hellcat-Charger",
+    "target_id": "665",
+    "target_car": "Plymouth Superbird '70",
+    "donor_id": "2152",
+    "donor_car": "Dodge Charger SRT Hellcat '15"
+  },
+  {
+    "engine": "Hellcat-Charger",
+    "target_id": "3430",
+    "target_car": "Jeep Willys MB '45",
+    "donor_id": "2152",
+    "donor_car": "Dodge Charger SRT Hellcat '15"
+  },
+  {
+    "engine": "F136F-458",
+    "target_id": "2136",
+    "target_car": "Alfa Romeo 4C '14",
+    "donor_id": "1504",
+    "donor_car": "Ferrari 458 Italia '09"
+  },
+  {
+    "engine": "F140B-Enzo",
+    "target_id": "1409",
+    "target_car": "Ferrari F40 '92",
+    "donor_id": "1474",
+    "donor_car": "Ferrari Enzo Ferrari '02"
+  },
+  {
+    "engine": "L4-Focus-Gr.B",
+    "target_id": "3555",
+    "target_car": "Ford Escort RS Cosworth '92",
+    "donor_id": "3264",
+    "donor_car": "Ford Focus Gr.B Rally Car"
+  },
+  {
+    "engine": "L4-Focus-Gr.B",
+    "target_id": "3466",
+    "target_car": "Ford Sierra RS 500 Cosworth '87",
+    "donor_id": "3264",
+    "donor_car": "Ford Focus Gr.B Rally Car"
+  },
+  {
+    "engine": "V8-Ford-GT-LM-Test",
+    "target_id": "3420",
+    "target_car": "Ford Focus RS '18",
+    "donor_id": "1425",
+    "donor_car": "Ford Ford GT LM Spec II Test Car"
+  },
+  {
+    "engine": "Coyote-5.0L-Mustang",
+    "target_id": "3341",
+    "target_car": "De Tomaso Pantera '71",
+    "donor_id": "2138",
+    "donor_car": "Ford Mustang GT '15"
+  },
+  {
+    "engine": "Coyote-5.0L-Mustang",
+    "target_id": "1729",
+    "target_car": "Ford Mustang Mach 1 '71",
+    "donor_id": "2138",
+    "donor_car": "Ford Mustang GT '15"
+  },
+  {
+    "engine": "Voodoo-5.2L-GT350R",
+    "target_id": "3444",
+    "target_car": "Ford 1932 Ford Roadster Hot Rod",
+    "donor_id": "3391",
+    "donor_car": "Ford Shelby GT350R '16"
+  },
+  {
+    "engine": "Voodoo-5.2L-GT350R",
+    "target_id": "3487",
+    "target_car": "Ford Mustang Boss 429 '69",
+    "donor_id": "3391",
+    "donor_car": "Ford Shelby GT350R '16"
+  },
+  {
+    "engine": "Voodoo-5.2L-GT350R",
+    "target_id": "1925",
+    "target_car": "Shelby G.T.350 '65",
+    "donor_id": "3391",
+    "donor_car": "Ford Shelby GT350R '16"
+  },
+  {
+    "engine": "K24A-Civic",
+    "target_id": "1689",
+    "target_car": "Honda Civic Type R (EK) Touring Car",
+    "donor_id": "3526",
+    "donor_car": "Garage RCR Civic"
+  },
+  {
+    "engine": "K24A-Civic",
+    "target_id": "3530",
+    "target_car": "Alfa Romeo Giulia Sprint GT Veloce '67",
+    "donor_id": "3526",
+    "donor_car": "Garage RCR Civic"
+  },
+  {
+    "engine": "K24A-Civic",
+    "target_id": "3442",
+    "target_car": "Autobianchi A112 Abarth '85",
+    "donor_id": "3526",
+    "donor_car": "Garage RCR Civic"
+  },
+  {
+    "engine": "K24A-Civic",
+    "target_id": "821",
+    "target_car": "Honda Civic Type R (EK) '97",
+    "donor_id": "3526",
+    "donor_car": "Garage RCR Civic"
+  },
+  {
+    "engine": "K24A-Civic",
+    "target_id": "688",
+    "target_car": "Honda Integra Type R (DC2) '95",
+    "donor_id": "3526",
+    "donor_car": "Garage RCR Civic"
+  },
+  {
+    "engine": "K24A-Civic",
+    "target_id": "514",
+    "target_car": "Honda S2000 '99",
+    "donor_id": "3526",
+    "donor_car": "Garage RCR Civic"
+  },
+  {
+    "engine": "K24A-Civic",
+    "target_id": "1370",
+    "target_car": "MINI MINI Cooper S '05",
+    "donor_id": "3526",
+    "donor_car": "Garage RCR Civic"
+  },
+  {
+    "engine": "K24A-Civic",
+    "target_id": "104",
+    "target_car": "Nissan Sileighty '98",
+    "donor_id": "3526",
+    "donor_car": "Garage RCR Civic"
+  },
+  {
+    "engine": "K24A-Civic",
+    "target_id": "2154",
+    "target_car": "Toyota 86 GT '15",
+    "donor_id": "3526",
+    "donor_car": "Garage RCR Civic"
+  },
+  {
+    "engine": "K24A-Civic",
+    "target_id": "3559",
+    "target_car": "Suzuki Jimny Sierra JC '18",
+    "donor_id": "3526",
+    "donor_car": "Garage RCR Civic"
+  },
+  {
+    "engine": "Windsor-351-Maverick",
+    "target_id": "3336",
+    "target_car": "Ford F-150 SVT Raptor '11",
+    "donor_id": "3522",
+    "donor_car": "Greening Auto Company Maverick"
+  },
+  {
+    "engine": "Windsor-351-Maverick",
+    "target_id": "1426",
+    "target_car": "Ford Ford GT '06",
+    "donor_id": "3522",
+    "donor_car": "Greening Auto Company Maverick"
+  },
+  {
+    "engine": "Windsor-351-Maverick",
+    "target_id": "3402",
+    "target_car": "Ford Ford GT '17",
+    "donor_id": "3522",
+    "donor_car": "Greening Auto Company Maverick"
+  },
+  {
+    "engine": "Windsor-351-Maverick",
+    "target_id": "3300",
+    "target_car": "Ford Mustang Gr.3 Road Car",
+    "donor_id": "3522",
+    "donor_car": "Greening Auto Company Maverick"
+  },
+  {
+    "engine": "Windsor-351-Maverick",
+    "target_id": "3391",
+    "target_car": "Ford Shelby GT350R '16",
+    "donor_id": "3522",
+    "donor_car": "Greening Auto Company Maverick"
+  },
+  {
+    "engine": "Windsor-351-Maverick",
+    "target_id": "3488",
+    "target_car": "Porsche Cayman GT4 '16",
+    "donor_id": "3522",
+    "donor_car": "Greening Auto Company Maverick"
+  },
+  {
+    "engine": "Windsor-351-Maverick",
+    "target_id": "2138",
+    "target_car": "Ford Mustang GT '15",
+    "donor_id": "3522",
+    "donor_car": "Greening Auto Company Maverick"
+  },
+  {
+    "engine": "Windsor-351-Maverick",
+    "target_id": "3500",
+    "target_car": "Genesis G70 3.3T AWD Prestige Package '22",
+    "donor_id": "3522",
+    "donor_car": "Greening Auto Company Maverick"
+  },
+  {
+    "engine": "SE75E-2&4",
+    "target_id": "1523",
+    "target_car": "Fiat 500 F '68",
+    "donor_id": "2156",
+    "donor_car": "Honda 2&4 powered by RC213V"
+  },
+  {
+    "engine": "SE75E-2&4",
+    "target_id": "3357",
+    "target_car": "Honda S660 '15",
+    "donor_id": "2156",
+    "donor_car": "Honda 2&4 powered by RC213V"
+  },
+  {
+    "engine": "SE75E-2&4",
+    "target_id": "135",
+    "target_car": "Honda S800 '66",
+    "donor_id": "2156",
+    "donor_car": "Honda 2&4 powered by RC213V"
+  },
+  {
+    "engine": "K20C1-Civic-'20",
+    "target_id": "3438",
+    "target_car": "Abarth Abarth 595 SS '70",
+    "donor_id": "3467",
+    "donor_car": "Honda Civic Type R Limited Edition (FK8) '20"
+  },
+  {
+    "engine": "K20C1-Civic-'20",
+    "target_id": "204",
+    "target_car": "Honda Civic Type R (EK) '98",
+    "donor_id": "3467",
+    "donor_car": "Honda Civic Type R Limited Edition (FK8) '20"
+  },
+  {
+    "engine": "K20C1-Civic-'20",
+    "target_id": "203",
+    "target_car": "Honda Integra Type R (DC2) '98",
+    "donor_id": "3467",
+    "donor_car": "Honda Civic Type R Limited Edition (FK8) '20"
+  },
+  {
+    "engine": "K20C1-Civic-'20",
+    "target_id": "3356",
+    "target_car": "MINI Mini-Cooper 'S' '65",
+    "donor_id": "3467",
+    "donor_car": "Honda Civic Type R Limited Edition (FK8) '20"
+  },
+  {
+    "engine": "K20C1-Civic-'20",
+    "target_id": "137",
+    "target_car": "Honda Beat '91",
+    "donor_id": "3467",
+    "donor_car": "Honda Civic Type R Limited Edition (FK8) '20"
+  },
+  {
+    "engine": "B18C-Integra-'98",
+    "target_id": "37",
+    "target_car": "Honda Civic SiR-II (EG) '93",
+    "donor_id": "203",
+    "donor_car": "Honda Integra Type R (DC2) '98"
+  },
+  {
+    "engine": "B18C-Integra-'98",
+    "target_id": "3563",
+    "target_car": "Honda Civic Si Extra (EF) '87",
+    "donor_id": "203",
+    "donor_car": "Honda Integra Type R (DC2) '98"
+  },
+  {
+    "engine": "HR-414E-NSX",
+    "target_id": "1433",
+    "target_car": "Amuse Amuse S2000 GT1 Turbo",
+    "donor_id": "3348",
+    "donor_car": "Honda NSX CONCEPT-GT '16"
+  },
+  {
+    "engine": "HR-414E-NSX",
+    "target_id": "3526",
+    "target_car": "Garage RCR Civic",
+    "donor_id": "3348",
+    "donor_car": "Honda NSX CONCEPT-GT '16"
+  },
+  {
+    "engine": "HR-414E-NSX",
+    "target_id": "293",
+    "target_car": "Honda NSX Type R '92",
+    "donor_id": "3348",
+    "donor_car": "Honda NSX CONCEPT-GT '16"
+  },
+  {
+    "engine": "HR-414E-NSX",
+    "target_id": "396",
+    "target_car": "Honda NSX Type R '02",
+    "donor_id": "3348",
+    "donor_car": "Honda NSX CONCEPT-GT '16"
+  },
+  {
+    "engine": "HR-414E-NSX",
+    "target_id": "3339",
+    "target_car": "Subaru BRZ Drift Car '17",
+    "donor_id": "3348",
+    "donor_car": "Honda NSX CONCEPT-GT '16"
+  },
+  {
+    "engine": "HR-414E-NSX",
+    "target_id": "3536",
+    "target_car": "Honda Civic Type R (FL5) '22",
+    "donor_id": "3348",
+    "donor_car": "Honda NSX CONCEPT-GT '16"
+  },
+  {
+    "engine": "HR-414E-NSX",
+    "target_id": "3467",
+    "target_car": "Honda Civic Type R Limited Edition (FK8) '20",
+    "donor_id": "3348",
+    "donor_car": "Honda NSX CONCEPT-GT '16"
+  },
+  {
+    "engine": "V12-XJR-9",
+    "target_id": "2146",
+    "target_car": "Jaguar F-type R '14",
+    "donor_id": "1067",
+    "donor_car": "Jaguar XJR-9 '88"
+  },
+  {
+    "engine": "V12-XJR-9",
+    "target_id": "543",
+    "target_car": "Jaguar XJ220 '92",
+    "donor_id": "1067",
+    "donor_car": "Jaguar XJR-9 '88"
+  },
+  {
+    "engine": "L539-Aventador-SV",
+    "target_id": "1481",
+    "target_car": "Lamborghini Countach 25th Anniversary '88",
+    "donor_id": "3392",
+    "donor_car": "Lamborghini Aventador LP 750-4 SV '15"
+  },
+  {
+    "engine": "3UZ-FE-SC430",
+    "target_id": "3222",
+    "target_car": "Toyota 86 GRMN '16",
+    "donor_id": "1516",
+    "donor_car": "Lexus SC430 GT500 '08"
+  },
+  {
+    "engine": "3UZ-FE-SC430",
+    "target_id": "3471",
+    "target_car": "Toyota Celica GT-Four (ST205) '94",
+    "donor_id": "1516",
+    "donor_car": "Lexus SC430 GT500 '08"
+  },
+  {
+    "engine": "3UZ-FE-SC430",
+    "target_id": "3401",
+    "target_car": "Toyota Crown Athlete G '13",
+    "donor_id": "1516",
+    "donor_car": "Lexus SC430 GT500 '08"
+  },
+  {
+    "engine": "3UZ-FE-SC430",
+    "target_id": "3368",
+    "target_car": "Toyota Tundra TRD Pro '19",
+    "donor_id": "1516",
+    "donor_car": "Lexus SC430 GT500 '08"
+  },
+  {
+    "engine": "1LR-GUE-LFA",
+    "target_id": "3494",
+    "target_car": "Toyota Alphard Executive Lounge '18",
+    "donor_id": "1562",
+    "donor_car": "Lexus LFA '10"
+  },
+  {
+    "engine": "1LR-GUE-LFA",
+    "target_id": "3418",
+    "target_car": "Toyota GR Supra RZ '20",
+    "donor_id": "1562",
+    "donor_car": "Lexus LFA '10"
+  },
+  {
+    "engine": "R26B-787B",
+    "target_id": "3306",
+    "target_car": "Mazda Atenza Gr.3 Road Car",
+    "donor_id": "296",
+    "donor_car": "Mazda 787B '91"
+  },
+  {
+    "engine": "R26B-787B",
+    "target_id": "3512",
+    "target_car": "Mazda Roadster NR-A (ND) '22",
+    "donor_id": "296",
+    "donor_car": "Mazda 787B '91"
+  },
+  {
+    "engine": "R26B-787B",
+    "target_id": "1746",
+    "target_car": "Mazda Roadster Touring Car",
+    "donor_id": "296",
+    "donor_car": "Mazda 787B '91"
+  },
+  {
+    "engine": "R26B-787B",
+    "target_id": "205",
+    "target_car": "Mazda RX-7 Spirit R Type A (FD) '02",
+    "donor_id": "296",
+    "donor_car": "Mazda 787B '91"
+  },
+  {
+    "engine": "R26B-787B",
+    "target_id": "3427",
+    "target_car": "Mazda RX-8 Spirit R '12",
+    "donor_id": "296",
+    "donor_car": "Mazda 787B '91"
+  },
+  {
+    "engine": "R26B-787B",
+    "target_id": "374",
+    "target_car": "Mazda RX-7 GT-X (FC) '90",
+    "donor_id": "296",
+    "donor_car": "Mazda 787B '91"
+  },
+  {
+    "engine": "R26B-787B",
+    "target_id": "3521",
+    "target_car": "Mazda Mazda3 '19",
+    "donor_id": "296",
+    "donor_car": "Mazda 787B '91"
+  },
+  {
+    "engine": "R26B-787B",
+    "target_id": "1431",
+    "target_car": "RE Amemiya RE Amemiya FD3S RX-7",
+    "donor_id": "296",
+    "donor_car": "Mazda 787B '91"
+  },
+  {
+    "engine": "VRH35Z-R92CP",
+    "target_id": "773",
+    "target_car": "Nissan R32 GT-R V-spec II '94",
+    "donor_id": "954",
+    "donor_car": "Nissan R92CP '92"
+  },
+  {
+    "engine": "VRH35Z-R92CP",
+    "target_id": "489",
+    "target_car": "Nissan R33 GT-R V-spec '97",
+    "donor_id": "954",
+    "donor_car": "Nissan R92CP '92"
+  },
+  {
+    "engine": "VRH35Z-R92CP",
+    "target_id": "210",
+    "target_car": "Nissan R34 GT-R V-spec II Nur '02",
+    "donor_id": "954",
+    "donor_car": "Nissan R92CP '92"
+  },
+  {
+    "engine": "13B-REW-RX-7",
+    "target_id": "201",
+    "target_car": "Mazda Eunos Roadster (NA) '89",
+    "donor_id": "205",
+    "donor_car": "Mazda RX-7 Spirit R Type A (FD) '02"
+  },
+  {
+    "engine": "13B-REW-RX-7",
+    "target_id": "779",
+    "target_car": "Suzuki Cappuccino (EA11R) '91",
+    "donor_id": "205",
+    "donor_car": "Mazda RX-7 Spirit R Type A (FD) '02"
+  },
+  {
+    "engine": "VR38DETT-GT-R-NISMO",
+    "target_id": "3337",
+    "target_car": "Alpine A110 '17",
+    "donor_id": "3345",
+    "donor_car": "Nissan GT-R NISMO '17"
+  },
+  {
+    "engine": "VR38DETT-GT-R-NISMO",
+    "target_id": "829",
+    "target_car": "Lancia Delta HF Integrale Evoluzione '91",
+    "donor_id": "3345",
+    "donor_car": "Nissan GT-R NISMO '17"
+  },
+  {
+    "engine": "VR38DETT-GT-R-NISMO",
+    "target_id": "3301",
+    "target_car": "Mitsubishi Lancer Evolution Final Gr.B Road Car",
+    "donor_id": "3345",
+    "donor_car": "Nissan GT-R NISMO '17"
+  },
+  {
+    "engine": "VR38DETT-GT-R-NISMO",
+    "target_id": "3258",
+    "target_car": "Mitsubishi Lancer Evolution Final Gr.4",
+    "donor_id": "3345",
+    "donor_car": "Nissan GT-R NISMO '17"
+  },
+  {
+    "engine": "VR38DETT-GT-R-NISMO",
+    "target_id": "24",
+    "target_car": "Nissan 180SX Type X '96",
+    "donor_id": "3345",
+    "donor_car": "Nissan GT-R NISMO '17"
+  },
+  {
+    "engine": "VR38DETT-GT-R-NISMO",
+    "target_id": "709",
+    "target_car": "Nissan Fairlady Z 300ZX TT 2seater '89",
+    "donor_id": "3345",
+    "donor_car": "Nissan GT-R NISMO '17"
+  },
+  {
+    "engine": "VR38DETT-GT-R-NISMO",
+    "target_id": "3524",
+    "target_car": "Nissan GT-R NISMO (R32) '90",
+    "donor_id": "3345",
+    "donor_car": "Nissan GT-R NISMO '17"
+  },
+  {
+    "engine": "VR38DETT-GT-R-NISMO",
+    "target_id": "3513",
+    "target_car": "Nissan Silvia K's Type S (S14) '94",
+    "donor_id": "3345",
+    "donor_car": "Nissan GT-R NISMO '17"
+  },
+  {
+    "engine": "VR38DETT-GT-R-NISMO",
+    "target_id": "3477",
+    "target_car": "Nissan Silvia spec-R Aero (S15) Touring Car",
+    "donor_id": "3345",
+    "donor_car": "Nissan GT-R NISMO '17"
+  },
+  {
+    "engine": "VR38DETT-GT-R-NISMO",
+    "target_id": "3504",
+    "target_car": "Nissan Z Performance '23",
+    "donor_id": "3345",
+    "donor_car": "Nissan GT-R NISMO '17"
+  },
+  {
+    "engine": "VR38DETT-GT-R-NISMO",
+    "target_id": "3520",
+    "target_car": "NISMO 400R '95",
+    "donor_id": "3345",
+    "donor_car": "Nissan GT-R NISMO '17"
+  },
+  {
+    "engine": "VR38DETT-GT-R-NISMO",
+    "target_id": "3262",
+    "target_car": "Toyota 86 Gr.4",
+    "donor_id": "3345",
+    "donor_car": "Nissan GT-R NISMO '17"
+  },
+  {
+    "engine": "VR38DETT-GT-R-NISMO",
+    "target_id": "1448",
+    "target_car": "Nissan SILVIA spec-R Aero (S15) '02",
+    "donor_id": "3345",
+    "donor_car": "Nissan GT-R NISMO '17"
+  },
+  {
+    "engine": "RB26DETT-GT-R-R34",
+    "target_id": "3429",
+    "target_car": "Nissan Fairlady Z 432 '69",
+    "donor_id": "210",
+    "donor_car": "Nissan R34 GT-R V-spec II Nur '02"
+  },
+  {
+    "engine": "RB26DETT-GT-R-R34",
+    "target_id": "1384",
+    "target_car": "Nissan Fairlady Z Version S (Z33) '07",
+    "donor_id": "210",
+    "donor_car": "Nissan R34 GT-R V-spec II Nur '02"
+  },
+  {
+    "engine": "RB26DETT-GT-R-R34",
+    "target_id": "102",
+    "target_car": "Nissan Skyline GTS-R (R31) '87",
+    "donor_id": "210",
+    "donor_car": "Nissan R34 GT-R V-spec II Nur '02"
+  },
+  {
+    "engine": "RB26DETT-GT-R-R34",
+    "target_id": "78",
+    "target_car": "Nissan Silvia K's Aero (S14) '96",
+    "donor_id": "210",
+    "donor_car": "Nissan R34 GT-R V-spec II Nur '02"
+  },
+  {
+    "engine": "Evo-Final-Gr.B",
+    "target_id": "931",
+    "target_car": "Mitsubishi Lancer Evolution III GSR '95",
+    "donor_id": "3230",
+    "donor_car": "Mitsubishi Lancer Evolution Final Gr.B Rally Car"
+  },
+  {
+    "engine": "Evo-Final-Gr.B",
+    "target_id": "301",
+    "target_car": "Mitsubishi Lancer Evolution IV GSR '96",
+    "donor_id": "3230",
+    "donor_car": "Mitsubishi Lancer Evolution Final Gr.B Rally Car"
+  },
+  {
+    "engine": "Evo-Final-Gr.B",
+    "target_id": "211",
+    "target_car": "Mitsubishi Lancer Evolution V GSR '98",
+    "donor_id": "3230",
+    "donor_car": "Mitsubishi Lancer Evolution Final Gr.B Rally Car"
+  },
+  {
+    "engine": "Evo-Final-Gr.B",
+    "target_id": "1508",
+    "target_car": "Mitsubishi Lancer Evolution VI GSR T.M. SCP '99",
+    "donor_id": "3230",
+    "donor_car": "Mitsubishi Lancer Evolution Final Gr.B Rally Car"
+  },
+  {
+    "engine": "Evo-Final-Gr.B",
+    "target_id": "3424",
+    "target_car": "Mitsubishi Lancer Evolution IX MR GSR '06",
+    "donor_id": "3230",
+    "donor_car": "Mitsubishi Lancer Evolution Final Gr.B Rally Car"
+  },
+  {
+    "engine": "Evo-Final-Gr.B",
+    "target_id": "2150",
+    "target_car": "Mitsubishi Lancer Evolution Final '15",
+    "donor_id": "3230",
+    "donor_car": "Mitsubishi Lancer Evolution Final Gr.B Rally Car"
+  },
+  {
+    "engine": "Evo-Final-Gr.B",
+    "target_id": "799",
+    "target_car": "Mitsubishi Lancer Evolution VIII MR GSR '04",
+    "donor_id": "3230",
+    "donor_car": "Mitsubishi Lancer Evolution Final Gr.B Rally Car"
+  },
+  {
+    "engine": "Evo-Final-Gr.B",
+    "target_id": "3383",
+    "target_car": "Mazda Demio XD Touring '15",
+    "donor_id": "3230",
+    "donor_car": "Mitsubishi Lancer Evolution Final Gr.B Rally Car"
+  },
+  {
+    "engine": "VK45DE-GT-R",
+    "target_id": "1458",
+    "target_car": "Nissan Fairlady Z (Z34) '08",
+    "donor_id": "1466",
+    "donor_car": "Nissan GT-R GT500 '08"
+  },
+  {
+    "engine": "VK45DE-GT-R",
+    "target_id": "3477",
+    "target_car": "Nissan Silvia spec-R Aero (S15) Touring Car",
+    "donor_id": "1466",
+    "donor_car": "Nissan GT-R GT500 '08"
+  },
+  {
+    "engine": "SR20DET-Silvia-S15",
+    "target_id": "3429",
+    "target_car": "Nissan Fairlady Z 432 '69",
+    "donor_id": "1448",
+    "donor_car": "Nissan SILVIA spec-R Aero (S15) '02"
+  },
+  {
+    "engine": "SR20DET-Silvia-S15",
+    "target_id": "919",
+    "target_car": "Nissan Silvia Q's (S13) '88",
+    "donor_id": "1448",
+    "donor_car": "Nissan SILVIA spec-R Aero (S15) '02"
+  },
+  {
+    "engine": "SR20DET-Silvia-S15",
+    "target_id": "1461",
+    "target_car": "Nissan Silvia K's Dia Selection (S13) '90",
+    "donor_id": "1448",
+    "donor_car": "Nissan SILVIA spec-R Aero (S15) '02"
+  },
+  {
+    "engine": "SR20DET-Silvia-S15",
+    "target_id": "1796",
+    "target_car": "Alpine A110 '72",
+    "donor_id": "1448",
+    "donor_car": "Nissan SILVIA spec-R Aero (S15) '02"
+  },
+  {
+    "engine": "SR20DET-Silvia-S15",
+    "target_id": "173",
+    "target_car": "Renault R5 Turbo '80",
+    "donor_id": "1448",
+    "donor_car": "Nissan SILVIA spec-R Aero (S15) '02"
+  },
+  {
+    "engine": "SR20DET-Silvia-S15",
+    "target_id": "1986",
+    "target_car": "Renault R8 Gordini '66",
+    "donor_id": "1448",
+    "donor_car": "Nissan SILVIA spec-R Aero (S15) '02"
+  },
+  {
+    "engine": "LZ20B-Skyline",
+    "target_id": "3364",
+    "target_car": "Greddy Greddy Fugu Z",
+    "donor_id": "3493",
+    "donor_car": "Nissan Skyline Super Silhouette Group 5 '84"
+  },
+  {
+    "engine": "LZ20B-Skyline",
+    "target_id": "837",
+    "target_car": "Nissan Skyline Hard Top 2000GT-R (KPGC10) '70",
+    "donor_id": "3493",
+    "donor_car": "Nissan Skyline Super Silhouette Group 5 '84"
+  },
+  {
+    "engine": "LZ20B-Skyline",
+    "target_id": "836",
+    "target_car": "Nissan Skyline 2000GT-R (KPGC110) '73",
+    "donor_id": "3493",
+    "donor_car": "Nissan Skyline Super Silhouette Group 5 '84"
+  },
+  {
+    "engine": "M158-AMG-Huayra",
+    "target_id": "82",
+    "target_car": "Toyota Supra RZ '97",
+    "donor_id": "2050",
+    "donor_car": "Pagani Huayra '13"
+  },
+  {
+    "engine": "M64/03-911",
+    "target_id": "1778",
+    "target_car": "Volkswagen Volkswagen 1200 '66",
+    "donor_id": "3431",
+    "donor_car": "Porsche 911 Carrera RS (964) '92"
+  },
+  {
+    "engine": "M64/03-911",
+    "target_id": "1671",
+    "target_car": "Volkswagen Sambabus Typ 2 '62",
+    "donor_id": "3431",
+    "donor_car": "Porsche 911 Carrera RS (964) '92"
+  },
+  {
+    "engine": "M64/03-911",
+    "target_id": "3514",
+    "target_car": "Citroen DS 21 Pallas '70",
+    "donor_id": "3431",
+    "donor_car": "Porsche 911 Carrera RS (964) '92"
+  },
+  {
+    "engine": "MDYA-911",
+    "target_id": "3404",
+    "target_car": "Porsche 911 Carrera RS CS (993) '95",
+    "donor_id": "3539",
+    "donor_car": "Porsche 911 GT3 RS (992) '22"
+  },
+  {
+    "engine": "MDYA-911",
+    "target_id": "3488",
+    "target_car": "Porsche Cayman GT4 '16",
+    "donor_id": "3539",
+    "donor_car": "Porsche 911 GT3 RS (992) '22"
+  },
+  {
+    "engine": "MDYA-911",
+    "target_id": "3310",
+    "target_car": "Porsche Cayman GT4 Clubsport '16",
+    "donor_id": "3539",
+    "donor_car": "Porsche 911 GT3 RS (992) '22"
+  },
+  {
+    "engine": "MDYA-911",
+    "target_id": "3481",
+    "target_car": "Toyota GR86 RZ '21",
+    "donor_id": "3539",
+    "donor_car": "Porsche 911 GT3 RS (992) '22"
+  },
+  {
+    "engine": "M97/80-911",
+    "target_id": "3385",
+    "target_car": "Porsche 911 Turbo (930) '81",
+    "donor_id": "3311",
+    "donor_car": "Porsche 911 RSR (991) '17"
+  },
+  {
+    "engine": "M97/80-911",
+    "target_id": "3359",
+    "target_car": "Porsche 911 GT3 (997) '09",
+    "donor_id": "3311",
+    "donor_car": "Porsche 911 RSR (991) '17"
+  },
+  {
+    "engine": "M97/80-911",
+    "target_id": "3268",
+    "target_car": "Porsche 911 GT3 RS (991) '16",
+    "donor_id": "3311",
+    "donor_car": "Porsche 911 RSR (991) '17"
+  },
+  {
+    "engine": "M97/80-911",
+    "target_id": "3413",
+    "target_car": "Subaru BRZ STI Sport '18",
+    "donor_id": "3311",
+    "donor_car": "Porsche 911 RSR (991) '17"
+  },
+  {
+    "engine": "DKH-911",
+    "target_id": "3268",
+    "target_car": "Porsche 911 GT3 RS (991) '16",
+    "donor_id": "3558",
+    "donor_car": "Porsche 911 Turbo S (992) '20"
+  },
+  {
+    "engine": "DKH-911",
+    "target_id": "2153",
+    "target_car": "Subaru WRX STI Type S '14",
+    "donor_id": "3558",
+    "donor_car": "Porsche 911 Turbo S (992) '20"
+  },
+  {
+    "engine": "DKH-911",
+    "target_id": "3506",
+    "target_car": "Subaru BRZ S '21",
+    "donor_id": "3558",
+    "donor_car": "Porsche 911 Turbo S (992) '20"
+  },
+  {
+    "engine": "DKH-911",
+    "target_id": "3539",
+    "target_car": "Porsche 911 GT3 RS (992) '22",
+    "donor_id": "3558",
+    "donor_car": "Porsche 911 Turbo S (992) '20"
+  },
+  {
+    "engine": "DKH-911",
+    "target_id": "3432",
+    "target_car": "Subaru Impreza Sedan WRX STi '04",
+    "donor_id": "3558",
+    "donor_car": "Porsche 911 Turbo S (992) '20"
+  },
+  {
+    "engine": "959.50-959",
+    "target_id": "3375",
+    "target_car": "Porsche 356 A/1500 GS Carrera '56",
+    "donor_id": "3519",
+    "donor_car": "Porsche 959 '87"
+  },
+  {
+    "engine": "959.50-959",
+    "target_id": "3509",
+    "target_car": "Porsche 911 Carrera RS (901) '73",
+    "donor_id": "3519",
+    "donor_car": "Porsche 959 '87"
+  },
+  {
+    "engine": "959.50-959",
+    "target_id": "3431",
+    "target_car": "Porsche 911 Carrera RS (964) '92",
+    "donor_id": "3519",
+    "donor_car": "Porsche 959 '87"
+  },
+  {
+    "engine": "959.50-959",
+    "target_id": "3365",
+    "target_car": "Porsche 356 A/1500 GS GT Carrera Speedster '56",
+    "donor_id": "3519",
+    "donor_car": "Porsche 959 '87"
+  },
+  {
+    "engine": "LS7-Rampage",
+    "target_id": "1027",
+    "target_car": "DMC DeLorean S2 '04",
+    "donor_id": "3426",
+    "donor_car": "Roadster Shop Roadster Shop Rampage"
+  },
+  {
+    "engine": "LS7-Rampage",
+    "target_id": "3296",
+    "target_car": "Chevrolet Corvette C7 Gr.3 Road Car",
+    "donor_id": "3426",
+    "donor_car": "Roadster Shop Roadster Shop Rampage"
+  },
+  {
+    "engine": "LS7-Rampage",
+    "target_id": "1549",
+    "target_car": "Amuse Amuse NISMO 380RS Super Leggera",
+    "donor_id": "3426",
+    "donor_car": "Roadster Shop Roadster Shop Rampage"
+  },
+  {
+    "engine": "LS7-Rampage",
+    "target_id": "3251",
+    "target_car": "Honda NSX Gr.4",
+    "donor_id": "3426",
+    "donor_car": "Roadster Shop Roadster Shop Rampage"
+  },
+  {
+    "engine": "LS7-Rampage",
+    "target_id": "48",
+    "target_car": "Nissan Fairlady 240ZG (HS30) '71",
+    "donor_id": "3426",
+    "donor_car": "Roadster Shop Roadster Shop Rampage"
+  },
+  {
+    "engine": "LS7-Rampage",
+    "target_id": "709",
+    "target_car": "Nissan Fairlady Z 300ZX TT 2seater '89",
+    "donor_id": "3426",
+    "donor_car": "Roadster Shop Roadster Shop Rampage"
+  },
+  {
+    "engine": "LS7-Rampage",
+    "target_id": "1431",
+    "target_car": "RE Amemiya RE Amemiya FD3S RX-7",
+    "donor_id": "3426",
+    "donor_car": "Roadster Shop Roadster Shop Rampage"
+  },
+  {
+    "engine": "LS7-Rampage",
+    "target_id": "3584",
+    "target_car": "Toyota Land Cruiser FJ40V '74",
+    "donor_id": "3426",
+    "donor_car": "Roadster Shop Roadster Shop Rampage"
+  },
+  {
+    "engine": "CTR38-CTR3",
+    "target_id": "3439",
+    "target_car": "Porsche 911 Carrera RS (993) '95",
+    "donor_id": "3398",
+    "donor_car": "RUF CTR3 '07"
+  },
+  {
+    "engine": "CTR38-CTR3",
+    "target_id": "3304",
+    "target_car": "Subaru WRX Gr.B Road Car",
+    "donor_id": "3398",
+    "donor_car": "RUF CTR3 '07"
+  },
+  {
+    "engine": "LS7-BRZ",
+    "target_id": "3551",
+    "target_car": "BMW M3 '97",
+    "donor_id": "3339",
+    "donor_car": "Subaru BRZ Drift Car '17"
+  },
+  {
+    "engine": "LS7-BRZ",
+    "target_id": "3245",
+    "target_car": "BMW M4 Gr.4",
+    "donor_id": "3339",
+    "donor_car": "Subaru BRZ Drift Car '17"
+  },
+  {
+    "engine": "LS7-BRZ",
+    "target_id": "3246",
+    "target_car": "Bugatti Veyron Gr.4",
+    "donor_id": "3339",
+    "donor_car": "Subaru BRZ Drift Car '17"
+  },
+  {
+    "engine": "LS7-BRZ",
+    "target_id": "3227",
+    "target_car": "Lexus LC500 '17",
+    "donor_id": "3339",
+    "donor_car": "Subaru BRZ Drift Car '17"
+  },
+  {
+    "engine": "LS7-BRZ",
+    "target_id": "919",
+    "target_car": "Nissan Silvia Q's (S13) '88",
+    "donor_id": "3339",
+    "donor_car": "Subaru BRZ Drift Car '17"
+  },
+  {
+    "engine": "LS7-BRZ",
+    "target_id": "2167",
+    "target_car": "Nissan GT-R '17",
+    "donor_id": "3339",
+    "donor_car": "Subaru BRZ Drift Car '17"
+  },
+  {
+    "engine": "LS7-BRZ",
+    "target_id": "3297",
+    "target_car": "Subaru WRX STI Isle of Man '16",
+    "donor_id": "3339",
+    "donor_car": "Subaru BRZ Drift Car '17"
+  },
+  {
+    "engine": "LS7-BRZ",
+    "target_id": "3554",
+    "target_car": "Toyota Hiace Van DX '16",
+    "donor_id": "3339",
+    "donor_car": "Subaru BRZ Drift Car '17"
+  },
+  {
+    "engine": "EJ20-Impreza-Rally",
+    "target_id": "334",
+    "target_car": "Renault Clio V6 24V '00",
+    "donor_id": "3550",
+    "donor_car": "Subaru Impreza Rally Car '98"
+  },
+  {
+    "engine": "EJ20-Impreza-Rally",
+    "target_id": "3354",
+    "target_car": "Subaru BRZ S '15",
+    "donor_id": "3550",
+    "donor_car": "Subaru Impreza Rally Car '98"
+  },
+  {
+    "engine": "EJ20-Impreza-Rally",
+    "target_id": "451",
+    "target_car": "Subaru Impreza 22B-STi '98",
+    "donor_id": "3550",
+    "donor_car": "Subaru Impreza Rally Car '98"
+  },
+  {
+    "engine": "EJ20-Impreza-Rally",
+    "target_id": "379",
+    "target_car": "Subaru Impreza Coupe WRX Type R STi Ver.VI '99",
+    "donor_id": "3550",
+    "donor_car": "Subaru Impreza Rally Car '98"
+  },
+  {
+    "engine": "K14C-Swift",
+    "target_id": "3545",
+    "target_car": "Suzuki Jimny XC '18",
+    "donor_id": "3456",
+    "donor_car": "Suzuki Swift Sport '17"
+  },
+  {
+    "engine": "H25A-Escudo",
+    "target_id": "2150",
+    "target_car": "Mitsubishi Lancer Evolution Final '15",
+    "donor_id": "808",
+    "donor_car": "Suzuki V6 Escudo Pikes Peak Special spec.98"
+  },
+  {
+    "engine": "H25A-Escudo",
+    "target_id": "3384",
+    "target_car": "Mitsubishi GTO Twin Turbo '91",
+    "donor_id": "808",
+    "donor_car": "Suzuki V6 Escudo Pikes Peak Special spec.98"
+  },
+  {
+    "engine": "V8-Suzuki-VGT-Gr.3",
+    "target_id": "3299",
+    "target_car": "Alfa Romeo 4C Gr.3 Road Car",
+    "donor_id": "3508",
+    "donor_car": "Suzuki SUZUKI Vision Gran Turismo (Gr.3 Version)"
+  },
+  {
+    "engine": "V8-Suzuki-VGT-Gr.3",
+    "target_id": "3453",
+    "target_car": "BMW M3 '89",
+    "donor_id": "3508",
+    "donor_car": "Suzuki SUZUKI Vision Gran Turismo (Gr.3 Version)"
+  },
+  {
+    "engine": "V8-Suzuki-VGT-Gr.3",
+    "target_id": "3354",
+    "target_car": "Subaru BRZ S '15",
+    "donor_id": "3508",
+    "donor_car": "Suzuki SUZUKI Vision Gran Turismo (Gr.3 Version)"
+  },
+  {
+    "engine": "V8-Suzuki-VGT-Gr.3",
+    "target_id": "3456",
+    "target_car": "Suzuki Swift Sport '17",
+    "donor_id": "3508",
+    "donor_car": "Suzuki SUZUKI Vision Gran Turismo (Gr.3 Version)"
+  },
+  {
+    "engine": "V8-Suzuki-VGT-Gr.3",
+    "target_id": "808",
+    "target_car": "Suzuki V6 Escudo Pikes Peak Special spec.98",
+    "donor_id": "3508",
+    "donor_car": "Suzuki SUZUKI Vision Gran Turismo (Gr.3 Version)"
+  },
+  {
+    "engine": "V8-Suzuki-VGT-Gr.3",
+    "target_id": "3369",
+    "target_car": "Radical SR3 SL '13",
+    "donor_id": "3508",
+    "donor_car": "Suzuki SUZUKI Vision Gran Turismo (Gr.3 Version)"
+  },
+  {
+    "engine": "V8-Suzuki-VGT-Gr.3",
+    "target_id": "3409",
+    "target_car": "BAC Mono '16",
+    "donor_id": "3508",
+    "donor_car": "Suzuki SUZUKI Vision Gran Turismo (Gr.3 Version)"
+  },
+  {
+    "engine": "V8-Suzuki-VGT-Gr.3",
+    "target_id": "1907",
+    "target_car": "KTM X-BOW R '12",
+    "donor_id": "3508",
+    "donor_car": "Suzuki SUZUKI Vision Gran Turismo (Gr.3 Version)"
+  },
+  {
+    "engine": "3S-GTE-MR2",
+    "target_id": "63",
+    "target_car": "Toyota Corolla Levin 1600GT APEX (AE86) '83",
+    "donor_id": "207",
+    "donor_car": "Toyota MR2 GT-S '97"
+  },
+  {
+    "engine": "3S-GTE-MR2",
+    "target_id": "810",
+    "target_car": "Toyota Sprinter Trueno 1600GT APEX (AE86) '83",
+    "donor_id": "207",
+    "donor_car": "Toyota MR2 GT-S '97"
+  },
+  {
+    "engine": "B58-GR-Supra-'20",
+    "target_id": "3344",
+    "target_car": "BMW M3 Sport Evolution '89",
+    "donor_id": "3418",
+    "donor_car": "Toyota GR Supra RZ '20"
+  },
+  {
+    "engine": "2JZ-GTE-Supra",
+    "target_id": "3483",
+    "target_car": "BMW M2 Competition '18",
+    "donor_id": "82",
+    "donor_car": "Toyota Supra RZ '97"
+  },
+  {
+    "engine": "2JZ-GTE-Supra",
+    "target_id": "655",
+    "target_car": "BMW Z4 3.0i '03",
+    "donor_id": "82",
+    "donor_car": "Toyota Supra RZ '97"
+  },
+  {
+    "engine": "2JZ-GTE-Supra",
+    "target_id": "2139",
+    "target_car": "Lexus RC F '14",
+    "donor_id": "82",
+    "donor_car": "Toyota Supra RZ '97"
+  },
+  {
+    "engine": "2JZ-GTE-Supra",
+    "target_id": "1461",
+    "target_car": "Nissan Silvia K's Dia Selection (S13) '90",
+    "donor_id": "82",
+    "donor_car": "Toyota Supra RZ '97"
+  },
+  {
+    "engine": "2JZ-GTE-Supra",
+    "target_id": "1448",
+    "target_car": "Nissan SILVIA spec-R Aero (S15) '02",
+    "donor_id": "82",
+    "donor_car": "Toyota Supra RZ '97"
+  },
+  {
+    "engine": "2JZ-GTE-Supra",
+    "target_id": "3506",
+    "target_car": "Subaru BRZ S '21",
+    "donor_id": "82",
+    "donor_car": "Toyota Supra RZ '97"
+  },
+  {
+    "engine": "2JZ-GTE-Supra",
+    "target_id": "3295",
+    "target_car": "Toyota 86 GT 'Limited' '16",
+    "donor_id": "82",
+    "donor_car": "Toyota Supra RZ '97"
+  },
+  {
+    "engine": "2JZ-GTE-Supra",
+    "target_id": "3481",
+    "target_car": "Toyota GR86 RZ '21",
+    "donor_id": "82",
+    "donor_car": "Toyota Supra RZ '97"
+  },
+  {
+    "engine": "2JZ-GTE-Supra",
+    "target_id": "3535",
+    "target_car": "Toyota GR Corolla MORIZO Edition '22",
+    "donor_id": "82",
+    "donor_car": "Toyota Supra RZ '97"
+  },
+  {
+    "engine": "2JZ-GTE-Supra",
+    "target_id": "3451",
+    "target_car": "Toyota GR Yaris RZ 'High performance' '20",
+    "donor_id": "82",
+    "donor_car": "Toyota Supra RZ '97"
+  },
+  {
+    "engine": "2JZ-GTE-Supra",
+    "target_id": "3367",
+    "target_car": "Toyota GR Supra RZ '19",
+    "donor_id": "82",
+    "donor_car": "Toyota Supra RZ '97"
+  },
+  {
+    "engine": "2JZ-GTE-Supra",
+    "target_id": "843",
+    "target_car": "Toyota Supra 3.0GT Turbo A '88",
+    "donor_id": "82",
+    "donor_car": "Toyota Supra RZ '97"
+  },
+  {
+    "engine": "GTI-VGT-Gr.3",
+    "target_id": "2141",
+    "target_car": "Volkswagen Golf VII GTI '14",
+    "donor_id": "2192",
+    "donor_car": "Volkswagen Volkswagen GTI VGT (Gr.3)"
+  },
+  {
+    "engine": "GTI-VGT-Gr.3",
+    "target_id": "729",
+    "target_car": "Renault Avantime 3.0 V6 24V '02",
+    "donor_id": "2192",
+    "donor_car": "Volkswagen Volkswagen GTI VGT (Gr.3)"
+  },
+  {
+    "engine": "GTI-VGT-Gr.3",
+    "target_id": "2155",
+    "target_car": "Volkswagen Polo GTI '14",
+    "donor_id": "2192",
+    "donor_car": "Volkswagen Volkswagen GTI VGT (Gr.3)"
+  },
+  {
+    "engine": "B18C-Integra-'98",
+    "target_id": "3613",
+    "target_car": "Citroën 2 CV 6 Charleston '86",
+    "donor_id": "203",
+    "donor_car": "Honda Integra Type R (DC2) '98"
+  },
+  {
+    "engine": "B18C-Integra-'98",
+    "target_id": "3615",
+    "target_car": "Honda Civic Si Group A version '87",
+    "donor_id": "203",
+    "donor_car": "Honda Integra Type R (DC2) '98"
+  },
+  {
+    "engine": "K20C1-Civic-'20",
+    "target_id": "3616",
+    "target_car": "Honda Step WGN Spada Premium Line '23",
+    "donor_id": "3375",
+    "donor_car": "Honda Civic Type R (FK8) '20"
+  },
+  {
+    "engine": "V12-F3500-A",
+    "target_id": "3616",
+    "target_car": "Honda Step WGN Spada Premium Line '23",
+    "donor_id": "3588",
+    "donor_car": "Gran Turismo F3500-A"
+  },
+  {
+    "engine": "Windsor-351-Maverick",
+    "target_id": "3616",
+    "target_car": "Honda Step WGN Spada Premium Line '23",
+    "donor_id": "3395",
+    "donor_car": "Greening Auto Company Maverick"
+  },
+  {
+    "engine": "R26B-787B",
+    "target_id": "3331",
+    "target_car": "Mazda RX-VISION '15",
+    "donor_id": "650",
+    "donor_car": "Mazda 787B '91"
+  },
+  {
+    "engine": "SE75E-2&4",
+    "target_id": "354",
+    "target_car": "Mini Cooper 'S' '65",
+    "donor_id": "2196",
+    "donor_car": "Honda Project 2&4 powered by RC213V"
+  },
+  {
+    "engine": "Demon-Challenger",
+    "target_id": "2095",
+    "target_car": "Peugeot RCZ Gr.3 Road Car",
+    "donor_id": "3388",
+    "donor_car": "Dodge Challenger SRT Demon '18"
+  },
+  {
+    "engine": "8.0-WR16-64v4T-Chiron",
+    "target_id": "1959",
+    "target_car": "Lamborghini Aventador LP 700-4 '11",
+    "donor_id": "3473",
+    "donor_car": "Bugatti Chiron '16"
+  },
+  {
+    "engine": "8.0-WR16-64v4T-Chiron",
+    "target_id": "849",
+    "target_car": "Lamborghini Diablo GT '00",
+    "donor_id": "3473",
+    "donor_car": "Bugatti Chiron '16"
+  },
+  {
+    "engine": "8.0-WR16-64v4T-Chiron",
+    "target_id": "1506",
+    "target_car": "Lamborghini Gallardo LP 560-4 '08",
+    "donor_id": "3473",
+    "donor_car": "Bugatti Chiron '16"
+  },
+  {
+    "engine": "8.0-WR16-64v4T-Chiron",
+    "target_id": "1505",
+    "target_car": "Lamborghini Murciélago LP 640 '09",
+    "donor_id": "3473",
+    "donor_car": "Bugatti Chiron '16"
+  }
+]

@@ -200,6 +200,49 @@ def build_setup(
         bump = sim['recommended_front_rh_bump_mm']
         notes.append(f"⚠️ [Bottoming/Fender Guard] ตรวจพบความเสี่ยงล้อหน้ากระแทกซุ้มล้อ/Bump Stop ที่ความเร็ว {sim_spd:.0f} km/h (ยุบรวม {sim['total_outside_front_compression_mm']} มม.) -> แนะนำยกหน้าขึ้น +{bump} มม.")
 
+    eq_proof = lib.solve_suspension_equilibrium(
+        mass_kg=veh.mass_kg,
+        front_ratio=veh.front_weight_ratio,
+        power_hp=veh.power_hp,
+        torque_nm=veh.torque_nm,
+        drivetrain=veh.drivetrain,
+        hcg_m=veh.hcg_m,
+        wheelbase_m=veh.wheelbase_m,
+        track_width_m=veh.track_width_m,
+        mu=mu,
+        fn_f=params['natural_frequency_hz']['front'],
+        fn_r=params['natural_frequency_hz']['rear'],
+        arb_f=params['anti_roll_bar']['front'],
+        arb_r=params['anti_roll_bar']['rear'],
+        df_f=params['downforce']['front'] if params.get('downforce') else 0,
+        df_r=params['downforce']['rear'] if params.get('downforce') else 0,
+        height_range=height_range,
+        height_front_range=height_front_range,
+        height_rear_range=height_rear_range,
+        speed_kmh=sim_spd,
+        is_widebody=is_widebody,
+        group=veh.group,
+        body_style=veh.body_style,
+        bumpiness=trk.bumpiness,
+        is_dirt=trk.is_dirt
+    )
+
+    tire_wear = lib.calculate_tire_wear_index(
+        fn_hz_f=params['natural_frequency_hz']['front'],
+        fn_hz_r=params['natural_frequency_hz']['rear'],
+        camber_f=params['camber_deg']['front'],
+        camber_r=params['camber_deg']['rear'],
+        toe_f=params['toe_angle']['front'],
+        toe_r=params['toe_angle']['rear'],
+        ptw=veh.power_to_weight,
+        is_endurance=trk.is_endurance
+    )
+
+    if not eq_proof['trail_braking_feasible']:
+        notes.append(f"⚠️ [Trail-Braking Compliance Warning] ยุบตัวล้อหน้าระหว่างแตะเบรกเลี้ยวลึก (Trail-Braking) เสี่ยงกระแทก Bump Stop เหลือระยะเพียง {eq_proof['min_dynamic_clearance_mm']} มม. -> แนะนำเพิ่มสปริงหน้า +{eq_proof['recommended_front_fn_boost_hz']} Hz หรือยกหน้าขึ้น")
+    else:
+        notes.append(f"✅ [Trail-Braking Physical Proof] ผ่านการทดสอบฟิสิกส์: มีระยะยุบตัวเหลือ {eq_proof['min_dynamic_clearance_mm']} มม. ขณะแตะเบรกเลี้ยวที่ {sim_spd:.0f} km/h (ไม่กระแทก Bump Stop)")
+
     params['quick_trims'] = lib.build_quick_trims(params, drivetrain=veh.drivetrain, is_endurance=trk.is_endurance)
 
     return {
@@ -218,7 +261,9 @@ def build_setup(
             'flat_ride_frequency_ratio': fr_ratio,
             'dynamic_braking_pitch_transfer_pct': pitch_transfer_pct,
             'brake_bias': params['brake_bias'],
-            'high_speed_simulation': sim
+            'high_speed_simulation': sim,
+            'equilibrium_proof': eq_proof,
+            'tire_wear_analysis': tire_wear
         },
         'parameters': params
     }

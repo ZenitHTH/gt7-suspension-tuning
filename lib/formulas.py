@@ -6,7 +6,7 @@ longitudinal braking pitch dive, lateral cornering roll deflection, and aerodyna
 """
 
 import math
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Any
 import os
 import sys
 
@@ -158,10 +158,10 @@ def calculate_combined_trail_braking_load(
 def calculate_tire_wear_index(
     fn_hz_f: float,
     fn_hz_r: float,
-    camber_f: float,
-    camber_r: float,
-    toe_f: float,
-    toe_r: float,
+    camber_f: Any,
+    camber_r: Any,
+    toe_f: Any,
+    toe_r: Any,
     ptw: float = 200.0,
     is_endurance: bool = False
 ) -> dict[str, float]:
@@ -171,17 +171,34 @@ def calculate_tire_wear_index(
     wheel alignment slip scrub (toe friction work), and excessive camber inner-edge abrasion.
     Baseline = 1.00 (standard road suspension on neutral alignment).
     """
+    def _parse_val(val: Any) -> float:
+        if isinstance(val, (int, float)):
+            return float(val)
+        if isinstance(val, str):
+            parts = val.split()
+            try:
+                num = float(parts[-1])
+                return -num if 'out' in val.lower() else num
+            except ValueError:
+                return 0.0
+        return 0.0
+
+    c_f = abs(_parse_val(camber_f))
+    c_r = abs(_parse_val(camber_r))
+    t_f = _parse_val(toe_f)
+    t_r = _parse_val(toe_r)
+
     base_fn_f = 2.10
     base_fn_r = 2.25
 
-    wear_k_f = (max(1.0, fn_hz_f) / base_fn_f) ** 1.35
-    wear_k_r = (max(1.0, fn_hz_r) / base_fn_r) ** 1.35
+    wear_k_f = (max(1.0, float(fn_hz_f)) / base_fn_f) ** 1.35
+    wear_k_r = (max(1.0, float(fn_hz_r)) / base_fn_r) ** 1.35
 
-    toe_scrub_f = 1.0 + 0.35 * abs(toe_f)
-    toe_scrub_r = 1.0 + 0.35 * abs(toe_r)
+    toe_scrub_f = 1.0 + 0.35 * abs(t_f)
+    toe_scrub_r = 1.0 + 0.35 * abs(t_r)
 
-    cam_scrub_f = 1.0 + 0.04 * max(0.0, camber_f - 2.0)
-    cam_scrub_r = 1.0 + 0.04 * max(0.0, camber_r - 1.8)
+    cam_scrub_f = 1.0 + 0.04 * max(0.0, c_f - 2.0)
+    cam_scrub_r = 1.0 + 0.04 * max(0.0, c_r - 1.8)
 
     ptw_factor_r = 1.0 + 0.15 * max(0.0, (ptw - 250.0) / 250.0)
     ptw_factor_f = 1.0

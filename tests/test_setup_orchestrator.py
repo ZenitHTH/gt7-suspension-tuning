@@ -22,5 +22,13 @@ class TestSetupOrchestrator(unittest.TestCase):
         self.assertIn("QUICK-TRIMS DELTA TABLE", sheet)
         self.assertIn("⚠️ เสี่ยงกระแทกซุ้มล้อ/Bump Stop", sheet)
 
+    def test_setup_equilibrium_telemetry(self):
+        car = {'name': 'Corvette ZR1', 'mass_kg': 1500, 'drivetrain': 'FR', 'power_hp': 755, 'torque_nm': 969}
+        track = {'name': 'Spa-Francorchamps', 'bumpiness': 'medium', 'elevation_diff_m': 100.0}
+        res = setup.build_setup(car, track=track, tire='RM')
+        self.assertIn('equilibrium_proof', res['telemetry'])
+        self.assertIn('tire_wear_analysis', res['telemetry'])
+        self.assertIn('trail_braking_feasible', res['telemetry']['equilibrium_proof'])
+
 if __name__ == '__main__':
     unittest.main()

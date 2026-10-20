@@ -4,7 +4,10 @@ from lib.formulas import (
     calculate_sprung_mass,
     calculate_aerodynamic_heave,
     calculate_braking_pitch_dive,
-    calculate_cornering_roll_deflection
+    calculate_cornering_roll_deflection,
+    calculate_acceleration_squat_dive,
+    calculate_combined_trail_braking_load,
+    calculate_tire_wear_index
 )
 from lib.springs import (
     calculate_natural_frequencies,

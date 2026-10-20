@@ -6,7 +6,13 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, BASE_DIR)
 sys.path.insert(0, os.path.join(BASE_DIR, 'scripts'))
 
-from lib.formulas import calculate_wheel_rate, calculate_sprung_mass
+from lib.formulas import (
+    calculate_wheel_rate,
+    calculate_sprung_mass,
+    calculate_acceleration_squat_dive,
+    calculate_combined_trail_braking_load,
+    calculate_tire_wear_index
+)
 from lib.springs import calculate_natural_frequencies, calculate_anti_roll_bars
 from lib.shocks import calculate_dampers
 from lib.wheels import calculate_wheel_alignment, calculate_brake_bias, get_tire_mu
@@ -20,6 +26,37 @@ class TestLibModules(unittest.TestCase):
         self.assertGreater(kw, 50000.0)
         tot_s, c_f, c_r = calculate_sprung_mass(1000.0, 0.50, 'Road Car')
         self.assertEqual(tot_s, 880.0)
+
+    def test_acceleration_squat_dive(self):
+        res = calculate_acceleration_squat_dive(
+            torque_nm=600.0, power_hp=500.0, mass_kg=1400.0, drivetrain='FR',
+            hcg_m=0.45, wheelbase_m=2.6, wheel_rate_f=55000.0, wheel_rate_r=65000.0
+        )
+        self.assertIn('squat_rear_mm', res)
+        self.assertIn('lift_front_mm', res)
+        self.assertGreater(res['squat_rear_mm'], 0.0)
+        self.assertGreater(res['lift_front_mm'], 0.0)
+
+    def test_combined_trail_braking(self):
+        res = calculate_combined_trail_braking_load(
+            mass_kg=1350.0, mu=1.35, hcg_m=0.45, wheelbase_m=2.5,
+            track_width_m=1.6, lltd_f=0.55, arb_f=5, wheel_rate_f=60000.0,
+            speed_kmh=180.0, df_front=150.0
+        )
+        self.assertIn('total_deflection_mm', res)
+        self.assertIn('pitch_component_mm', res)
+        self.assertIn('roll_component_mm', res)
+        self.assertIn('aero_component_mm', res)
+        self.assertGreater(res['total_deflection_mm'], 10.0)
+
+    def test_tire_wear_index(self):
+        wear = calculate_tire_wear_index(
+            fn_hz_f=2.8, fn_hz_r=3.0, camber_f=3.0, camber_r=2.0,
+            toe_f=-0.10, toe_r=0.20, ptw=300.0, is_endurance=True
+        )
+        self.assertIn('front_wear_factor', wear)
+        self.assertIn('rear_wear_factor', wear)
+        self.assertGreater(wear['front_wear_factor'], 1.0)
 
     def test_springs_and_shocks(self):
         fn_f, fn_r, ratio = calculate_natural_frequencies(1.35, 0.50, 'medium', 'Road Car', 1350.0)

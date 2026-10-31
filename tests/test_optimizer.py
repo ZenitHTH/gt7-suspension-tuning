@@ -74,6 +74,35 @@ class TestReverseOptimizer(unittest.TestCase):
         self.assertEqual(res.parameters['downforce']['front'], 110)
         self.assertEqual(res.parameters['downforce']['rear'], 155)
 
+    def test_racecar_bounds_prevent_ride_height_jacking(self):
+        car = {'name': 'Porsche 911 RSR Gr.3', 'mass_kg': 1243, 'drivetrain': 'MR', 'power_hp': 510, 'torque_nm': 500, 'group': 'Gr.3'}
+        veh = VehicleSpec.from_dict(car, custom_overrides={}, is_widebody=False)
+        sliders = resolve_slider_ranges(car, {})
+        params, telem = compute_baseline_suspension(veh, self.trk, 'RM', sliders, False, False)
+        req = SolverRequest(
+            veh=veh, trk=self.trk, baseline_params=params,
+            telem=telem, sliders=sliders, g_model=self.g_model,
+            objective='balanced', speed_kmh=240.0
+        )
+        res = solve_optimal_setup(req)
+        rh = res.parameters['ride_height_mm']
+        self.assertLessEqual(rh['front'], 85)
+        self.assertLessEqual(rh['rear'], 95)
+        self.assertGreater(rh['rear'], rh['front'])
+
+    def test_dirt_camber_preserved_under_solver(self):
+        trk_dirt = TrackSpec.from_dict(None, mode='dirt', tire='Dirt')
+        req_dirt = SolverRequest(
+            veh=self.veh, trk=trk_dirt, baseline_params=self.params,
+            telem=self.telem, sliders=self.sliders, g_model=self.g_model,
+            objective='max_grip', speed_kmh=160.0
+        )
+        self.params['camber_deg']['front'] = 0.0
+        self.params['camber_deg']['rear'] = 0.0
+        res = solve_optimal_setup(req_dirt)
+        self.assertEqual(res.parameters['camber_deg']['front'], 0.0)
+        self.assertEqual(res.parameters['camber_deg']['rear'], 0.0)
+
 
 if __name__ == '__main__':
     unittest.main()

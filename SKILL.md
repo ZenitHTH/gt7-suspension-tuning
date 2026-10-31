@@ -75,6 +75,7 @@ To build a mathematically sound suspension, differential, and chassis setup in G
 > - Red Bull X2019 Competition (X2019 Nations Cup): Body height Front 45–50 mm / Rear 50–60 mm; Natural Freq 4.00–6.00 Hz both; Downforce Front 800–1200 / Rear 1200–1600 (DB assumed generic road car)
 > - Toyota Supra GT Road Car (JZA80): Body height Front/Rear 65–105 mm; Natural Freq Front/Rear 1.50–3.50 Hz; Downforce Front 200 (fixed) / Rear 400–500 (DB assumed generic road car 90–140 mm). Note: Clamp rear downforce to floor (400) to counter locked front 200.
 > - Citroën 2 CV 6 Charleston '86 (w/ Full Custom Suspension & GT Auto Aero): Body height Front 100–225 mm / Rear 100–255 mm; Natural Freq 1.00–3.00 Hz both; Damping Comp 20–40% / Exp 30–60%; Downforce Front 50–200 / Rear 100–250 (DB ultralight heuristic assumed 60–70 mm if unprovided).
+> - Suzuki Jimny XC '18 (w/ Full Custom Suspension): Body height Front/Rear 135–260 mm; Damping Comp 20–40% / Exp 30–60% (Expansion ceiling is 60%, NOT 80%!); Downforce None (Stock body has no adjustable aero).
 - Subaru Impreza Rally Car '98 (Gr.B): Body height Front/Rear 80–190 mm; Natural Freq 1.50–3.00 Hz both; Damping Comp 20–40% / Exp 30–80%; Downforce Front 100–150 / Rear 150–250.
 >
 > Aero recommendation formula (when user provides or calculates range):
@@ -108,6 +109,8 @@ When searching online for reference setups:
   * ❌ Recommends slammed minimum ride height (`50–60 mm` on road cars).
   * ❌ Recommends spring frequencies $>3.50\text{ Hz}$ on road cars without massive downforce.
   * ❌ Instructs installing the **Steering Angle Adapter (ตัวปรับมุมเลี้ยว)** for grip racing.
+* **Community Reference Baseline (Fossil Fueled 1.71/1.72 Quick Tuning Guide - Oct 2026)**:
+  * Validates post-1.71 road car physics: exaggerated body roll & rear squat under power, acute controller trail-braking instability on racing tires, wheel arch rubbing on widebody/low setups, and the need for +20 to +30 mm ride height buffers.
 
 -----
 
@@ -225,6 +228,74 @@ When searching online for reference setups:
 >    - Rear Rebound Damping: Stiffen by `+4% to +6%` (pins rear down over crests and curbs).
 >    - Rear Downforce: Increase rear aero by `+15% to +20%` span.
 
+### 2.G — Universal Tire Wear Rebalancing & The Brake Bias Fallacy (All Drivetrains & Classes)
+
+> ⚠️ **THE LONGITUDINAL VS LATERAL TIRE WEAR INVARIANT**:
+> Total tire wear is the sum of **Longitudinal Friction Work** (braking and acceleration slip) and **Lateral Friction Work** (cornering slip angle):
+> $$E_{\text{wear}} \propto \int |F_x \cdot s_x| dt + \int |F_y \cdot s_y| dt$$
+>
+> **The Brake Bias Myth Explained**:
+> Adjusting the Brake Balance Controller (e.g. popular YouTube advice setting rear `-5`) ONLY shifts **longitudinal braking work ($F_x$)**.
+> - **When Rear `-5` Works**: On front-heavy FR/FF road cars (55:45 to 62:38), moving brake bias rearward unloads the heavy front axle and forces trailing-throttle yaw rotation into slow corners.
+> - **When Rear `-5` Fails**: On balanced or high-downforce platforms (MR, RR, AWD, Gr.1, Gr.X, GT3) navigating sustained high-G sweepers (>160 km/h), the front tires wear out from **lateral cornering scrub ($F_y$)**, NOT braking. If rear roll stiffness is too compliant, the outside front tire must resist 100% of the vehicle's cornering inertia alone. The front tires burn to 10% while rears remain at 40%.
+>
+> #### Universal Asymmetric Tire Wear Rebalancing Matrix (When Wear Disparity > 20%):
+>
+> | Asymmetric Wear Symptom | Physical Mechanism | Universal Tuning Remedies (All Cars) |
+> | :--- | :--- | :--- |
+> | **Severe Front Tire Wear**<br>(Front $\ll$ Rear, e.g. Front 10% / Rear 40%) | Outside front tire overloaded by continuous lateral cornering scrub + excessive camber/toe friction | 1. **Shift Roll Stiffness Rearward**: Soften Front ARB by 1–2 clicks, stiffen Rear ARB by 2–3 clicks.<br>2. **Trim Front Downforce**: Reduce front aero by 5–10% to lower carcass friction down straights.<br>3. **Flatten Front Camber**: Reduce negative camber by `-0.4° to -0.6°` to distribute normal load across full tread.<br>4. **Zero Front Toe**: Set front toe strictly to `0.00°` to eliminate continuous straight-line scrub.<br>5. **Calibrate Brake Bias**: Set to `-2 to -3` (never `-5` on MR/RR to avoid ABS rear micro-lock). |
+> | **Severe Rear Tire Wear**<br>(Rear $\ll$ Front, e.g. Front 45% / Rear 15%) | Driven rear wheels spinning under power exit, excessive rear camber, or excessive rear toe scrub | 1. **Clamp LSD Accel Sensitivity**: Lower rear LSD Accel to `18–24` (stops corner-exit wheelspin micro-scrub).<br>2. **Flatten Rear Camber**: Reduce rear camber to `-1.0° to -1.4°` to maximize longitudinal acceleration contact patch.<br>3. **Shift Roll Stiffness Forward**: Stiffen Front ARB and soften Rear ARB to let rear squat evenly.<br>4. **Anti-Squat Damping**: Increase Rear Compression Damping by +2% to +4% to prevent sudden rear collapse under boost.<br>5. **For AWD Platforms**: Shift center torque split closer to 40:60 or 45:55 to share acceleration load with front axle. |
+
+### 2.H — Controller (DualSense) vs Direct-Drive Wheel Dynamics & Input Assistance Traps (Update 1.71+)
+> 🎮 **THE CONTROLLER VS WHEEL DIVERGENCE (Fossil Fueled 1.71 Guide Synthesis)**:
+> In GT7 Update 1.71+, the handling disparity between Gamepad/Controller (DualSense) and Steering Wheel (Direct-Drive / Force Feedback) is wider than ever. Controllers utilize built-in steering filtering and invisible dynamic angle limiters that trigger under bottoming loads, while trail-braking lacks analog load-cell modulation.
+>
+> 1. **Controller Braking Instability on Racing Tires (Braking Sensitivity Lock)**:
+>    - *Symptom*: Almost all road cars fitted with Racing Tires suffer acute instability / twitching / snap-oversteer when applying brakes on controller.
+>    - *Remedy*: Maximize **LSD Braking Sensitivity to `80–100`** (or 100 on MR/RR and RWD). While wheel users can delicately modulate pedal trail-braking into corner entry (allowing low LSD braking 15–25), controller users need maximum differential braking lockup to act as a stabilizing electronic yaw damper.
+> 2. **Invisible Steering Limiter on Controller (The Banked Carousel & Fender Scrub Trap)**:
+>    - *Mechanism*: When the front suspension bottoms out onto bump stops—most notoriously in uneven banked turns like the **Nürburgring Nordschleife Karussell**—the game's hidden controller assist algorithms artificially restrict steering angle to prevent physics engine clipping, inducing sudden, catastrophic understeer ("หน้ารถแถตรงไม่ยอมเลี้ยว").
+>    - *The Wheel Arch Rubbing Trap*: Occurs on road cars fitted with **Wide Body + Wide Offset Wheels + Racing Tires + Low Ride Height** (e.g. Toyota RAV4, Mark II). Under braking dive, the tire physically tucks inside the fender arch, artificially clamping steering throw.
+>    - *Universal Remedy*: Run Ride Height at least **`+20 to +30 mm` above slider minimum** (e.g. 120 mm on a 90–140 mm slider). Avoid slamming road cars to minimum ride height on controller!
+> 3. **Input Modulation Technique**:
+>    - Using the **Right Analog Stick** for acceleration and braking provides significantly finer, progressive modulation than standard controller triggers ($L_2 / R_2$), helping prevent instantaneous wheelspin and ABS pulse lock.
+> 4. **Initial Torque Calibration**:
+>    - Set Initial Torque to minimum (`0–4`) for maximum agility and turn-in response. Only increase (`8–12`) if a lightweight or twitchy car feels overly nervous on initial turn-in.
+
+### 2.I — Tire Compound Compliance Guard (Sports Tires vs Racing Tires in 1.71+)
+> ⚠️ **THE "DRIVING ON ICE" MISMATCH TRAP**:
+> Transferring a stiff, 3.00 Hz suspension setup developed on Racing Tires directly onto **Sports Tires (SH / SM / SS)** will make the car feel completely unmanageable—behaving as if it is driving on ice:
+> - **Symptom**: Severe corner-entry understeer followed by uncontrollable snap-power oversteer on corner exit.
+> - **The Physical Mechanism**: Racing tires possess massive mechanical grip ($\mu \approx 1.45–1.65$) able to support high vertical wheel rates ($3.00\text{ Hz}$) without sliding. Sports tires ($\mu \approx 1.15–1.35$) have lower carcass stiffness and grip; an over-stiff suspension overloads the contact patch before dynamic load transfer completes, causing sudden tire detachment.
+> - **Sports Tire Conversion Protocol**:
+>   1. **Soften Natural Frequency**: Drop from `3.00 Hz` down to **`2.20 – 2.55 Hz`** (front) and **`2.30 – 2.65 Hz`** (rear).
+>   2. **Elevate Ride Height**: Raise Body Height by **`+5 to +10 mm`** to give the chassis room to roll and bite.
+>   3. **Unlock LSD Braking Sensitivity**: Sports tires break away progressively, allowing lower LSD Braking (`18–28` instead of `80–100`).
+>   4. **Rule of Thumb**: *"The less grip you have, the softer you must be."*
+
+### 2.J — Target PP Trimming Hierarchy (Shedding 1–5 PP under Hard Caps: 700 PP / 800 PP)
+> 🏁 **PP TRIMMING TRIAGE (Zero-Loss Parts Downgrade First)**:
+> When a completed road or tuned car setup slightly breaches a race entry limit (e.g., 703.72 PP with a 700.00 PP ceiling), execute the zero-performance-loss downgrade cascade before touching engine output:
+>
+> 1. **Clutch & Flywheel Downgrade (Zero Loss — Best)**:
+>    - Change `Racing Clutch & Flywheel` $\rightarrow$ `Normal` or `Sports`.
+>    - **PP Drop**: `-2.5 to -3.5 PP`.
+>    - **Impact**: Zero power loss. On racing sequential transmissions, shift latency penalty is negligible.
+> 2. **Brake Disc Downgrade (Zero Loss)**:
+>    - Change `Racing Slotted / Drilled Discs` $\rightarrow$ `Normal` or `Sports`, while **keeping** `Racing Brake Pads`.
+>    - **PP Drop**: `-1.5 to -2.5 PP`.
+>    - **Impact**: Zero braking distance penalty in dry conditions; saves PP without compromising deceleration.
+> 3. **Micro-Trim ECU / Power Restrictor (Minimal Power Loss)**:
+>    - Set Output Adjustment (ECU) or Power Restrictor to `98%–99%`.
+>    - **PP Drop**: `-3.0 to -4.5 PP`.
+>    - **Impact**: Sheds ~4–8 HP; straight-line top speed decreases by $<1–2\text{ km/h}$.
+> 4. **Forward Ballast Placement (Improves Weight Balance)**:
+>    - Add `+10 kg` ballast with positioning at `-15 to -25` (front bias).
+>    - **PP Drop**: `-3.5 to -4.5 PP`.
+>    - **Impact**: Adds 10 kg mass, drops PP, and stabilizes front trail-braking bite.
+>
+> *Note on Gr.1 / Gr.2 / Gr.3 / Gr.4*: Homologated racecars have locked clutches and brake discs; adjust PP strictly via ECU / Restrictor or Ballast.
+
 -----
 
 ## 3. Parameter Physics Breakdown: Focused Suspension & Alignment Dynamics (Update 1.71+)
@@ -246,6 +317,10 @@ graph TD
 * **Positive Rake Angle ($\Delta h$)**:
   $$\text{Body Height}_{\text{Rear}} = \text{Body Height}_{\text{Front}} + 6\text{ to }12\text{ mm}$$
   * *Mechanism*: Generates forward aerodynamic pitch load, biting front tires on turn-in while ensuring the rear diffuser does not stall.
+* **Asymmetric Slider Floor Travel Guard ($h_{\text{min}, r} > h_{\text{min}, f}$)**:
+  When a chassis features an elevated rear slider floor (e.g. Ford Sierra RS Front 100 mm / Rear 120 mm), rear ride height must never sit flush against the floor. It must maintain an independent anti-squat travel buffer:
+  $$\text{Body Height}_{\text{Rear}} = \min(h_{\text{max}, r}, \max(h_{\text{min}, r} + \text{margin} + \text{wide\_buf}, \text{Body Height}_{\text{Front}} + \Delta h))$$
+  Where $\text{margin} + \text{wide\_buf} \ge 10–15\text{ mm}$ prevents the rear suspension from bottoming out onto bump stops under peak acceleration torque squat.
 * **Tire-to-Fender Collision Geometry & Widebody**: If Wide Offset or Wide Wheels are fitted in GT Auto (or the `--widebody` flag is set), low front ride height causes tire-fender scrub under braking pitch, locking steering throw. Raise front ride height by an additional `+5 to +8 mm` (the tuner CLI adds `+5 mm` when `--widebody` is specified).
 * **2D Trail-Braking Dynamic Bottoming Clearance Model**:
   Under aggressive trail-braking at speed $v$ (km/h) into high-G corner entry, the outside front corner experiences three simultaneous dynamic deflections:
@@ -304,6 +379,7 @@ graph TD
 * **LSD Braking Sensitivity**: `22–28` for solid/live axle FR cars (stabilizes axle chatter); `52–65` for MR/RR platforms (prevents trail-braking snap).
 * **Brake Balance Controller**: Set to **`-1` to `-2` (Rear Bias)** on front-heavy platforms to unload front tires without triggering deep-braking rear ABS shudder.
 * **Downforce Balance & Center of Pressure (CP)**: Match aerodynamic Center of Pressure to vehicle mass distribution (e.g. 40% front / 70% rear span for MR/RR; 45% front / 55% rear for Gr.X). Avoid pinning the rear down with max downforce while leaving the front weak. When front aero is fixed/locked (e.g. Supra GT Road Car front 200), clamp rear downforce to floor (400) to maintain balance.
+* **Aerodynamic Stability Invariant (Front $\le$ Rear Downforce)**: On road circuits and non-oval tracks, Front Downforce must never exceed Rear Downforce in absolute kgf ($F_{z, front} \le F_{z, rear}$) on rear-wheel-drive platforms (FR, MR, RR). If custom GT Auto aero parts provide a large front splitter but a constrained rear wing (e.g. Front 50–200, Rear 50–100), front downforce must be clamped to the rear ceiling to prevent Center of Pressure migration ahead of CG, which causes violent high-speed snap-oversteer at speeds $>200\text{ km/h}$.
 
 -----
 
@@ -332,6 +408,19 @@ graph TD
 
 > 📌 **Update 1.72 (Spec IV) — Gr.1 / Gr.2 / Gr.3 / Gr.4 Default Suspension & Differential Reset:**
 > Update 1.72 revised the stock/default suspension and LSD gear values across all **Gr.1, Gr.2, Gr.3, and Gr.4** racecars. Do not rely on pre-1.72 stock baseline numbers when calculating relative adjustments or evaluating BoP handling—always read the live in-game default sliders first.
+
+> 🏎️ **Update 1.71 Mid-Engine (MR) & Rear-Engine (RR) Dynamics & Ballast Protocol (Ferrari F355 Berlinetta '94, De Tomaso Mangusta, Honda NSX, Air-Cooled 911s):**
+> Update 1.71's increased body roll creates a severe dual dilemma for mid- and rear-engine road cars:
+> 1. **Acceleration Rear Squat $\rightarrow$ Power Understeer**: Corner-exit throttle transfers colossal weight onto the rear tires; the front unweights and pushes wide.
+> 2. **Deceleration Nose Dive $\rightarrow$ Violent Lift-Off Snap-Oversteer**: Decelerating or trail-braking unweights the rear pendulum, causing catastrophic snap-spins.
+>
+> **The 1.71 MR/RR Taming Protocol (Fossil Fueled Ferrari F355 & Mangusta Case Study)**:
+> - **Front Ballast (-50 Position, 20–50 kg)**: *The single most effective and immediate stabilizer.* Shifting 20–50 kg ballast to the extreme front bumper (-50) pins the front tires, eliminating trailing-throttle twitchiness and calming polar inertia.
+> - **100-Point Downforce Differential**: Keep Front Downforce **~100 points lower** than Rear Downforce (e.g. Front 150 / Rear 250 on Ferrari F355; or Front 200 / Rear 300). Front downforce that is too close to rear downforce causes extreme high-speed nervousness on racing tires.
+> - **Front Frequency Softening**: Reduce Front Natural Frequency relative to Rear (e.g. `2.90 Hz Front / 3.00 Hz Rear`) to let the front dive and bite under corner exit acceleration, curing power understeer.
+> - **Zero Rear Toe (`0.00°`)**: Running rear toe-in increases corner-exit push; zero rear toe frees the rear axle to rotate smoothly out of turns.
+> - **Front Toe-Out (`Out 0.10° to 0.20°`)**: Sharpens initial turn-in while damping lift-off snap.
+> - **Inverted Camber**: Slightly flatter front camber (`-1.8°`) and steeper rear camber (`-2.2°`) to make the front axle less aggressive and twitchy.
 
 -----
 
@@ -412,6 +501,24 @@ graph TD
   4. **Live Axle Trail-Braking Calibration**:
      * Set Rear LSD Braking Sensitivity to **`40–44`** with rebound damping `44%–46%` to suppress live axle hop into apexes.
 
+### 5.D.1 — Mini-SUV Snow & Jump Dynamics (Swapped Jimny XC '18 & Anti-Kangaroo Hopping)
+* **The Kangaroo Hopping / Pogo Phenomenon ("Max Verstappen Syndrome")**:
+  - *Root Cause 1 (Shock Top-Out)*: Setting ride height near maximum (>230 mm on a 135–260 mm slider) leaves <20 mm droop stroke. Airborne extension violently hits internal top-out bump stops, kicking the chassis downward into harsh rebounds.
+  - *Root Cause 2 (Spring Recoil)*: Setting Natural Frequency >1.45 Hz on an ~875 kg ultralight chassis stores excessive elastic potential energy on landing, catapulting the vehicle straight back up.
+  - *Root Cause 3 (Expansion Slider Ceiling)*: Damper expansion spans 30%–60% (not standard 80%). Failure to clamp rebound to near-max (58%–60%) allows undamped spring recoil.
+* **The 4-Pillar Anti-Kangaroo Snow Protocol**:
+  1. **Centered Ride Height**: Set to `190–200 mm` (centered in 135–260 mm range) to give ~60 mm bump travel AND ~60 mm droop travel, eliminating both bump stop bottoming and shock top-out.
+  2. **Frequency at Slider Floor**: Clamp Natural Frequency to slider minimum (`1.30–1.35 Hz`).
+  3. **Compression at Slider Floor**: Set Compression to slider minimum (`20%`).
+  4. **Expansion at Slider Ceiling**: Set Expansion to slider maximum (`60%`).
+* **The Snow Turn-In Paradox (Curing Understeer without Bouncing)**:
+  - Symmetrical ARB (`1/1`) and heavy rear toe (`In 0.18°`) completely lock the rear axle against yaw on low-friction snow (0.86G).
+  - *Remedy*:
+    - **Asymmetric ARB (Front 1 / Rear 3–4)**: Stiffer rear transfers dynamic roll stiffness to the outside rear tire, forcing tail rotation.
+    - **Front Toe-Out (`Out 0.10°`) & Reduced Rear Toe (`In 0.04°`)**: Sharpens initial turn-in bite while unshackling the rear axle.
+    - **AWD Torque Split (`35:65`)**: Sends 65% power to the rear wheels to steer with throttle via controlled power slides.
+    - **Brake Balance (`-1 Rear`)**: Shifts deceleration rearward to rotate the chassis during trail-braking.
+
 ### 5.E — Gr.B AWD Rally Car Dynamics (Tarmac Circuit vs Dirt Jump Duality)
 * **Archetype Cars**: Subaru Impreza Rally Car '98, Ford Focus RS WRC, Peugeot 205 T16 Evolution 2, Audi Sport quattro S1 Pikes Peak, Mitsubishi Lancer Evolution Final Gr.B.
 * **The Center Differential Advantage over Gr.4**:
@@ -430,12 +537,29 @@ graph TD
   4. **Soft ARBs (`1 / 1`) & Open LSDs (`12 / 15`)**: Prevents asymmetric touchdown tank-slapper kicks.
   5. **Center Torque Split (`40:60`)**: Front wheels actively pull the nose straight on landing.
 
+### 5.F — Zero-Downforce & No-Aero Cars on Racing Tires (The High-Rake "Derpy Tune" Phenomenon)
+* **Archetype Cars**: Plymouth Superbird '70 (un-winged / stock road spec), Suzuki Jimny XC '18 (no GT Auto aero), De Tomaso Mangusta '69, Classic Muscle & Vintage Roadsters with zero downforce points.
+* **The High-Speed Float Paradox**:
+  * In GT7 Update 1.71+, equipping sticky **Racing Tires (RH / RM / RS)** to cars with zero aerodynamic downforce causes violent high-speed instability and wander above 200 km/h. Because there is no downforce to load the tire carcass down straights, tiny road crests cause the vehicle to skitter and float.
+* **The "Derpy Tune" Aerodynamic Rake Protocol (Fossil Fueled Synthesis)**:
+  1. **Extreme Positive Rake (`+20 to +30 mm` rear higher)**:
+     - Setting rear ride height significantly higher than front (e.g. Front 80 mm / Rear 105 mm on low cars, or Front 100 mm / Rear 125 mm) creates an artificial wedge that generates aerodynamic rake downforce down the floor pan, planting the rear axle at speed.
+  2. **Inverted Negative Camber**:
+     - Run **lower front camber (`-1.6° to -1.8°`)** and **higher rear camber (`-2.2° to -2.5°`)** to prevent razor-sharp front twitchiness from upsetting the un-winged rear.
+  3. **Elevated Initial Torque**:
+     - Increase LSD Initial Torque to **`8–12`** to provide initial differential resistance, damping straight-line wander.
+  4. **Controller LSD Braking Lock**:
+     - Set LSD Braking Sensitivity to **`80–100`** to prevent the rear from snapping violently during high-speed deceleration.
+
 -----
 
 ## 6. Universal Tuning Master Table (GT7 1.71+)
 
 | Vehicle Architecture / Body Style | Ride Height (F/R) | Natural Freq (F/R) | ARB (F/R) | Damping (Comp / Exp) | Camber (F/R) | Toe (F/R) | LSD (Init / Acc / Brk) | Brake Bias |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Controller Baseline Road (1.71+)** | `Min + 25mm` | `3.00 / 3.00 Hz` | `8 / 8` | `35% / 55%` | `-2.0° / -2.0°` | `0.00° / In 0.20°` | `0 / 20 / 100` | `-1` |
+| **MR 1.71 Tamed (F355 / Mangusta)** | `80 / 105 mm` | `2.90 / 3.00 Hz` | `8 / 8` | `35% / 55%` | `-1.8° / -2.2°` | `Out 0.20° / 0.00°` | `0 / 20 / 100` | `-1` |
+| **Zero-Aero High-Rake (Superbird)** | `95 / 120 mm` | `2.70 / 2.85 Hz` | `3 / 7` | `32% / 46%` | `-1.8° / -2.4°` | `Out 0.10° / In 0.12°` | `10 / 22 / 85` | `-1` |
 | **FF Hot Hatch (62:38)** | `100 / 110 mm` | `3.00 / 2.65 Hz` | `2 / 8` | `35% / 45%` | `-3.2° / -1.2°` | `Out 0.12° / In 0.05°` | `5 / 24 / 22` | `+1` |
 | **Kei Car Stock/Mild (64-130 HP)** | `100 / 105 mm` | `2.15 / 2.25 Hz` | `3 / 4` | `28% / 40%` | `-2.2° / -1.4°` | `Out 0.04° / In 0.10°` | `4 / 18 / 22` | `0` |
 | **Kei Car Swapped (300+ HP)** | `95 / 102 mm` | `2.55 / 2.65 Hz` | `4 / 6` | `32% / 48%` | `-2.8° / -1.8°` | `Out 0.06° / In 0.24°` | `6 / 26 / 60` | `-1` |
@@ -453,6 +577,7 @@ graph TD
 | **Gr.X Red Bull X2019 (46:54 MR)** | `48 / 55 mm` | `5.30 / 5.50 Hz` | `4 / 6` | `33% / 37% (Comp) 48% / 54% (Exp)` | `-3.3° / -2.0°` | `Out 0.04° / In 0.16°` | `6 / 18 / 52` | `0` |
 | **Gr.B 4WD Rally Tarmac Spec** | `90 / 98 mm` | `2.60 / 2.72 Hz` | `3 / 7` | `32% / 34% (Comp) 48% / 50% (Exp)` | `-3.2° / -1.6°` | `Out 0.08° / In 0.12°` | F:`5/14/18` R:`7/28/40` | `-1` |
 | **4WD Dirt / Off-Road Jump Spec** | `Max - 15mm` | `1.55 / 1.50 Hz` | `1 / 1` | `27% / 76-78%` | `0.0° / 0.0°` | `0.00° / In 0.18°` | F:`5/10/12` R:`5/15/15` | `0` |
+| **Jimny XC Swapped Snow/Jump (875kg)** | `190 / 200 mm` | `1.35 / 1.30 Hz` | `1 / 3` | `20% / 60%` | `0.0° / 0.0°` | `Out 0.10° / In 0.04°` | F:`5/10/10` R:`5/15/15` | `-1` |
 
 -----
 
@@ -556,6 +681,9 @@ python3 cli.py "Porsche 911 GT3 RS (991) '16" -t "Spa" --tire RM --power 650 --m
 # Generate specialized setups (modes: grip, time_attack, wet, dirt, drift, endurance)
 python3 cli.py "Toyota 86 GT '15" --power 550 --mode drift
 python3 cli.py "Mitsubishi Lancer Evolution Final '15" -t "Colorado Springs" --mode dirt
+
+# Optimize setup specifically for Gamepad / DualSense controller users (1.71+ braking lock & steering limiter guard)
+python3 cli.py "Toyota Mark II Tourer V '97" -t "Nurburgring" --tire RS --controller
 ```
 
 -----
@@ -605,6 +733,50 @@ Whenever tuning for endurance events (WTC 700 / WTC 800, Spa 1h, Sarthe 24h, Nü
 4. **Gentle LSD Acceleration Sensitivity (คุมเฟืองท้ายไม่ให้ล้อฟรีทิ้ง)**:
    * Set Rear LSD Accel to `18 – 24` to prevent power wheelspin out of slow hairpins.
 
+### 8.E — Universal Maximum Speed (Vmax) & Gearing Formulation from Possibility Specs
+
+Never estimate track top speed or transmission auto-set from straight length alone. Compute Vmax from four physical possibility variables:
+
+1. **Vehicle Power-to-Weight Tier ($P_{\text{ratio}} = \text{Power [HP]} / \text{Mass [kg]}$)**:
+   - **Tier 1: Extreme Power-to-Weight ($>0.80\text{ HP/kg}$)** *(Prototypes, Super Formula, Hypercars, Valkyrie, X2019, Swapped Kei)*:
+     - Massive acceleration gradient from 200 to 300+ km/h. Terminal velocity is drag-limited rather than distance-limited. On an 800m straight, easily attains **320–345 km/h**.
+   - **Tier 2: Purpose-Built Downforce Racecars ($0.35–0.65\text{ HP/kg}$)** *(Gr.1, Gr.2, Gr.3, LMH)*:
+     - High aerodynamic drag ($C_d A$) balances power above 260 km/h. Attains **270–300 km/h** on standard GP straights.
+   - **Tier 3: Production Sports & Gr.4 ($0.20–0.35\text{ HP/kg}$)** *(Road Cars, GT-R, M3, Supra, Gr.4)*:
+     - Lower downforce drag allows clean top-end glide, but lower power limits acceleration rate. Attains **240–275 km/h**.
+
+2. **Corner Exit Velocity Feeder Invariant ($v_{\text{exit}}$)**:
+   - **High-Speed Feeder ($v_{\text{exit}} > 180–220\text{ km/h}$)** *(e.g. Lago Maggiore T17, Spa Blanchimont, Suzuka 130R, Fuji 100R)*:
+     - The vehicle starts straight-line acceleration at over 200 km/h. Distance to terminal velocity is cut by $>50\%$. Even a short 700m straight yields speeds exceeding 315–330 km/h in Tier 1 cars.
+   - **Low-Speed Feeder ($v_{\text{exit}} < 80–100\text{ km/h}$)** *(e.g. Monza T1 chicane, Spa La Source, Suzuka Hairpin)*:
+     - Vehicle must accelerate through low gears; requires $>1,200\text{m}$ of straightaway to approach maximum drag equilibrium.
+
+3. **Topographical Gradient Factor ($\Delta z / L$)**:
+   - **Downhill Straights ($>3\text{–}6\%$ slope, e.g. Bathurst Conrod Straight, Maggiore Back Straight)**:
+     - Gravity component ($a_g = g \sin\theta$) acts as free continuous power (+30 to +60 HP equivalent). Adds **`+10 to +25 km/h`** over flat-road Vmax.
+   - **Uphill Straights ($>3\text{–}6\%$ slope, e.g. Spa Kemmel Straight, SUGO Final Straight, Red Bull Ring T1-T2)**:
+     - Gravity opposes acceleration. Subtracts **`-10 to -15 km/h`** from predicted flat Vmax; requires tightly spaced 4th–6th gears.
+
+4. **Universal Transmission Auto-Set Rule**:
+   $$\text{Auto-Set Top Speed} = V_{\max, \text{simulated}} + 15\text{ to }20\text{ km/h (Drafting / Slipstream Headroom)}$$
+   *Always ensure the 6th/top gear redline sits at least 15 km/h above solo terminal velocity to prevent hitting rev limiters during slipstream overtaking.*
+
+### 8.F — Update 1.71/1.72 Performance Point (PP) Meta Optimization & Component Exploits
+In GT7 Update 1.71 and 1.72 (Spec IV), the Performance Point (PP) algorithm heavily weights mechanical braking capability and drivetrain components. By intelligently downgrading non-essential parts, you can exploit significant PP savings to run higher engine horsepower:
+
+1. **The Racing Brakes PP Penalty Trap (Crucial Meta Hack)**:
+   - In modern GT7 physics, **Racing Brake Kits (Slotted / Carbon)** consume a massive chunk of PP (often 15 to 30 PP points!).
+   - *The Solution*: Uninstall the Racing Brake System and revert to **Normal or Sport Brakes**, but install **Racing Brake Pads (ผ้าเบรกเรซซิ่ง)**.
+   - *Impact*: In GT7 with ABS enabled, stopping distances on Normal brakes with Racing pads are virtually identical to full Racing brakes, but you instantly recover 15–30 PP to invest directly into engine output.
+2. **Remove Racing Clutch & Flywheel**:
+   - Reverting from Racing Clutch & Flywheel back to Normal or Sport saves 3–8 PP with zero perceptible penalty in manual sequential transmission shifting.
+3. **Uninstall or Disable Anti-Lag (ระบบกันแล็ก)**:
+   - Anti-lag inflates PP, yet burns colossal amounts of fuel during off-throttle coasting (severely harming stint length in endurance races like Spa 1h or Sardegna 800) for negligible lap time improvement. Always remove or turn OFF.
+4. **Asymmetric Downforce PP Slashing**:
+   - High Front Downforce drastically increases PP because the algorithm assumes higher corner-entry speed.
+   - High Rear Downforce often slightly lowers or minimally impacts PP while pinning the rear end down.
+   - Setting Front Downforce to moderate/low (`50–100`) and Rear Downforce to Maximum (`200–300`) reduces the car's overall PP rating, allowing you to run **+50 to +100 HP more power** under the exact same PP ceiling (e.g. 600 or 700 PP cap).
+
 -----
 
 ## 9. Extreme Elevation & Crest Dynamic Tuning (Bathurst, Nordschleife, Spa, SUGO)
@@ -617,6 +789,51 @@ Whenever tuning for endurance events (WTC 700 / WTC 800, Spa 1h, Sarthe 24h, Nü
 * **SUGO International Racing Course (Update 1.72 Spec)**:
   * *Profile*: 3,586m technical layout with rapid S-bend transitions, aggressive inside sausage curbs, compression dips, and a **10% uphill gradient** on the final corner onto the 704m straight.
   * *Tuning Adjustments*: Add `+3 to +5 mm` ride height buffer over flat-circuit spec, soften ARBs by `1 click` to ride inside curbs without unseating the chassis, and run `48%–54%` rear expansion damping to prevent abrupt rearward weight transfer from unloading the front tires up the 10% climb.
+
+### 9.A — Universal Circuit Layout & Topography Suspension Analysis Framework
+
+Analyze any circuit in Gran Turismo 7 using this 5-stage race engineering diagnostic framework:
+
+```mermaid
+flowchart TD
+    A["1. Rotational Bias<br>(Clockwise vs Counter-CW)"] --> B["2. Corner Velocity Spectrum<br>(Aero vs Mechanical)"]
+    B --> C["3. Elevation Dynamics<br>(Downhill Dives vs Uphill Climbs)"]
+    C --> D["4. Crests & Undulations<br>(Unweighting & Tail Float)"]
+    D --> E["5. Surface Camber & Banking<br>(Positive Bank vs Off-Camber)"]
+```
+
+1. **Rotational Direction & Asymmetric Wear Allocation**:
+   - **Clockwise Circuits (Maggiore, Suzuka, Fuji, Nürburgring GP, Catalunya, Monza)**:
+     - Majority right-hand corners $\rightarrow$ **Outside Left Tires (FL & RL)** carry 65–75% of cumulative lateral energy.
+   - **Counter-Clockwise Circuits (Interlagos, Laguna Seca, Willow Springs Big Willow, Brands Hatch Indy, Mount Panorama)**:
+     - Majority left-hand corners $\rightarrow$ **Outside Right Tires (FR & RR)** take peak punishment.
+   - *Tuning Action*: When severe wear occurs on the loaded side, apply the **Universal Asymmetric Wear Rebalancing Matrix** (Section 2.G).
+
+2. **Corner Velocity Spectrum (Aero vs Mechanical Grip Split)**:
+   - **High-Speed Sustained Aero Sweepers (>160–180 km/h, Carousels, Banked Bowls, Double-Apex Sweepers)**:
+     - Lateral load governed by Aerodynamic Downforce and Roll Stiffness Distribution (LLTD).
+     - *Tuning Action*: Soften front ARB (`2–4`) and stiffen rear ARB (`6–8`) to prevent front tire scrub; maintain front ride height travel buffer ($>10\text{ mm}$ over minimum) to prevent bump-stop bottoming under aero heave.
+   - **Low-to-Mid Speed Mechanical Sectors (<120 km/h, Hairpins, 90° Turns, Street Chicanes)**:
+     - Governed by Camber, Toe, and LSD. Run Front Toe `0.00°` and conservative LSD Accel (`18–24`) to eliminate tire-shredding wheelspin out of low-gear exits.
+
+3. **Elevation Plunges & Forward Deceleration Pitch**:
+   - Steep downhill braking zones (Maggiore T12, Laguna Seca Corkscrew, Bathurst The Esses, Spa Rivage) amplify forward load transfer by $+30\%$ to $+50\%$.
+   - *Tuning Action*: Stiffen Front Compression Damping (`31%–34%`) to catch chassis dive before bump-stop contact. Maintain positive rake (+6 to +12 mm) and limit Front Camber to `-1.6° to -2.0°` to prevent inner shoulder lockup under threshold braking.
+
+4. **Blind Crests & High-Speed Ridgelines (Tail Float Remediation)**:
+   - Undulating tracks with high-speed crests (Maggiore T5, Nordschleife Flugplatz/Schwedenkreuz, Bathurst Skyline, Spa Raidillon exit) rapidly unweight the rear chassis, inducing catastrophic trailing-throttle snap-oversteer.
+   - *Tuning Action*: Stiffen **Rear Rebound Damping (Expansion) to `52%–58%`** and increase **Rear Toe-In (`In 0.12° to 0.18°`)** to pull the chassis down over crests and anchor the rear axle.
+
+5. **Banked Surfaces vs Off-Camber Slopes**:
+   - **Positively Banked Turns (Maggiore T7 Bowl, Daytona, Autopolis, Zandvoort)**: Road angle provides natural normal force ($F_N$). Flatten static negative camber to `-1.6° to -1.8°` on loaded tires to prevent inner-shoulder gouging.
+   - **Off-Camber Turns (Nürburgring Karussell exit, Willow Springs T3/T4)**: Vehicle slides away from apex; requires compliant ARBs (`3–4`) and softer compression damping to maximize tire contact.
+
+6. **Autodrome Lago Maggiore Telemetry Benchmark (Spec IV Audit)**:
+   - *Profile*: 5,809m, 17 corners, 74m elevation change, Clockwise.
+   - *Tire Wear Hotspot*: Front-Left tire takes severe punishment across sustained right-handers (T2-3 downhill, T7 180° Banked Bowl, T15-17 Final Carousel).
+   - *Downhill Vmax Compression*: Despite moderate 800m straight lengths, high exit velocity (220+ km/h) and steep downhill gradient allow Tier 1 cars (>0.80 HP/kg) to exceed **320+ km/h**.
+     - **Auto-Set Gearing**: Set to **`335–340 km/h`** to prevent hitting 15,000 RPM rev limiters.
+     - **Bump-Stop Clearance**: Maintain minimum 50 mm Front Ride Height to accommodate ~35 mm of aerodynamic heave compression at 320 km/h.
 
 -----
 

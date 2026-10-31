@@ -32,7 +32,7 @@ def _cp_balance_efficiency(df_front: int, df_rear: int, front_weight_ratio: floa
     total_df = df_front + df_rear
     if total_df <= 0:
         return 1.0
-    target_share = max(0.32, min(0.46, 1.0 - front_weight_ratio))
+    target_share = max(0.35, min(0.48, 0.25 + 0.35 * front_weight_ratio))
     front_share = float(df_front) / float(total_df)
     imbalance = abs(front_share - target_share)
     return max(0.75, 1.0 - 0.65 * imbalance)

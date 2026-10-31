@@ -23,22 +23,24 @@ def _build_telemetry_dict(
     veh: Any,
     telem: Dict[str, Any],
     sim_pack: Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any]],
-    bias: int
+    params: Dict[str, Any]
 ) -> Dict[str, Any]:
     """Format derived physical telemetry dictionary."""
     sim, eq_proof, tire_wear, g_pred, g_prof = sim_pack
     wf_pct = f"{veh.front_weight_ratio * 100.0:.1f}% F / {veh.rear_weight_ratio * 100.0:.1f}% R"
+    lat_g = g_pred['g_240'] if g_pred else round(telem['ay_est'], 2)
+    actual_fr = round(params['natural_frequency_hz']['rear'] / max(0.1, params['natural_frequency_hz']['front']), 2)
     return {
         'mass_sprung_total_kg': telem['tot_s'],
         'mass_sprung_corner_f_kg': telem['c_f'],
         'mass_sprung_corner_r_kg': telem['c_r'],
         'weight_dist_pct': wf_pct,
         'tire_friction_mu': telem['mu'],
-        'lateral_g_capacity': round(telem['ay_est'], 2),
+        'lateral_g_capacity': lat_g,
         'target_lltd_front_pct': telem['lltd_pct'],
-        'flat_ride_frequency_ratio': telem['fr_ratio'],
+        'flat_ride_frequency_ratio': actual_fr,
         'dynamic_braking_pitch_transfer_pct': telem['pitch_transfer_pct'],
-        'brake_bias': bias,
+        'brake_bias': params['brake_bias'],
         'high_speed_simulation': sim,
         'equilibrium_proof': eq_proof,
         'tire_wear_analysis': tire_wear,
@@ -107,6 +109,22 @@ def _prepare_setup_inputs(
     return sliders, overrides
 
 
+def _resolve_profile_ranges(sliders: Dict[str, Any], params: Dict[str, Any]) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+    """Extract downforce profile ranges from sliders or baseline parameters."""
+    if sliders.get('df_front') and sliders.get('df_rear'):
+        return sliders['df_front'], sliders['df_rear']
+    df = params.get('downforce') or {}
+    if 'range_f' in df and 'range_r' in df:
+        try:
+            rf = tuple(int(x) for x in df['range_f'].split('-'))
+            rr = tuple(int(x) for x in df['range_r'].split('-'))
+            return rf, rr
+        except Exception:
+            pass
+    active_f, active_r = df.get('front', 0), df.get('rear', 0)
+    return (active_f, active_f), (active_r, active_r)
+
+
 def _solve_or_simulate_dynamics(
     req: lib.SolverRequest,
     solve_obj: Optional[str]
@@ -118,7 +136,7 @@ def _solve_or_simulate_dynamics(
     sim, eq, wear, _ = run_trail_simulations(req.veh, req.trk, req.baseline_params, req.telem, req.sliders, req.speed_kmh, req.veh.is_widebody)
     df = (req.baseline_params['downforce']['front'], req.baseline_params['downforce']['rear']) if req.baseline_params.get('downforce') else (0, 0)
     g_pred = lib.predict_g_at_downforce(req.g_model, df)
-    df_ranges = (req.sliders.get('df_front') or (0, 0), req.sliders.get('df_rear') or (0, 0))
+    df_ranges = _resolve_profile_ranges(req.sliders, req.baseline_params)
     g_prof = lib.build_df_g_profile(req.g_model, df_ranges, df)
     return req.baseline_params, sim, eq, wear, g_pred, g_prof
 
@@ -159,7 +177,9 @@ def build_setup(
         params = lib.apply_closed_loop_trim(params, stability, symptoms, veh.drivetrain, veh.group)
 
     sim_spd = float(speed_kmh) if speed_kmh is not None else (240.0 if veh.is_racecar else 200.0)
-    g_cfg = lib.GForceCalibrationInput(g_forces, g_ref_df, telem['mu'], veh.front_weight_ratio, veh.mass_kg)
+    base_df = (params['downforce']['front'], params['downforce']['rear']) if params.get('downforce') else (0, 0)
+    calib_ref_df = g_ref_df or base_df
+    g_cfg = lib.GForceCalibrationInput(g_forces, calib_ref_df, telem['mu'], veh.front_weight_ratio, veh.mass_kg)
     solver_req = lib.SolverRequest(veh, trk, params, telem, sliders, lib.calibrate_g_model(g_cfg), solve_objective or 'balanced', (), sim_spd)
     params, sim, eq, wear, g_pred, g_prof = _solve_or_simulate_dynamics(solver_req, solve_objective)
 
@@ -167,5 +187,5 @@ def build_setup(
         veh, trk, tire, params, telem, sim, eq, sim_spd, stability, symptoms, is_widebody, is_controller
     )
     params['quick_trims'] = lib.build_quick_trims(params, drivetrain=veh.drivetrain, is_endurance=trk.is_endurance)
-    telem_dict = _build_telemetry_dict(veh, telem, (sim, eq, wear, g_pred, g_prof), params['brake_bias'])
+    telem_dict = _build_telemetry_dict(veh, telem, (sim, eq, wear, g_pred, g_prof), params)
     return _assemble_final_result(out_car, (track, tire, mode), telem_dict, params)

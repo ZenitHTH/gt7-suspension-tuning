@@ -62,7 +62,7 @@ def _add_options_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument('--controller', action='store_true', help="Optimize setup for Gamepad/DualSense controller users")
     parser.add_argument('--g-forces', type=float, nargs=3, metavar=('G60', 'G120', 'G240'))
     parser.add_argument('--g-ref-df', type=int, nargs=2, metavar=('FRONT', 'REAR'))
-    parser.add_argument('--solve', choices=['balanced', 'max_grip', 'min_tire_wear'])
+    parser.add_argument('--solve', nargs='?', const='balanced', choices=['balanced', 'max_grip', 'min_tire_wear'])
     parser.add_argument('--json', action='store_true')
 
 

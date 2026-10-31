@@ -99,5 +99,70 @@ class TestLibModules(unittest.TestCase):
         spd = calculate_top_speed(300.0, 200.0)
         self.assertGreaterEqual(spd, 230)
 
+    def test_calculate_top_speed_power_to_weight_tiers(self):
+        # Tier 1: Extreme Power-to-Weight (X2019 / Hypercar)
+        spd_tier1 = calculate_top_speed(power=816.0, ptw=1255.0, longest_straight_m=800.0, elevation_diff_m=74.0)
+        self.assertEqual(spd_tier1, 340)
+
+        # Tier 2: Gr.3 / Downforce racecar
+        spd_tier2 = calculate_top_speed(power=500.0, ptw=384.0, longest_straight_m=800.0, elevation_diff_m=74.0)
+        self.assertEqual(spd_tier2, 290)
+
+    def test_universal_tire_wear_rebalancing_symptoms(self):
+        from lib.trims import apply_closed_loop_trim
+        params = {
+            'anti_roll_bar': {'front': 4, 'rear': 6},
+            'downforce': {'front': 980, 'rear': 1420},
+            'camber_deg': {'front': -2.2, 'rear': -1.2},
+            'toe_angle': {'front': 'Out 0.04', 'rear': 'In 0.12'},
+            'damping_compression_pct': {'front': 32, 'rear': 36},
+            'damping_expansion_pct': {'front': 47, 'rear': 54},
+            'ride_height_mm': {'front': 50, 'rear': 57},
+            'brake_bias': -1,
+            'lsd_rear': {'init': 5, 'accel': 16, 'brake': 48}
+        }
+        res = apply_closed_loop_trim(parameters=params, symptoms=['front_tire_wear'], drivetrain='MR')
+        self.assertLess(res['anti_roll_bar']['front'], 4)
+        self.assertGreater(res['anti_roll_bar']['rear'], 6)
+        self.assertEqual(res['toe_angle']['front'], '0.00')
+        self.assertLess(res['downforce']['front'], 980)
+        self.assertGreater(res['camber_deg']['front'], -2.2) # Flattened (-1.7)
+        self.assertEqual(res['brake_bias'], -2)
+
+    def test_asymmetric_slider_floor_rear_squat_buffer(self):
+        # Asymmetric slider floors (e.g. Sierra RS: 100-200 Front / 120-220 Rear)
+        # must guarantee rear travel buffer of h_min_r + margin + widebody
+        rh_f, rh_r = calculate_ride_height(
+            height_front_range=(100, 200),
+            height_rear_range=(120, 220),
+            wf=0.56,
+            is_widebody=True
+        )
+        self.assertEqual(rh_f, 115)
+        self.assertEqual(rh_r, 135)
+        self.assertGreaterEqual(rh_r - 120, 15)
+
+    def test_endurance_downforce_safety_clamp_and_precedence(self):
+        # Front-heavy FR car (wf=0.56) in endurance mode with 50-200 / 100-250
+        df = calculate_aerodynamics(
+            df_front_range=(50, 200),
+            df_rear_range=(100, 250),
+            wf=0.56,
+            is_endurance=True
+        )
+        self.assertEqual(df['front'], 118)
+        self.assertEqual(df['rear'], 190)
+        self.assertLessEqual(df['front'], df['rear'])
+
+        # Constrained rear spoiler (50-200 / 50-100): front must clamp to rear
+        df_constrained = calculate_aerodynamics(
+            df_front_range=(50, 200),
+            df_rear_range=(50, 100),
+            wf=0.56,
+            is_endurance=True
+        )
+        self.assertEqual(df_constrained['rear'], 80)
+        self.assertEqual(df_constrained['front'], 80) # Clamped from 118 to 80!
+
 if __name__ == '__main__':
     unittest.main()

@@ -15156,7 +15156,33 @@
         "target_id": "3467",
         "target_car": "Honda Civic Type R Limited Edition (FK8) '20"
       }
-    ]
+    ],
+    "slider_ranges": {
+      "height_front": [
+        40,
+        60
+      ],
+      "height_rear": [
+        50,
+        70
+      ],
+      "fn_front": [
+        3.0,
+        5.0
+      ],
+      "fn_rear": [
+        3.0,
+        5.0
+      ],
+      "df_front": [
+        650,
+        750
+      ],
+      "df_rear": [
+        800,
+        1000
+      ]
+    }
   },
   {
     "id": "3349",
@@ -16296,7 +16322,33 @@
       "W": 918.47
     },
     "swaps_available": [],
-    "is_donor_for": []
+    "is_donor_for": [],
+    "slider_ranges": {
+      "df_front": [
+        800,
+        1200
+      ],
+      "df_rear": [
+        1200,
+        1600
+      ],
+      "height_front": [
+        45,
+        50
+      ],
+      "height_rear": [
+        50,
+        60
+      ],
+      "fn_front": [
+        4.0,
+        6.0
+      ],
+      "fn_rear": [
+        4.0,
+        6.0
+      ]
+    }
   },
   {
     "id": "3375",
@@ -22519,7 +22571,33 @@
       "W": 885.79
     },
     "swaps_available": [],
-    "is_donor_for": []
+    "is_donor_for": [],
+    "slider_ranges": {
+      "height_front": [
+        25,
+        40
+      ],
+      "height_rear": [
+        50,
+        90
+      ],
+      "fn_front": [
+        4.0,
+        6.0
+      ],
+      "fn_rear": [
+        4.0,
+        6.0
+      ],
+      "df_front": [
+        1200,
+        1500
+      ],
+      "df_rear": [
+        1600,
+        2000
+      ]
+    }
   },
   {
     "id": "3529",
@@ -22565,7 +22643,33 @@
       "W": 885.79
     },
     "swaps_available": [],
-    "is_donor_for": []
+    "is_donor_for": [],
+    "slider_ranges": {
+      "height_front": [
+        25,
+        40
+      ],
+      "height_rear": [
+        50,
+        90
+      ],
+      "fn_front": [
+        4.0,
+        6.0
+      ],
+      "fn_rear": [
+        4.0,
+        6.0
+      ],
+      "df_front": [
+        1200,
+        1500
+      ],
+      "df_rear": [
+        1600,
+        2000
+      ]
+    }
   },
   {
     "id": "3531",
@@ -23966,7 +24070,25 @@
         "donor_car": "Suzuki Swift Sport '17"
       }
     ],
-    "is_donor_for": []
+    "is_donor_for": [],
+    "slider_ranges": {
+      "height_front": [
+        135,
+        260
+      ],
+      "height_rear": [
+        135,
+        260
+      ],
+      "damping_comp": [
+        20,
+        40
+      ],
+      "damping_exp": [
+        30,
+        60
+      ]
+    }
   },
   {
     "id": "1541",

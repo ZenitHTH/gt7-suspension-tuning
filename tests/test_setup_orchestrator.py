@@ -30,5 +30,23 @@ class TestSetupOrchestrator(unittest.TestCase):
         self.assertIn('tire_wear_analysis', res['telemetry'])
         self.assertIn('trail_braking_feasible', res['telemetry']['equilibrium_proof'])
 
+    def test_controller_setup_and_171_meta(self):
+        car = get_car("Toyota Mark II") or {'name': 'Mark II Tourer V', 'mass_kg': 1146, 'drivetrain': 'FR', 'power_hp': 746, 'torque_nm': 788}
+        res = setup.build_setup(car, tire='RS', is_controller=True, mode='endurance')
+        params = res['parameters']
+        self.assertGreaterEqual(params['lsd_rear']['brake'], 80)
+        sheet = cli.format_setup_sheet(res)
+        self.assertIn("Controller / DualSense Setup", sheet)
+        self.assertIn("PP Optimization Meta", sheet)
+
+    def test_no_aero_rake_setup(self):
+        car = {'name': 'Plymouth Superbird', 'mass_kg': 1600, 'drivetrain': 'FR', 'power_hp': 500, 'torque_nm': 600}
+        res = setup.build_setup(car, tire='RS', df_front_range=(0, 0), df_rear_range=(0, 0))
+        rh = res['parameters']['ride_height_mm']
+        rake = rh['rear'] - rh['front']
+        self.assertGreaterEqual(rake, 18)
+        sheet = cli.format_setup_sheet(res)
+        self.assertIn("No-Aero High Rake", sheet)
+
 if __name__ == '__main__':
     unittest.main()

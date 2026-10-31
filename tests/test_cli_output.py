@@ -33,5 +33,27 @@ class TestCLIOutput(unittest.TestCase):
         self.assertIn("Max DF", sheet)
         self.assertFalse(res['telemetry']['high_speed_simulation']['bottoming_or_fender_hit'])
 
+    def test_omitted_g_ref_df_anchors_to_baseline_and_syncs_lateral_g(self):
+        car = {
+            'id': '3466', 'name': "Ford Sierra RS 500 Cosworth '87",
+            'drivetrain': 'FR', 'mass_kg': 989, 'power_hp': 359, 'torque_nm': 368.9,
+            'balance': {'front_pct': 56, 'rear_pct': 44}
+        }
+        res = build_setup(
+            car=car, tire='RM', df_front_range=(50, 200), df_rear_range=(100, 250),
+            g_forces=(1.46, 1.59, 1.75)
+        )
+        # Should anchor at baseline downforce without double-counting G
+        dyn = res['telemetry']['dynamic_g_force']
+        self.assertAlmostEqual(dyn['g_240'], 1.75, places=2)
+        self.assertAlmostEqual(res['telemetry']['lateral_g_capacity'], 1.75, places=2)
+
+    def test_wingless_car_sheet_avoids_redundant_min_max_comparison(self):
+        car = {'name': 'Civic Type R', 'mass_kg': 1050, 'drivetrain': 'FF', 'power_hp': 185, 'torque_nm': 160}
+        res = build_setup(car, tire='SS', df_front_range=(0, 0), df_rear_range=(0, 0), solve_objective='balanced')
+        sheet = format_setup_sheet(res)
+        self.assertIn("DF 0/0", sheet)
+        self.assertNotIn("Min DF (0/0)", sheet)
+
 if __name__ == '__main__':
     unittest.main()

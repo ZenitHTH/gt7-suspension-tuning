@@ -18,7 +18,7 @@ SLIDER_BOUNDS: Dict[str, Tuple[int, int]] = {
     'damping_expansion': (30, 80),
     'lsd_initial_torque': (4, 30),
     'lsd_accel_sensitivity': (5, 65),
-    'lsd_braking_sensitivity': (5, 65),
+    'lsd_braking_sensitivity': (5, 100),
     'brake_bias_ff': (0, 5),
     'brake_bias_default': (-5, 5),
 }

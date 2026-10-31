@@ -28,10 +28,16 @@ def _format_dynamic_g_lines(telem: Dict[str, Any]) -> List[str]:
         return []
     df = dyn_g['downforce']
     min_a, max_a = prof['min_aero'], prof['max_aero']
-    return [
-        f"• แรงเหวี่ยง G ตามแรงกดแอร์โร (Dynamic G @ DF {df['front']}/{df['rear']}): 60 km/h = {dyn_g['g_60']:.2f}G | 120 km/h = {dyn_g['g_120']:.2f}G | 240 km/h = {dyn_g['g_240']:.2f}G",
-        f"  ↳ เทียบสเกลแรงกด (240 km/h G vs Aero): Min DF ({min_a['downforce']['front']}/{min_a['downforce']['rear']}) = {min_a['g_240']:.2f}G | Setup DF ({df['front']}/{df['rear']}) = {dyn_g['g_240']:.2f}G | Max DF ({max_a['downforce']['front']}/{max_a['downforce']['rear']}) = {max_a['g_240']:.2f}G"
+    min_f, min_r = min_a['downforce']['front'], min_a['downforce']['rear']
+    max_f, max_r = max_a['downforce']['front'], max_a['downforce']['rear']
+    lines = [
+        f"• แรงเหวี่ยง G ตามแรงกดแอร์โร (Dynamic G @ DF {df['front']}/{df['rear']}): 60 km/h = {dyn_g['g_60']:.2f}G | 120 km/h = {dyn_g['g_120']:.2f}G | 240 km/h = {dyn_g['g_240']:.2f}G"
     ]
+    if (min_f, min_r) != (max_f, max_r) and (max_f > 0 or max_r > 0):
+        lines.append(
+            f"  ↳ เทียบสเกลแรงกด (240 km/h G vs Aero): Min DF ({min_f}/{min_r}) = {min_a['g_240']:.2f}G | Setup DF ({df['front']}/{df['rear']}) = {dyn_g['g_240']:.2f}G | Max DF ({max_f}/{max_r}) = {max_a['g_240']:.2f}G"
+        )
+    return lines
 
 
 def _format_telemetry(telem: Dict[str, Any]) -> List[str]:

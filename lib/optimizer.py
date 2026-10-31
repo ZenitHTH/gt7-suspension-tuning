@@ -8,7 +8,7 @@ under aerodynamic load and high-speed trail braking constraints.
 from dataclasses import dataclass
 import copy
 import math
-from typing import Dict, Tuple, Any, Optional
+from typing import Dict, Tuple, Any
 
 from lib.calibrator import GForceModel, predict_g_at_downforce, build_df_g_profile
 from lib.equilibrium import simulate_high_speed_trail_braking, solve_suspension_equilibrium
@@ -39,17 +39,26 @@ class SolverResult:
     objective_score: float
 
 
+def _resolve_df_ranges(sliders: Dict[str, Any], df: Dict[str, Any]) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+    """Extract downforce min/max boundaries from sliders or baseline parameters."""
+    if sliders.get('df_front') and sliders.get('df_rear'):
+        return sliders['df_front'], sliders['df_rear']
+    if 'range_f' in df and 'range_r' in df:
+        return tuple(int(x) for x in df['range_f'].split('-')), tuple(int(x) for x in df['range_r'].split('-'))
+    f, r = df.get('front', 0), df.get('rear', 0)
+    return (f, f), (r, r)
+
+
 def _optimize_downforce(req: SolverRequest, params: Dict[str, Any]) -> None:
     """Optimize aerodynamic downforce levels according to objective targets."""
     if 'downforce' in req.locked_params or not params.get('downforce'):
         return
-    if not req.sliders.get('df_front') or not req.sliders.get('df_rear'):
+    (min_f, max_f), (min_r, max_r) = _resolve_df_ranges(req.sliders, params['downforce'])
+    if (max_f - min_f) <= 0 and (max_r - min_r) <= 0:
         return
-    min_f, max_f = req.sliders['df_front']
-    min_r, max_r = req.sliders['df_rear']
     span = 0.90 if req.objective == 'max_grip' else (0.40 if req.objective == 'min_tire_wear' else 0.65)
     df_r = int(min_r + span * (max_r - min_r))
-    f_share = max(0.32, min(0.46, 1.0 - req.veh.front_weight_ratio))
+    f_share = max(0.35, min(0.48, 0.25 + 0.35 * req.veh.front_weight_ratio))
     df_f = int((f_share / max(0.01, 1.0 - f_share)) * df_r)
     params['downforce']['front'] = max(min_f, min(max_f, df_f))
     params['downforce']['rear'] = max(min_r, min(max_r, df_r))
@@ -71,24 +80,26 @@ def _optimize_frequencies(req: SolverRequest, params: Dict[str, Any]) -> None:
 
 def _optimize_camber(req: SolverRequest, params: Dict[str, Any]) -> None:
     """Tune negative camber to balance cornering bite against tire abrasion."""
-    if 'camber_deg' in req.locked_params:
+    if 'camber_deg' in req.locked_params or req.trk.is_dirt or req.trk.is_wet:
         return
-    if req.objective == 'min_tire_wear':
-        params['camber_deg']['front'] = -2.0
-        params['camber_deg']['rear'] = -1.0
-    elif req.objective == 'max_grip':
-        params['camber_deg']['front'] = -2.8
-        params['camber_deg']['rear'] = -1.5
+    delta_f = 0.4 if req.objective == 'max_grip' else (-0.4 if req.objective == 'min_tire_wear' else 0.0)
+    delta_r = 0.2 if req.objective == 'max_grip' else (-0.2 if req.objective == 'min_tire_wear' else 0.0)
+    params['camber_deg']['front'] = round(min(-1.4, params['camber_deg']['front'] - delta_f), 1)
+    params['camber_deg']['rear'] = round(min(-0.8, params['camber_deg']['rear'] - delta_r), 1)
 
 
 def _resolve_height_bounds(req: SolverRequest) -> Tuple[int, int, int, int]:
-    """Extract physical ride height boundaries from vehicle sliders."""
-    s = req.sliders
-    min_f = s['height_front'][0] if s.get('height_front') else (s['height_range'][0] if s.get('height_range') else 90)
-    max_f = s['height_front'][1] if s.get('height_front') else (s['height_range'][1] if s.get('height_range') else 160)
-    min_r = s['height_rear'][0] if s.get('height_rear') else (s['height_range'][0] if s.get('height_range') else 90)
-    max_r = s['height_rear'][1] if s.get('height_rear') else (s['height_range'][1] if s.get('height_range') else 160)
-    return min_f, max_f, min_r, max_r
+    """Extract physical ride height boundaries from vehicle sliders or archetype."""
+    s, v = req.sliders, req.veh
+    grp = getattr(v, 'group', 'Road Car')
+    if getattr(v, 'is_racecar', False) or grp in ['Gr.1', 'Gr.2', 'Gr.3', 'Gr.4', 'Gr.X']:
+        b = 50 if grp in ['Gr.1', 'Gr.X'] else (55 if grp in ['Gr.2', 'Gr.3'] else 70)
+        d_min, d_max = (b, b), (b + 40, b + 45)
+    else:
+        d_min, d_max = ((55, 55), (100, 105)) if getattr(v, 'is_ultralight', False) else ((90, 90), (160, 160))
+    hf = s.get('height_front') or s.get('height_range') or (d_min[0], d_max[0])
+    hr = s.get('height_rear') or s.get('height_range') or (d_min[1], d_max[1])
+    return hf[0], hf[1], hr[0], hr[1]
 
 
 def _simulate_trail(req: SolverRequest, params: Dict[str, Any], min_rh_f: int) -> Dict[str, Any]:
@@ -106,11 +117,16 @@ def _simulate_trail(req: SolverRequest, params: Dict[str, Any], min_rh_f: int) -
     )
 
 
-def _step_ride_heights(params: Dict[str, Any], sim: Dict[str, Any], bounds: Tuple[int, int, int, int]) -> None:
-    """Step ride heights upward to relieve bump stop collision and stroke deficit."""
+def _step_ride_heights(
+    params: Dict[str, Any],
+    sim: Dict[str, Any],
+    limits_and_rake: Tuple[int, int, int]
+) -> None:
+    """Step ride heights upward to relieve bump stop collision while preserving target rake."""
+    max_f, max_r, rake_delta = limits_and_rake
     bump = math.ceil(max(12.0 - sim['dynamic_outside_front_clearance_mm'], 2.0))
-    params['ride_height_mm']['front'] = min(bounds[1], params['ride_height_mm']['front'] + bump)
-    params['ride_height_mm']['rear'] = min(bounds[3], max(params['ride_height_mm']['front'] + 8, params['ride_height_mm']['rear']))
+    params['ride_height_mm']['front'] = min(max_f, params['ride_height_mm']['front'] + bump)
+    params['ride_height_mm']['rear'] = min(max_r, max(params['ride_height_mm']['front'] + rake_delta, params['ride_height_mm']['rear']))
 
 
 def _optimize_ride_heights(req: SolverRequest, params: Dict[str, Any], bounds: Tuple[int, int, int, int]) -> Dict[str, Any]:
@@ -118,13 +134,16 @@ def _optimize_ride_heights(req: SolverRequest, params: Dict[str, Any], bounds: T
     sim = _simulate_trail(req, params, bounds[0])
     if 'ride_height_mm' in req.locked_params:
         return sim
+    wf = req.veh.front_weight_ratio
+    rake_delta = 22 if req.telem.get('is_no_aero') else max(6, min(12, round(7.0 + 15.0 * max(0.0, wf - 0.50))))
     for _ in range(25):
         if not sim['bottoming_or_fender_hit'] and sim['dynamic_outside_front_clearance_mm'] >= 10.0:
             break
-        _step_ride_heights(params, sim, bounds)
+        _step_ride_heights(params, sim, (bounds[1], bounds[3], rake_delta))
         sim = _simulate_trail(req, params, bounds[0])
     if params['ride_height_mm']['rear'] <= params['ride_height_mm']['front']:
-        params['ride_height_mm']['rear'] = min(bounds[3], params['ride_height_mm']['front'] + 8)
+        params['ride_height_mm']['rear'] = min(bounds[3], params['ride_height_mm']['front'] + rake_delta)
+        sim = _simulate_trail(req, params, bounds[0])
     return sim
 
 
@@ -132,14 +151,15 @@ def _solve_eq(req: SolverRequest, params: Dict[str, Any]) -> Dict[str, Any]:
     """Compute suspension equilibrium proof for optimal parameters."""
     df_f = params['downforce']['front'] if params.get('downforce') else 0
     df_r = params['downforce']['rear'] if params.get('downforce') else 0
+    s = req.sliders
     return solve_suspension_equilibrium(
         mass_kg=req.veh.mass_kg, front_ratio=req.veh.front_weight_ratio, power_hp=req.veh.power_hp,
         torque_nm=req.veh.torque_nm, drivetrain=req.veh.drivetrain, hcg_m=req.veh.hcg_m,
         wheelbase_m=req.veh.wheelbase_m, track_width_m=req.veh.track_width_m, mu=req.telem['mu'],
         fn_f=params['natural_frequency_hz']['front'], fn_r=params['natural_frequency_hz']['rear'],
         arb_f=params['anti_roll_bar']['front'], arb_r=params['anti_roll_bar']['rear'],
-        df_f=df_f, df_r=df_r, height_range=req.sliders.get('height_range'),
-        height_front_range=req.sliders.get('height_front'), height_rear_range=req.sliders.get('height_rear'),
+        df_f=df_f, df_r=df_r, height_range=s.get('height_range'),
+        height_front_range=s.get('height_front'), height_rear_range=s.get('height_rear'),
         speed_kmh=req.speed_kmh, is_widebody=req.veh.is_widebody, group=req.veh.group,
         body_style=req.veh.body_style, bumpiness=req.trk.bumpiness, is_dirt=req.trk.is_dirt
     )
@@ -157,11 +177,8 @@ def _eval_wear(req: SolverRequest, params: Dict[str, Any]) -> Dict[str, Any]:
 
 def _calculate_score(objective: str, g_240: float, front_wear: float) -> float:
     """Evaluate scalar objective score for optimal setup comparison."""
-    if objective == 'max_grip':
-        return round(g_240, 3)
-    if objective == 'min_tire_wear':
-        return round(-front_wear, 3)
-    return round(g_240 - 0.25 * front_wear, 3)
+    weights = {'max_grip': g_240, 'min_tire_wear': -front_wear}
+    return round(weights.get(objective, g_240 - 0.25 * front_wear), 3)
 
 
 def solve_optimal_setup(request: SolverRequest) -> SolverResult:
@@ -175,7 +192,7 @@ def solve_optimal_setup(request: SolverRequest) -> SolverResult:
     eq, tw = _solve_eq(request, params), _eval_wear(request, params)
     active_df = (params['downforce']['front'], params['downforce']['rear']) if params.get('downforce') else (0, 0)
     g_pred = predict_g_at_downforce(request.g_model, active_df)
-    df_ranges = (request.sliders.get('df_front') or (0, 0), request.sliders.get('df_rear') or (0, 0))
+    df_ranges = _resolve_df_ranges(request.sliders, params.get('downforce') or {})
     df_profile = build_df_g_profile(request.g_model, df_ranges, active_df)
     score = _calculate_score(request.objective, g_pred['g_240'], tw['front_wear_factor'])
     return SolverResult(params, g_pred, df_profile, sim, eq, tw, score)

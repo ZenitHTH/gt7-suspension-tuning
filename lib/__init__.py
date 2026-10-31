@@ -42,3 +42,8 @@ from lib.calibrator import (
     predict_g_at_downforce,
     build_df_g_profile
 )
+from lib.optimizer import (
+    SolverRequest,
+    SolverResult,
+    solve_optimal_setup
+)

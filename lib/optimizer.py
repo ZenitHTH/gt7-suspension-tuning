@@ -128,11 +128,11 @@ def _optimize_ride_heights(req: SolverRequest, params: Dict[str, Any], bounds: T
     return sim
 
 
-def _run_proofs_and_wear(req: SolverRequest, params: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    """Compute equilibrium verification proof and tire wear index."""
+def _solve_eq(req: SolverRequest, params: Dict[str, Any]) -> Dict[str, Any]:
+    """Compute suspension equilibrium proof for optimal parameters."""
     df_f = params['downforce']['front'] if params.get('downforce') else 0
     df_r = params['downforce']['rear'] if params.get('downforce') else 0
-    eq = solve_suspension_equilibrium(
+    return solve_suspension_equilibrium(
         mass_kg=req.veh.mass_kg, front_ratio=req.veh.front_weight_ratio, power_hp=req.veh.power_hp,
         torque_nm=req.veh.torque_nm, drivetrain=req.veh.drivetrain, hcg_m=req.veh.hcg_m,
         wheelbase_m=req.veh.wheelbase_m, track_width_m=req.veh.track_width_m, mu=req.telem['mu'],
@@ -143,13 +143,16 @@ def _run_proofs_and_wear(req: SolverRequest, params: Dict[str, Any]) -> Tuple[Di
         speed_kmh=req.speed_kmh, is_widebody=req.veh.is_widebody, group=req.veh.group,
         body_style=req.veh.body_style, bumpiness=req.trk.bumpiness, is_dirt=req.trk.is_dirt
     )
-    tw = calculate_tire_wear_index(
+
+
+def _eval_wear(req: SolverRequest, params: Dict[str, Any]) -> Dict[str, Any]:
+    """Calculate tire wear index for optimal setup."""
+    return calculate_tire_wear_index(
         fn_hz_f=params['natural_frequency_hz']['front'], fn_hz_r=params['natural_frequency_hz']['rear'],
         camber_f=params['camber_deg']['front'], camber_r=params['camber_deg']['rear'],
         toe_f=params['toe_angle']['front'], toe_r=params['toe_angle']['rear'],
         ptw=req.veh.power_to_weight, is_endurance=req.trk.is_endurance
     )
-    return eq, tw
 
 
 def _calculate_score(objective: str, g_240: float, front_wear: float) -> float:
@@ -169,7 +172,7 @@ def solve_optimal_setup(request: SolverRequest) -> SolverResult:
     _optimize_camber(request, params)
     bounds = _resolve_height_bounds(request)
     sim = _optimize_ride_heights(request, params, bounds)
-    eq, tw = _run_proofs_and_wear(request, params)
+    eq, tw = _solve_eq(request, params), _eval_wear(request, params)
     active_df = (params['downforce']['front'], params['downforce']['rear']) if params.get('downforce') else (0, 0)
     g_pred = predict_g_at_downforce(request.g_model, active_df)
     df_ranges = (request.sliders.get('df_front') or (0, 0), request.sliders.get('df_rear') or (0, 0))

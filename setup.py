@@ -177,7 +177,7 @@ def build_setup(
     base_df = (params['downforce']['front'], params['downforce']['rear']) if params.get('downforce') else (0, 0)
     calib_ref_df = g_ref_df or base_df
     if stability or symptoms:
-        params = lib.apply_closed_loop_trim(params, stability, symptoms, veh.drivetrain, veh.group)
+        params = lib.apply_closed_loop_trim(params, stability, symptoms, veh.drivetrain, veh.group, is_controller=is_controller)
 
     g_cfg = lib.GForceCalibrationInput(g_forces, calib_ref_df, telem['mu'], veh.front_weight_ratio, veh.mass_kg)
     solver_req = lib.SolverRequest(veh, trk, params, telem, sliders, lib.calibrate_g_model(g_cfg), solve_objective or 'balanced', (), sim_spd)

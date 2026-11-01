@@ -46,3 +46,29 @@ class TestBenchmarkValidation(unittest.TestCase):
         res = build_setup(car=car, track=track, tire='SM')
         bias = res['parameters']['brake_bias']
         self.assertLessEqual(bias, 0)
+
+    def test_mr_awd_and_controller_closed_loop_trim_safety_clamps(self):
+        alpine = get_car("Alpine A110")
+        track_alsace = get_track("Alsace")
+        alpine_setup = build_setup(car=alpine, track=track_alsace, tire='SM', symptoms=['entry_push', 'entry_push'])
+        self.assertLessEqual(alpine_setup['parameters']['brake_bias'], 0)
+
+        g70 = get_car("Genesis G70")
+        track_rbr = get_track("Red Bull Ring")
+        g70_setup = build_setup(car=g70, track=track_rbr, tire='RM', symptoms=['entry_push', 'entry_push'])
+        self.assertLessEqual(g70_setup['parameters']['brake_bias'], 0)
+
+        mustang = get_car("Ford Mustang Gr.3")
+        pad_setup = build_setup(car=mustang, track=track_rbr, tire='RM', is_controller=True, symptoms=['entry_push'])
+        self.assertLessEqual(pad_setup['parameters']['brake_bias'], 1)
+
+    def test_controller_notes_no_conflicting_lsd_recommendation(self):
+        car = get_car("Ford Mustang Mach 1")
+        track = get_track("Alsace")
+        pad_setup = build_setup(car=car, track=track, tire='CS', is_controller=True)
+        pad_notes = pad_setup['parameters']['endurance_notes']
+        self.assertFalse(any("[Anti-Understeer]" in n and "22-26" in n for n in pad_notes))
+
+        wheel_setup = build_setup(car=car, track=track, tire='CS', is_controller=False)
+        wheel_notes = wheel_setup['parameters']['endurance_notes']
+        self.assertTrue(any("[Anti-Understeer]" in n and "22-26" in n for n in wheel_notes))

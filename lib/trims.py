@@ -26,8 +26,9 @@ def _apply_stability_trims(
         p['anti_roll_bar']['rear'] = min(10, p['anti_roll_bar']['rear'] + 1)
         for lsd in [p[k] for k in ('lsd_rear', 'lsd_front') if k in p and isinstance(p[k], dict)]:
             lsd['brake'] = max(5, lsd['brake'] - 4)
-        if drivetrain != 'FF':
-            p['brake_bias'] = min(5, p['brake_bias'] + 1)
+        if drivetrain == 'FR':
+            max_shift = 1 if p.get('is_controller') else 5
+            p['brake_bias'] = min(max_shift, p['brake_bias'] + 1)
     if high_s is not None and high_s >= 0.20:
         p['damping_expansion_pct']['rear'] = min(80, p['damping_expansion_pct']['rear'] + 4)
         for lsd in [p[k] for k in ('lsd_rear', 'lsd_front') if k in p and isinstance(p[k], dict)]:
@@ -43,8 +44,9 @@ def _apply_corner_symptom(p: Dict[str, Any], s: str, drivetrain: str) -> None:
         for lsd in [p[k] for k in ('lsd_rear', 'lsd_front') if k in p and isinstance(p[k], dict)]:
             lsd['brake'] = max(5, lsd['brake'] - 4)
         p['ride_height_mm']['rear'] += 3
-        if drivetrain != 'FF':
-            p['brake_bias'] = min(5, p['brake_bias'] + 1)
+        if drivetrain == 'FR':
+            max_shift = 1 if p.get('is_controller') else 5
+            p['brake_bias'] = min(max_shift, p['brake_bias'] + 1)
     elif s == 'exit_snap':
         for lsd in [p[k] for k in ('lsd_rear', 'lsd_front') if k in p and isinstance(p[k], dict)]:
             lsd['accel'] = max(5, lsd['accel'] - 4)
@@ -139,30 +141,41 @@ def _clamp_drivetrain_and_brakes(p: Dict[str, Any], drivetrain: str, group: str)
         lsd['accel'] = max(SLIDER_BOUNDS['lsd_accel_sensitivity'][0], min(SLIDER_BOUNDS['lsd_accel_sensitivity'][1], lsd['accel']))
         lsd['brake'] = max(SLIDER_BOUNDS['lsd_braking_sensitivity'][0], min(SLIDER_BOUNDS['lsd_braking_sensitivity'][1], lsd['brake']))
 
-    bb_bounds = SLIDER_BOUNDS['brake_bias_ff'] if drivetrain == 'FF' else SLIDER_BOUNDS['brake_bias_default']
-    p['brake_bias'] = max(bb_bounds[0], min(bb_bounds[1], p['brake_bias']))
+    is_ctrl = p.get('is_controller', False)
+    if drivetrain in ['FF', 'MR', 'RR', 'AWD', '4WD', '4x4']:
+        max_bb = 0
+    elif is_ctrl:
+        max_bb = 1
+    else:
+        max_bb = 5
+    p['brake_bias'] = max(-5, min(max_bb, p['brake_bias']))
     _clamp_ride_height_range(p)
 
-    if group == 'Gr.4' and drivetrain in ['AWD', '4WD']:
+    if group == 'Gr.4' and drivetrain in ['AWD', '4WD', '4x4']:
         p['awd_torque_split'] = 'Fixed (Homologation / ปรับไม่ได้ใน Gr.4)'
 
 
-def apply_closed_loop_trim(
-    parameters: Dict[str, Any],
-    stability: Optional[Tuple[float, float]] = None,
-    symptoms: Optional[List[str]] = None,
-    drivetrain: str = 'FR',
-    group: str = 'Road Car'
-) -> Dict[str, Any]:
-    """Apply closed-loop trim adjustments to suspension and chassis parameters."""
-    p = parameters
-    if stability:
-        _apply_stability_trims(p, stability, drivetrain)
+def _apply_symptoms_list(p: Dict[str, Any], symptoms: Optional[List[str]], drivetrain: str) -> None:
+    """Iterate and apply handling, bump, and wear symptoms."""
     for sym in (symptoms or []):
         s = sym.lower()
         _apply_corner_symptom(p, s, drivetrain)
         _apply_bump_symptom(p, s)
         _apply_tire_wear_symptom(p, s, drivetrain)
+
+
+def apply_closed_loop_trim(
+    parameters: Dict[str, Any], stability: Optional[Tuple[float, float]] = None,
+    symptoms: Optional[List[str]] = None, drivetrain: str = 'FR',
+    group: str = 'Road Car', is_controller: Optional[bool] = None
+) -> Dict[str, Any]:
+    """Apply closed-loop trim adjustments to suspension and chassis parameters."""
+    p = parameters
+    if is_controller is not None:
+        p['is_controller'] = is_controller
+    if stability:
+        _apply_stability_trims(p, stability, drivetrain)
+    _apply_symptoms_list(p, symptoms, drivetrain)
     _clamp_suspension_sliders(p)
     _clamp_drivetrain_and_brakes(p, drivetrain, group)
     return p

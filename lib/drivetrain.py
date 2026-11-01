@@ -9,26 +9,17 @@ from typing import Dict, Tuple, Optional
 
 
 def _calculate_lsd_braking_sens(
-    drivetrain: str,
-    wr: float,
-    is_controller: bool,
-    is_endurance: bool
+    drivetrain: str, wr: float, is_controller: bool, is_endurance: bool
 ) -> int:
     """Calculate LSD braking sensitivity based on drivetrain architecture and controller filter."""
     if drivetrain == 'FF':
         return 12
     if drivetrain in ['MR', 'RR']:
-        if is_controller:
-            return 100
-        return max(45, min(60, round(40.0 + 60.0 * (wr - 0.45))))
-
-    # FR, AWD
+        return 100 if is_controller else max(45, min(60, round(40.0 + 60.0 * (wr - 0.45))))
     if is_controller:
         return 85
     t_brake = max(12, min(16, round(12.0 + 30.0 * max(0.0, wr - 0.48))))
-    if is_endurance:
-        t_brake = max(12, t_brake - 1)
-    return t_brake
+    return max(12, t_brake - 1) if is_endurance else t_brake
 
 
 def _calculate_lsd_accel_sens(ptw: float, is_endurance: bool) -> int:
@@ -38,29 +29,26 @@ def _calculate_lsd_accel_sens(ptw: float, is_endurance: bool) -> int:
     return max(18, min(45, round(45.0 - (ptw / 18.0))))
 
 
-def calculate_differential_lsd(
-    torque: float = 400.0,
-    ptw: float = 250.0,
-    wr: float = 0.50,
-    drivetrain: str = 'FR',
-    is_endurance: bool = False,
-    is_controller: bool = False
-) -> Tuple[Dict[str, int], Optional[Dict[str, int]]]:
-    """Calculate LSD Initial Torque (0-30), Accel Sensitivity, and Braking Sensitivity."""
+def _calculate_lsd_init_torque(torque: float, drivetrain: str, is_endurance: bool) -> int:
+    """Calculate LSD initial torque based on engine torque and endurance status."""
     mult = 0.8 if drivetrain == 'FF' else 1.0
     t_init = max(4, min(12, round(4.0 + (torque / 180.0) * mult)))
-    if is_endurance:
-        t_init = max(4, t_init - 1)
+    return max(4, t_init - 1) if is_endurance else t_init
 
+
+def calculate_differential_lsd(
+    torque: float = 400.0, ptw: float = 250.0, wr: float = 0.50,
+    drivetrain: str = 'FR', is_endurance: bool = False, is_controller: bool = False
+) -> Tuple[Dict[str, int], Optional[Dict[str, int]]]:
+    """Calculate LSD Initial Torque (0-30), Accel Sensitivity, and Braking Sensitivity."""
+    t_init = _calculate_lsd_init_torque(torque, drivetrain, is_endurance)
     t_accel = _calculate_lsd_accel_sens(ptw, is_endurance)
     t_brake = _calculate_lsd_braking_sens(drivetrain, wr, is_controller, is_endurance)
-
     lsd_rear = {'init': t_init, 'accel': t_accel, 'brake': t_brake}
     lsd_front = None
-    if drivetrain in ['AWD', '4WD']:
+    if drivetrain in ['AWD', '4WD', '4x4']:
         lsd_front = {'init': 5, 'accel': 16, 'brake': 20}
         lsd_rear = {'init': 7, 'accel': 28, 'brake': 100 if is_controller else 44}
-
     return lsd_rear, lsd_front
 
 

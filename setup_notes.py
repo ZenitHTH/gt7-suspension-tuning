@@ -8,14 +8,18 @@ from typing import List, Tuple, Optional, Any, Dict
 from models import VehicleSpec, TrackSpec
 
 
+def _append_tire_and_endurance_notes(notes: List[str], trk: TrackSpec, tire: str, fn_f: float) -> None:
+    """Append endurance racecraft and sports tire compliance notes."""
+    if trk.is_endurance:
+        notes.append("• [Tire Conservation] เซ็ตติ้งเน้นถนอมยาง: ลดมุม Camber และ Toe เพื่อลดการกินขอบยางด้านในและตัดการไถลากบนทางตรงยาว พร้อมลดสปริงเรทลงเพื่อลดความร้อนสะสมในเนื้อยาง")
+        notes.append("• [PP Optimization Meta (Update 1.71/1.72)] แนะนำถอดเบรกเรซซิ่ง (Racing Brakes) ออกแล้วใช้เบรก Normal/Sport + ผ้าเบรก Racing และถอด Clutch Kit กับ Anti-Lag ออก ช่วยประหยัดแต้ม PP นำไปเพิ่มแรงม้าได้ +50-80 HP")
+    if tire in ['SH', 'SM', 'SS'] and fn_f >= 2.85:
+        notes.append("• [Sports Tire Compliance Guard] วิ่งยางสปอร์ต (Sports Tires) ห้ามใช้สปริงแข็งระดับ 3.0 Hz ของยางเรซซิ่ง เพราะจะลื่นเหมือนขับบนน้ำแข็ง (เข้าดื้อ-ออกปัด)")
+
+
 def generate_chassis_notes(
-    veh: VehicleSpec,
-    trk: TrackSpec,
-    tire: str,
-    fn_f: float,
-    is_no_aero: bool,
-    is_controller: bool,
-    is_widebody: bool
+    veh: VehicleSpec, trk: TrackSpec, tire: str,
+    fn_f: float, is_no_aero: bool, is_controller: bool, is_widebody: bool
 ) -> List[str]:
     """Generate chassis, aero, and drivetrain engineering recommendations."""
     notes = []
@@ -25,28 +29,25 @@ def generate_chassis_notes(
         notes.append("• [No-Aero High Rake / Derpy Tune] รถไม่มีพาร์ทแอโร่บนยางเรซซิ่ง: ยกท้ายสูง (+20 ถึง +25 มม.) สร้างแรงกดเทียม (Rake Downforce) ลดอาการร่อนส่ายที่ความเร็วสูง")
     if is_widebody:
         notes.append("• [Widebody Clearance] เพิ่มระยะยุบตัวซุ้มล้อหน้า +5 มม. เพื่อป้องกันหน้ายางขัดกับซุ้มล้อ (Fender Scrub) ขณะแตะเบรกลึก")
-    if trk.is_endurance:
-        notes.append("• [Tire Conservation] เซ็ตติ้งเน้นถนอมยาง: ลดมุม Camber และ Toe เพื่อลดการกินขอบยางด้านในและตัดการไถลากบนทางตรงยาว พร้อมลดสปริงเรทลงเพื่อลดความร้อนสะสมในเนื้อยาง")
-        notes.append("• [PP Optimization Meta (Update 1.71/1.72)] แนะนำถอดเบรกเรซซิ่ง (Racing Brakes) ออกแล้วใช้เบรก Normal/Sport + ผ้าเบรก Racing และถอด Clutch Kit กับ Anti-Lag ออก ช่วยประหยัดแต้ม PP นำไปเพิ่มแรงม้าได้ +50-80 HP")
-    if tire in ['SH', 'SM', 'SS'] and fn_f >= 2.85:
-        notes.append("• [Sports Tire Compliance Guard] วิ่งยางสปอร์ต (Sports Tires) ห้ามใช้สปริงแข็งระดับ 3.0 Hz ของยางเรซซิ่ง เพราะจะลื่นเหมือนขับบนน้ำแข็ง (เข้าดื้อ-ออกปัด)")
-    _append_drivetrain_notes(notes, veh)
+    _append_tire_and_endurance_notes(notes, trk, tire, fn_f)
+    _append_drivetrain_notes(notes, veh, is_controller)
     return notes
 
 
-def _append_drivetrain_notes(notes: List[str], veh: VehicleSpec) -> None:
+def _append_drivetrain_notes(notes: List[str], veh: VehicleSpec, is_controller: bool) -> None:
     """Append drivetrain-specific stability and balance recommendations."""
     if veh.drivetrain in ['MR', 'RR'] and veh.group == 'Road Car':
         notes.append("• [MR/RR Balance (Update 1.71)] ปรับ Downforce หลังมากกว่าหน้า ~100 จุด (เช่น หน้า 150 / หลัง 250) และเพิ่ม Ballast หน้า (-50 position, 20-50 kg) เพื่อตัดอาการหน้าไวสะบัดหมุน (Liftoff Snap-Oversteer)")
     if veh.front_weight_ratio >= 0.55 and veh.drivetrain == 'FR':
-        notes.append("• [Anti-Understeer] ปลดล็อค LSD Braking = 22-26 (บนสเกล 0-100) และ ARB หน้าอ่อน/หลังแข็ง เพื่อให้ท้ายช่วยหมุนเข้าเอเปกซ์")
+        if not is_controller:
+            notes.append("• [Anti-Understeer] ปลดล็อค LSD Braking = 22-26 (บนสเกล 0-100) และ ARB หน้าอ่อน/หลังแข็ง เพื่อให้ท้ายช่วยหมุนเข้าเอเปกซ์")
         if any(yr in veh.name for yr in ["'6", "'7", "196", "197"]):
             notes.append("• [CRITICAL WARNING] ห้ามติดตั้ง Steering Angle Adapter (ตัวปรับมุมเลี้ยว) สำหรับวิ่งกริป! มันเป็นอะไหล่ดริฟต์ที่ลบ Ackermann geometry ทำให้ล้อหน้าไถต้านกันและดื้อโค้งสนิทเมื่อแตะเบรก")
             notes.append("• [Driving Assists] ปิด ASM (Active Stability Management) และ Countersteering Assistance เป็น OFF เพื่อให้ทำ Trail Braking ได้")
             notes.append("• [Chassis Rigidity] ติดตั้ง Roll Cage (โรลเคจ) ใน GT Auto เพื่อลดการบิดตัวของโครงสร้างตัวถังยุคคลาสสิก")
     elif veh.drivetrain in ['MR', 'RR']:
         notes.append("• [MR/RR Stability] LSD Braking ล็อคแน่น 52-65 (บนสเกล 0-100) ป้องกันอาการท้ายสะบัดหมุน (Snap Oversteer) ขณะแตะเบรกเลี้ยว (Trail-Braking)")
-    if veh.group == 'Gr.4' and veh.drivetrain in ['AWD', '4WD']:
+    if veh.group == 'Gr.4' and veh.drivetrain in ['AWD', '4WD', '4x4']:
         notes.append("• [Gr.4 AWD Center Diff] รถแข่ง Gr.4 ขับเคลื่อน 4 ล้อ (AWD/4WD) ล็อค Center Diff จากโรงงาน ไม่สามารถติดตั้งหรือปรับ Torque-Distributing Center Diff ได้ (Fixed Homologation)")
         notes.append("  ↳ วิธีแก้หน้าดื้อ: ให้คลาย LSD ล้อหน้าให้อ่อน (Accel 14-16 / Braking 18-20), ปรับ ARB หน้าอ่อน/หลังแข็ง (3/7 หรือ 2/8), ปรับสมดุลเบรกไปหลัง (-2), และใช้ Front Toe-Out ช่วยดึงหน้ารถเข้าโค้ง")
 

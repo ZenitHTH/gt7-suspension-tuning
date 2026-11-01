@@ -24,12 +24,8 @@ def resolve_slider_ranges(car: Dict[str, Any], explicit: Dict[str, Any]) -> Dict
 
 
 def init_vehicle_and_track_specs(
-    car: Dict[str, Any],
-    track: Optional[Dict[str, Any]],
-    tire: str,
-    mode: str,
-    overrides: Dict[str, Any],
-    is_widebody: bool
+    car: Dict[str, Any], track: Optional[Dict[str, Any]], tire: str,
+    mode: str, overrides: Dict[str, Any], is_widebody: bool
 ) -> Tuple[VehicleSpec, TrackSpec, Dict[str, Any]]:
     """Initialize VehicleSpec, TrackSpec, and update car output dict."""
     veh = VehicleSpec.from_dict(car, custom_overrides=overrides, is_widebody=is_widebody)
@@ -43,11 +39,8 @@ def init_vehicle_and_track_specs(
 
 
 def _format_range_dict(
-    f_val: Any,
-    r_val: Any,
-    f_range: Optional[Tuple],
-    r_range: Optional[Tuple],
-    single_range: Optional[Tuple]
+    f_val: Any, r_val: Any, f_range: Optional[Tuple],
+    r_range: Optional[Tuple], single_range: Optional[Tuple]
 ) -> Dict[str, Any]:
     """Format dictionary containing front/rear values and range bounds string."""
     res: Dict[str, Any] = {'front': f_val, 'rear': r_val}
@@ -59,13 +52,16 @@ def _format_range_dict(
     return res
 
 
+def _is_no_aero(veh: VehicleSpec, tire: str, df: Dict[str, Any], df_slider: Any) -> bool:
+    """Determine if car runs in no-aero high rake configuration."""
+    if veh.is_racecar or tire not in ['RS', 'RM', 'RH']:
+        return False
+    return df_slider == (0, 0) or (df.get('front', 0) == 0 and df.get('rear', 0) == 0)
+
+
 def _compute_aero_and_height(
-    veh: VehicleSpec,
-    trk: TrackSpec,
-    tire: str,
-    sliders: Dict[str, Any],
-    is_widebody: bool,
-    is_controller: bool
+    veh: VehicleSpec, trk: TrackSpec, tire: str, sliders: Dict[str, Any],
+    is_widebody: bool, is_controller: bool
 ) -> Tuple[Dict[str, Any], int, int, bool]:
     """Calculate aerodynamic downforce and ground clearance."""
     df = lib.calculate_aerodynamics(
@@ -73,10 +69,7 @@ def _compute_aero_and_height(
         is_oval=trk.is_oval, downforce_demand=trk.downforce_demand, is_endurance=trk.is_endurance,
         width_m=veh.width_m, height_m=veh.height_m, body_style=veh.body_style
     )
-    is_no_aero = (
-        not veh.is_racecar and tire in ['RS', 'RM', 'RH'] and
-        (sliders['df_front'] == (0, 0) or (df.get('front', 0) == 0 and df.get('rear', 0) == 0))
-    )
+    is_no_aero = _is_no_aero(veh, tire, df, sliders['df_front'])
     rh_f, rh_r = lib.calculate_ride_height(
         trk.is_dirt, veh.is_racecar, veh.is_ultralight, veh.body_style, trk.bumpiness,
         veh.power_to_weight, veh.front_weight_ratio, sliders['height_range'], sliders['height_front'],
@@ -87,11 +80,7 @@ def _compute_aero_and_height(
 
 
 def _compute_springs_and_shocks(
-    veh: VehicleSpec,
-    trk: TrackSpec,
-    mu: float,
-    sliders: Dict[str, Any],
-    df: Dict[str, Any]
+    veh: VehicleSpec, trk: TrackSpec, mu: float, sliders: Dict[str, Any], df: Dict[str, Any]
 ) -> Tuple[float, float, float, int, int, float, Tuple[int, int, int, int]]:
     """Calculate natural frequencies, anti-roll bars, and dampers."""
     fn_f, fn_r, fr_ratio = lib.calculate_natural_frequencies(
@@ -100,7 +89,7 @@ def _compute_springs_and_shocks(
         df_front=df['front'], df_rear=df['rear']
     )
     arb_f, arb_r, lltd_pct = lib.calculate_anti_roll_bars(veh.front_weight_ratio, veh.drivetrain, trk.is_dirt)
-    is_high_boost = ('Turbo' in veh.aspiration and veh.power_hp > 450)
+    is_high_boost = bool('Turbo' in veh.aspiration and veh.power_hp > 450)
     dampers = lib.calculate_dampers(
         trk.bumpiness, veh.power_to_weight, is_high_boost, veh.drivetrain,
         veh.front_weight_ratio, trk.is_dirt, trk.is_wet, elevation_diff_m=trk.elevation_diff_m,
@@ -152,7 +141,8 @@ def _compute_control_and_gearing(
 def _build_params_dict(
     rh_dict: Dict[str, Any], fn_dict: Dict[str, Any], arb: Tuple[int, int],
     dampers: Tuple[int, int, int, int], align: Tuple[float, float, str, str],
-    df: Dict[str, Any], lsd_r: Any, lsd_f: Any, bias: int, awd_split: Optional[str], top_spd: int
+    df: Dict[str, Any], lsd_r: Any, lsd_f: Any, bias: int, awd_split: Optional[str],
+    top_spd: int, is_controller: bool = False
 ) -> Dict[str, Any]:
     """Package baseline parameters into unified dictionary."""
     return {
@@ -163,7 +153,24 @@ def _build_params_dict(
         'camber_deg': {'front': align[0], 'rear': align[1]},
         'toe_angle': {'front': align[2], 'rear': align[3]},
         'downforce': df, 'lsd_rear': lsd_r, 'lsd_front': lsd_f, 'brake_bias': bias,
-        'awd_torque_split': awd_split, 'transmission_top_speed_kmh': top_spd, 'endurance_notes': []
+        'awd_torque_split': awd_split, 'transmission_top_speed_kmh': top_spd,
+        'is_controller': is_controller, 'endurance_notes': []
+    }
+
+
+def _format_telemetry(
+    sprung: Tuple[float, float, float],
+    mu_ay: Tuple[float, float, Optional[Tuple[float, float, float]]],
+    chassis: Tuple[float, float, float, bool]
+) -> Dict[str, Any]:
+    """Package baseline telemetry output dictionary."""
+    tot_s, c_f, c_r = sprung
+    mu, ay_est, g_forces = mu_ay
+    lltd_pct, fr_ratio, pitch_pct, is_no_aero = chassis
+    return {
+        'tot_s': tot_s, 'c_f': c_f, 'c_r': c_r, 'mu': mu, 'ay_est': ay_est,
+        'mu_braking': round(float(g_forces[1]), 2) if g_forces else mu,
+        'lltd_pct': lltd_pct, 'fr_ratio': fr_ratio, 'pitch_transfer_pct': pitch_pct, 'is_no_aero': is_no_aero
     }
 
 
@@ -173,18 +180,16 @@ def compute_baseline_suspension(
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """Compute complete baseline physical suspension parameters and telemetry."""
     mu = round(float(g_forces[0]), 2) if g_forces else lib.get_tire_mu(tire)
-    base_ay = float(g_forces[1]) if g_forces else mu
-    ay_est = base_ay * (0.90 if trk.bumpiness == 'high' else (1.05 if trk.bumpiness == 'low' else 1.00))
-    tot_s, c_f, c_r = lib.calculate_sprung_mass(veh.mass_kg, veh.front_weight_ratio, veh.group)
+    bump_mult = 0.90 if trk.bumpiness == 'high' else (1.05 if trk.bumpiness == 'low' else 1.00)
+    ay_est = (float(g_forces[1]) if g_forces else mu) * bump_mult
+    sprung = lib.calculate_sprung_mass(veh.mass_kg, veh.front_weight_ratio, veh.group)
     df, rh_f, rh_r, is_no_aero = _compute_aero_and_height(veh, trk, tire, sliders, is_widebody, is_controller)
     fn_f, fn_r, fr_ratio, arb_f, arb_r, lltd_pct, dampers = _compute_springs_and_shocks(veh, trk, mu, sliders, df)
     align, lsd_r, lsd_f, bias, pitch_pct, top_spd, awd_split = _compute_control_and_gearing(veh, trk, ay_est, is_controller)
     rh_dict = _format_range_dict(rh_f, rh_r, sliders['height_front'], sliders['height_rear'], sliders['height_range'])
     fn_dict = _format_range_dict(fn_f, fn_r, sliders['fn_front'], sliders['fn_rear'], None)
-    params = _build_params_dict(rh_dict, fn_dict, (arb_f, arb_r), dampers, align, df, lsd_r, lsd_f, bias, awd_split, top_spd)
-    telem = {
-        'tot_s': tot_s, 'c_f': c_f, 'c_r': c_r, 'mu': mu, 'ay_est': ay_est,
-        'mu_braking': round(float(g_forces[1]), 2) if g_forces else mu,
-        'lltd_pct': lltd_pct, 'fr_ratio': fr_ratio, 'pitch_transfer_pct': pitch_pct, 'is_no_aero': is_no_aero
-    }
+    params = _build_params_dict(
+        rh_dict, fn_dict, (arb_f, arb_r), dampers, align, df, lsd_r, lsd_f, bias, awd_split, top_spd, is_controller
+    )
+    telem = _format_telemetry(sprung, (mu, ay_est, g_forces), (lltd_pct, fr_ratio, pitch_pct, is_no_aero))
     return params, telem

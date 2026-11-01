@@ -27,11 +27,12 @@ def _apply_stability_trims(
         for lsd in [p[k] for k in ('lsd_rear', 'lsd_front') if k in p and isinstance(p[k], dict)]:
             lsd['brake'] = max(5, lsd['brake'] - 4)
         if drivetrain != 'FF':
-            p['brake_bias'] = max(-5, p['brake_bias'] - 1)
+            p['brake_bias'] = min(5, p['brake_bias'] + 1)
     if high_s is not None and high_s >= 0.20:
         p['damping_expansion_pct']['rear'] = min(80, p['damping_expansion_pct']['rear'] + 4)
         for lsd in [p[k] for k in ('lsd_rear', 'lsd_front') if k in p and isinstance(p[k], dict)]:
             lsd['brake'] = min(65, lsd['brake'] + 6)
+        p['brake_bias'] = max(-5, p['brake_bias'] - 1)
 
 
 def _apply_corner_symptom(p: Dict[str, Any], s: str, drivetrain: str) -> None:
@@ -43,7 +44,7 @@ def _apply_corner_symptom(p: Dict[str, Any], s: str, drivetrain: str) -> None:
             lsd['brake'] = max(5, lsd['brake'] - 4)
         p['ride_height_mm']['rear'] += 3
         if drivetrain != 'FF':
-            p['brake_bias'] = max(-5, p['brake_bias'] - 1)
+            p['brake_bias'] = min(5, p['brake_bias'] + 1)
     elif s == 'exit_snap':
         for lsd in [p[k] for k in ('lsd_rear', 'lsd_front') if k in p and isinstance(p[k], dict)]:
             lsd['accel'] = max(5, lsd['accel'] - 4)
@@ -76,8 +77,10 @@ def _apply_tire_wear_symptom(p: Dict[str, Any], s: str, drivetrain: str) -> None
             p['downforce']['front'] = max(10, int(round(p['downforce']['front'] * 0.92)))
         p['camber_deg']['front'] = max(-1.4, round(p['camber_deg']['front'] + 0.5, 1))
         p['toe_angle']['front'] = '0.00'
-        if drivetrain != 'FF':
-            p['brake_bias'] = max(-3, p['brake_bias'] - 1)
+        if drivetrain == 'FR':
+            p['brake_bias'] = min(2, p['brake_bias'] + 1)
+        elif drivetrain != 'FF':
+            p['brake_bias'] = max(-2, p['brake_bias'] - 1)
         for lsd in [p[k] for k in ('lsd_rear', 'lsd_front') if k in p and isinstance(p[k], dict)]:
             lsd['brake'] = max(20, lsd['brake'] - 4)
     elif s in ['rear_tire_wear', 'rear_wear', 'tire_wear_rear']:
@@ -87,6 +90,8 @@ def _apply_tire_wear_symptom(p: Dict[str, Any], s: str, drivetrain: str) -> None
         p['anti_roll_bar']['front'] = min(10, p['anti_roll_bar']['front'] + 1)
         p['anti_roll_bar']['rear'] = max(1, p['anti_roll_bar']['rear'] - 1)
         p['damping_compression_pct']['rear'] = min(80, p['damping_compression_pct']['rear'] + 2)
+        if drivetrain in ['FR', 'MR', 'RR']:
+            p['brake_bias'] = max(-2, p['brake_bias'] - 1)
 
 
 def _clamp_suspension_sliders(p: Dict[str, Any]) -> None:
@@ -188,7 +193,7 @@ def _build_max_stability_spec(p: Dict[str, Any], drivetrain: str) -> Dict[str, A
     stab_exp_r = min(80, exp['rear'] + 4)
     stab_toe_r = 'In 0.20°' if drivetrain in ['MR', 'RR'] else 'In 0.18°'
     stab_lsd_brake = min(65, lsd_r['brake'] + 8)
-    stab_bias = min(2, bias + 1) if drivetrain == 'FF' else min(1, bias + 1)
+    stab_bias = -1 if drivetrain == 'FF' else min(0, bias)
 
     return {
         'anti_roll_bar': f"{stab_arb_f} / {stab_arb_r}",

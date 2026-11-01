@@ -29,6 +29,18 @@ class TestReverseOptimizer(unittest.TestCase):
             base_mu=1.55, front_weight_ratio=0.56, mass_kg=989.0
         ))
 
+    def test_trims_brake_bias_direction(self):
+        from lib.trims import _apply_corner_symptom, _apply_stability_trims
+        # Understeer entry push should shift bias rearward (+1 in GT7)
+        params = {'anti_roll_bar': {'front': 5, 'rear': 5}, 'ride_height_mm': {'rear': 100}, 'brake_bias': 0}
+        _apply_corner_symptom(params, 'entry_push', drivetrain='FR')
+        self.assertEqual(params['brake_bias'], 1)
+
+        # Twitchy high-speed stability should shift bias forward (<= 1 in GT7)
+        params2 = {'anti_roll_bar': {'front': 5, 'rear': 5}, 'damping_expansion_pct': {'rear': 45}, 'brake_bias': 2}
+        _apply_stability_trims(params2, stability=(0.0, 0.25), drivetrain='FR')
+        self.assertLessEqual(params2['brake_bias'], 1)
+
     def test_solver_eliminates_bottoming_and_preserves_rake(self):
         # Force an unsafe low front height in baseline to verify solver fixes it
         self.params['ride_height_mm']['front'] = 105

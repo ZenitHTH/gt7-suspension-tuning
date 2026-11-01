@@ -55,5 +55,27 @@ class TestCLIOutput(unittest.TestCase):
         self.assertIn("DF 0/0", sheet)
         self.assertNotIn("Min DF (0/0)", sheet)
 
+    def test_measured_g_forces_couple_spring_rate_and_camber(self):
+        car = {
+            'id': '451', 'name': "Subaru Impreza 22B-STi '98",
+            'drivetrain': 'AWD', 'mass_kg': 990, 'power_hp': 401, 'torque_nm': 436.2,
+            'balance': {'front_pct': 58, 'rear_pct': 42}
+        }
+        sport_res = build_setup(
+            car=car, tire='SS', mode='grip', g_forces=(1.09, 1.17, 1.32), g_ref_df=(100, 187), solve_objective='balanced'
+        )
+        racing_res = build_setup(
+            car=car, tire='RS', mode='grip', g_forces=(1.29, 1.36, 1.55), g_ref_df=(100, 180), solve_objective='balanced'
+        )
+        self.assertLess(
+            sport_res['parameters']['natural_frequency_hz']['front'],
+            racing_res['parameters']['natural_frequency_hz']['front']
+        )
+        # Sport camber is flatter (closer to 0, so numerically greater than racing negative camber)
+        self.assertGreater(
+            sport_res['parameters']['camber_deg']['front'],
+            racing_res['parameters']['camber_deg']['front']
+        )
+
 if __name__ == '__main__':
     unittest.main()

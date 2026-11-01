@@ -176,9 +176,13 @@ When searching online for reference setups:
   $$\text{Body Height}_{\text{Front}} = \text{Slider}_{\text{Min}} + 5\text{ to }10\text{ mm (Travel Buffer)}$$
   $$\text{Body Height}_{\text{Rear}} = \text{Body Height}_{\text{Front}} + 8\text{ to }12\text{ mm (Positive Rake)}$$
 
-### D. G-Force Capacity & Spring Frequency Mapping
+### D. G-Force Capacity, Dynamic Downforce Scaling & Spring Frequency Mapping
 * **Low Lateral G (<1.15G)**: Comfort / Sport tires; use compliant frequencies (`2.20–2.50 Hz`).
 * **High Lateral G (1.25G – 1.60G+)**: Sport Soft / Racing tires with high mechanical grip; supports stiff frequencies (`2.75–3.20 Hz`) and aggressive camber (`-2.8° to -3.5°`).
+* **Mandatory Dynamic G-Force @ Downforce Invariant**:
+  * Rotational G-Force in GT7 scales dynamically with aerodynamic downforce ($F_z \propto v^2$).
+  * **Intake**: Always record the `(Front / Rear)` downforce setting at which the `60 / 120 / 240 km/h` G-forces were measured (e.g. `1.11G / 1.22G / 1.34G @ DF 80/150`). When `g_forces` are passed to `cli.py`, mechanical friction ($\mu = G_{60}$) and mid-corner lateral G ($a_y = G_{120}$) automatically anchor the spring frequency and negative camber solvers to the user's true tire grip.
+  * **Output**: Every setup sheet MUST explicitly report the predicted `60 / 120 / 240 km/h` G-forces **tagged with the exact `(Front / Rear)` downforce** (`@ DF Front/Rear`), plus the `240 km/h` G-force scaling across `Min DF`, `Setup DF`, and `Max DF`. Never display a G-force number without stating its corresponding downforce!
 
 ### E. Trail-Braking Diagnostics & Driving Style Invariant (การปรับแต่งสไตล์ Trail-Braking และถนอมยางหน้า Dual Invariant)
 > 🏁 **DEFAULT INVARIANT — Trail-Braking & Tire-Saver Synergy**:
@@ -610,6 +614,8 @@ gt7-suspension-tuning/
 ├── constants.py             # Canonical GT7 physical bounds & constants
 ├── lib/                     # First-principles vehicle dynamics library
 │   ├── formulas.py          # Core dynamics formulas (fn, mass, LLTD, bottoming sim)
+│   ├── calibrator.py        # Dynamic G-Force @ Downforce telemetry calibrator & predictor
+│   ├── optimizer.py         # Constrained multi-variable reverse suspension solver
 │   ├── springs.py           # Natural frequency (fn) solver & flat-ride timing
 │   ├── shocks.py            # Damping solver (compression <= 40%, expansion <= 80%)
 │   ├── wheels.py            # Camber & toe alignment solvers
@@ -674,6 +680,9 @@ python3 cli.py "Citroën 2 CV 6 Charleston '86" --power 141 --height-front 100 2
 
 # Apply closed-loop in-game Stability Index (Low/High) and handling symptom trims
 python3 cli.py "Ferrari F355 Berlinetta '94" -t "SUGO" --stability -0.35 0.25 --symptom entry_push
+
+# Calibrate Dynamic G-Force @ Downforce from 3-point in-game telemetry (60/120/240 km/h) and run reverse solver
+python3 cli.py "Lamborghini Diablo GT '00" --power 653 --torque 695.2 --balance 41 59 --df-front 0 100 --df-rear 130 280 --g-forces 1.11 1.22 1.34 --g-ref-df 80 150 --solve balanced --tire SS --speed 240
 
 # Generate setup with custom horsepower and weight reduction
 python3 cli.py "Porsche 911 GT3 RS (991) '16" -t "Spa" --tire RM --power 650 --mass 1280

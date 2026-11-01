@@ -81,21 +81,34 @@ def calculate_wheel_alignment(
     return _calculate_sprint_alignment(ay_est, wf, wr, drivetrain, power)
 
 
+def _calculate_drivetrain_bias(drivetrain: str, wf: float, is_controller: bool) -> int:
+    """Calculate signed GT7 brake bias (-5 Front to +5 Rear) by architecture."""
+    if drivetrain == 'FF':
+        return -2 if wf >= 0.64 else -1
+    if drivetrain in ['MR', 'RR']:
+        return 0 if wf >= 0.46 else -1
+    if drivetrain in ['AWD', '4WD', '4x4']:
+        return -1 if wf >= 0.52 else 0
+
+    base = round(10.0 * (wf - 0.48))
+    if is_controller:
+        return min(1, max(0, base))
+    return max(1, min(3, base)) if wf >= 0.52 else 0
+
+
 def calculate_brake_bias(
     wf: float = 0.50,
     hcg_m: float = 0.45,
     wheelbase_m: float = 2.60,
     drivetrain: str = 'FR',
-    is_endurance: bool = False
+    is_endurance: bool = False,
+    is_controller: bool = False
 ) -> Tuple[int, float]:
     """Calculate Brake Balance Controller (-5 to +5) and dynamic load transfer (%)."""
     dynamic_pitch_transfer = (1.2 * hcg_m) / wheelbase_m
-    if drivetrain == 'FF':
-        return 1, round(dynamic_pitch_transfer * 100.0, 1)
-
-    bias = max(-3, min(1, round(12.0 * (0.50 - wf))))
-    if wf >= 0.56:
-        bias = min(bias, -2)
-    if is_endurance and wf >= 0.45:
-        bias = max(-3, bias - 1)
+    bias = _calculate_drivetrain_bias(drivetrain, wf, is_controller)
+    if is_endurance and drivetrain == 'MR' and wf >= 0.45:
+        bias = -1
+    elif is_endurance and drivetrain == 'FR' and not is_controller:
+        bias = max(1, bias - 1)
     return bias, round(dynamic_pitch_transfer * 100.0, 1)

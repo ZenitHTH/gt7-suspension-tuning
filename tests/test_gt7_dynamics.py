@@ -41,9 +41,9 @@ class TestGT7Dynamics(unittest.TestCase):
         self.assertGreaterEqual(lsd_mr['brake'], 34)
 
     def test_dynamic_brake_bias(self):
-        # Front-heavy car with heavy nose-dive must have rearward brake bias (-2 to -3)
+        # Front-heavy car with heavy nose-dive must have rearward brake bias (+1 to +3 in GT7 scale)
         bias, transfer_pct = gt7_dynamics.calculate_brake_bias(wf=0.58, hcg_m=0.46, wheelbase_m=2.6, drivetrain='FR')
-        self.assertLessEqual(bias, -2)
+        self.assertGreaterEqual(bias, 1)
         self.assertGreater(transfer_pct, 15.0)
 
     def test_aerodynamic_downforce_with_ranges(self):
@@ -140,7 +140,8 @@ class TestGT7Dynamics(unittest.TestCase):
         self.assertLessEqual(p['anti_roll_bar']['rear'], 10)
         self.assertGreaterEqual(p['lsd_rear']['brake'], 5)
         self.assertLessEqual(p['lsd_rear']['brake'], 65)
-        self.assertGreaterEqual(p['brake_bias'], 0)  # FF must never get negative rear brake bias
+        self.assertLessEqual(p['brake_bias'], 0)  # FF must have front/neutral brake bias (<= 0 in GT7 scale)
+        self.assertGreaterEqual(p['brake_bias'], -5)
 
     def test_gr4_awd_preserves_fixed_split_under_symptom_trim(self):
         import gt7_tuner

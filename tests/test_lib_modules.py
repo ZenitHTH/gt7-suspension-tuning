@@ -129,6 +129,23 @@ class TestLibModules(unittest.TestCase):
         self.assertGreater(res['camber_deg']['front'], -2.2) # Flattened (-1.7)
         self.assertEqual(res['brake_bias'], -2)
 
+    def test_calculate_brake_bias_ground_truth(self):
+        # FF must have front bias (negative)
+        bias_ff, _ = calculate_brake_bias(wf=0.62, drivetrain='FF')
+        self.assertIn(bias_ff, [-1, -2])
+        # FR front-heavy on wheel should have rearward bias (positive) for trail-brake rotation
+        bias_fr_wheel, _ = calculate_brake_bias(wf=0.54, drivetrain='FR', is_controller=False)
+        self.assertIn(bias_fr_wheel, [1, 2, 3])
+        # FR on controller must be clamped to <= 1 to avoid ABS snap
+        bias_fr_pad, _ = calculate_brake_bias(wf=0.54, drivetrain='FR', is_controller=True)
+        self.assertLessEqual(bias_fr_pad, 1)
+        # AWD (Genesis G70 Gr.4) must have slight front or center bias to avoid center diff binding
+        bias_awd, _ = calculate_brake_bias(wf=0.53, drivetrain='AWD')
+        self.assertIn(bias_awd, [-1, 0])
+        # MR should have neutral or slight front bias (0 to -2) as yaw damper
+        bias_mr, _ = calculate_brake_bias(wf=0.44, drivetrain='MR')
+        self.assertIn(bias_mr, [-2, -1, 0])
+
     def test_asymmetric_slider_floor_rear_squat_buffer(self):
         # Asymmetric slider floors (e.g. Sierra RS: 100-200 Front / 120-220 Rear)
         # must guarantee rear travel buffer of h_min_r + margin + widebody

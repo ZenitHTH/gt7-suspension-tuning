@@ -122,7 +122,8 @@ def _resolve_differential_and_brakes(
     if veh.drivetrain == 'FF':
         lsd_f = dict(lsd_r) if isinstance(lsd_r, dict) else lsd_r
     bias, pitch_trans = lib.calculate_brake_bias(
-        veh.front_weight_ratio, veh.hcg_m, veh.wheelbase_m, veh.drivetrain, is_endurance=trk.is_endurance
+        veh.front_weight_ratio, veh.hcg_m, veh.wheelbase_m, veh.drivetrain,
+        is_endurance=trk.is_endurance, is_controller=is_controller
     )
     return lsd_r, lsd_f, bias, pitch_trans
 

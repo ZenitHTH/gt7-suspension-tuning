@@ -109,7 +109,7 @@ def _simulate_trail(req: SolverRequest, params: Dict[str, Any], min_rh_f: int) -
     return simulate_high_speed_trail_braking(
         speed_kmh=req.speed_kmh, mass_kg=req.veh.mass_kg, corner_front_kg=req.telem['c_f'],
         corner_rear_kg=req.telem['c_r'], wf=req.veh.front_weight_ratio, hcg_m=req.veh.hcg_m,
-        wheelbase_m=req.veh.wheelbase_m, track_width_m=req.veh.track_width_m, mu=req.telem['mu'],
+        wheelbase_m=req.veh.wheelbase_m, track_width_m=req.veh.track_width_m, mu=req.telem.get('mu_braking', req.telem['mu']),
         rh_front_mm=params['ride_height_mm']['front'], rh_rear_mm=params['ride_height_mm']['rear'],
         fn_front_hz=params['natural_frequency_hz']['front'], fn_rear_hz=params['natural_frequency_hz']['rear'],
         arb_front=params['anti_roll_bar']['front'], arb_rear=params['anti_roll_bar']['rear'],
@@ -155,7 +155,7 @@ def _solve_eq(req: SolverRequest, params: Dict[str, Any]) -> Dict[str, Any]:
     return solve_suspension_equilibrium(
         mass_kg=req.veh.mass_kg, front_ratio=req.veh.front_weight_ratio, power_hp=req.veh.power_hp,
         torque_nm=req.veh.torque_nm, drivetrain=req.veh.drivetrain, hcg_m=req.veh.hcg_m,
-        wheelbase_m=req.veh.wheelbase_m, track_width_m=req.veh.track_width_m, mu=req.telem['mu'],
+        wheelbase_m=req.veh.wheelbase_m, track_width_m=req.veh.track_width_m, mu=req.telem.get('mu_braking', req.telem['mu']),
         fn_f=params['natural_frequency_hz']['front'], fn_r=params['natural_frequency_hz']['rear'],
         arb_f=params['anti_roll_bar']['front'], arb_r=params['anti_roll_bar']['rear'],
         df_f=df_f, df_r=df_r, height_range=s.get('height_range'),

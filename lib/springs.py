@@ -9,7 +9,12 @@ from typing import Tuple, Optional
 from lib.formulas import normalize_group
 
 
-def _get_ranged_target_pcts(mass: float, grp: str, is_endurance: bool) -> Tuple[float, float, bool]:
+def _get_ranged_target_pcts(
+    mass: float,
+    grp: str,
+    is_endurance: bool,
+    mu: float = 1.25
+) -> Tuple[float, float, bool]:
     """Determine target interpolation percentages for explicit slider ranges."""
     if mass >= 2000:
         pct_f, pct_r = (0.82, 0.85) if is_endurance else (0.87, 0.89)
@@ -17,7 +22,9 @@ def _get_ranged_target_pcts(mass: float, grp: str, is_endurance: bool) -> Tuple[
     if any(g in grp for g in ['Gr.1', 'Gr.2', 'Gr.3', 'Gr.X']):
         pct_f, pct_r = (0.40, 0.50) if is_endurance else (0.75, 0.78)
         return pct_f, pct_r, False
-    return (0.55 if is_endurance else 0.65), 0.0, True
+    mu_shift = max(-0.20, min(0.15, (mu - 1.35) * 0.45))
+    base_pct = (0.55 if is_endurance else 0.65) + mu_shift
+    return max(0.32, min(0.85, base_pct)), 0.0, True
 
 
 def _calculate_ranged_frequencies(
@@ -27,15 +34,18 @@ def _calculate_ranged_frequencies(
     grp: str,
     is_endurance: bool,
     aero_boost_f: float,
-    aero_boost_r: float
+    aero_boost_r: float,
+    mu: float = 1.25,
+    wf: float = 0.50
 ) -> Tuple[float, float, float]:
     """Calculate natural frequencies within explicit in-game slider ranges."""
     f_min_f, f_max_f = fn_front_range
     f_min_r, f_max_r = fn_rear_range
-    pct_f, pct_r, is_road = _get_ranged_target_pcts(mass, grp, is_endurance)
+    pct_f, pct_r, is_road = _get_ranged_target_pcts(mass, grp, is_endurance, mu)
 
     target_f = f_min_f + (f_max_f - f_min_f) * pct_f
-    target_r = (target_f * 1.04) if is_road else (f_min_r + (f_max_r - f_min_r) * pct_r)
+    fr_mult = 1.08 if wf < 0.46 else (1.03 if wf > 0.54 else 1.04)
+    target_r = (target_f * fr_mult) if is_road else (f_min_r + (f_max_r - f_min_r) * pct_r)
     target_f = min(f_max_f, max(f_min_f, target_f + aero_boost_f))
     target_r = min(f_max_r, max(f_min_r, target_r + aero_boost_r))
     return round(target_f, 2), round(target_r, 2), round(target_r / target_f, 2)
@@ -131,7 +141,7 @@ def calculate_natural_frequencies(
 
     if fn_front_range and fn_rear_range:
         return _calculate_ranged_frequencies(
-            fn_front_range, fn_rear_range, mass, grp, is_endurance, aero_boost_f, aero_boost_r
+            fn_front_range, fn_rear_range, mass, grp, is_endurance, aero_boost_f, aero_boost_r, mu, wf
         )
     arch_res = _calculate_archetype_frequencies(
         grp, mu, mass, wf, is_endurance, aero_boost_f, aero_boost_r

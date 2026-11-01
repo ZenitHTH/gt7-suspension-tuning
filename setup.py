@@ -176,12 +176,12 @@ def build_setup(
     sim_spd = float(speed_kmh) if speed_kmh is not None else (240.0 if veh.is_racecar else 200.0)
     base_df = (params['downforce']['front'], params['downforce']['rear']) if params.get('downforce') else (0, 0)
     calib_ref_df = g_ref_df or base_df
+    if stability or symptoms:
+        params = lib.apply_closed_loop_trim(params, stability, symptoms, veh.drivetrain, veh.group)
+
     g_cfg = lib.GForceCalibrationInput(g_forces, calib_ref_df, telem['mu'], veh.front_weight_ratio, veh.mass_kg)
     solver_req = lib.SolverRequest(veh, trk, params, telem, sliders, lib.calibrate_g_model(g_cfg), solve_objective or 'balanced', (), sim_spd)
     params, sim, eq, wear, g_pred, g_prof = _solve_or_simulate_dynamics(solver_req, solve_objective)
-
-    if stability or symptoms:
-        params = lib.apply_closed_loop_trim(params, stability, symptoms, veh.drivetrain, veh.group)
 
     params['endurance_notes'] = _apply_setup_notes(
         veh, trk, tire, params, telem, sim, eq, sim_spd, stability, symptoms, is_widebody, is_controller

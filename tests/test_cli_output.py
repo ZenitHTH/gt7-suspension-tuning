@@ -62,10 +62,14 @@ class TestCLIOutput(unittest.TestCase):
             'balance': {'front_pct': 58, 'rear_pct': 42}
         }
         sport_res = build_setup(
-            car=car, tire='SS', mode='grip', g_forces=(1.09, 1.17, 1.32), g_ref_df=(100, 187), solve_objective='balanced'
+            car=car, tire='SS', mode='grip',
+            fn_front_range=(1.50, 3.50), fn_rear_range=(1.50, 3.50),
+            g_forces=(1.09, 1.17, 1.32), g_ref_df=(100, 187), solve_objective='balanced'
         )
         racing_res = build_setup(
-            car=car, tire='RS', mode='grip', g_forces=(1.29, 1.36, 1.55), g_ref_df=(100, 180), solve_objective='balanced'
+            car=car, tire='RS', mode='grip',
+            fn_front_range=(1.50, 3.50), fn_rear_range=(1.50, 3.50),
+            g_forces=(1.29, 1.36, 1.55), g_ref_df=(100, 180), solve_objective='balanced'
         )
         self.assertLess(
             sport_res['parameters']['natural_frequency_hz']['front'],
@@ -75,6 +79,32 @@ class TestCLIOutput(unittest.TestCase):
         self.assertGreater(
             sport_res['parameters']['camber_deg']['front'],
             racing_res['parameters']['camber_deg']['front']
+        )
+
+    def test_symptom_trim_preserves_camber_and_syncs_telemetry_under_solver(self):
+        car = {
+            'id': '1900', 'name': "Lamborghini Diablo GT '00",
+            'drivetrain': 'MR', 'mass_kg': 1490, 'power_hp': 653, 'torque_nm': 695.2,
+            'balance': {'front_pct': 41, 'rear_pct': 59}
+        }
+        base_res = build_setup(
+            car=car, tire='SS', mode='grip',
+            df_front_range=(0, 100), df_rear_range=(130, 280),
+            g_forces=(1.11, 1.22, 1.34), g_ref_df=(80, 150), solve_objective='balanced'
+        )
+        trim_res = build_setup(
+            car=car, tire='SS', mode='grip',
+            df_front_range=(0, 100), df_rear_range=(130, 280),
+            g_forces=(1.11, 1.22, 1.34), g_ref_df=(80, 150), solve_objective='balanced',
+            symptoms=['front_tire_wear']
+        )
+        self.assertGreater(
+            trim_res['parameters']['camber_deg']['front'],
+            base_res['parameters']['camber_deg']['front']
+        )
+        self.assertLess(
+            trim_res['telemetry']['tire_wear_analysis']['front_wear_factor'],
+            base_res['telemetry']['tire_wear_analysis']['front_wear_factor']
         )
 
 if __name__ == '__main__':

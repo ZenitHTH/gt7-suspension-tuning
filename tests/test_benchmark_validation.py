@@ -1,0 +1,41 @@
+import unittest
+from db import get_car, get_track
+from setup import build_setup
+
+
+class TestBenchmarkValidation(unittest.TestCase):
+    def test_genesis_g70_gr4_awd_benchmark(self):
+        # Genesis G70 AWD at Red Bull Ring should yield bias in [-1, 0]
+        car = get_car("Genesis G70") or {
+            'name': 'Genesis G70 Gr.4', 'mass_kg': 1350, 'drivetrain': 'AWD',
+            'group': 'Gr.4', 'balance': {'front_pct': 53, 'rear_pct': 47}
+        }
+        track = get_track("Red Bull Ring")
+        res = build_setup(car=car, track=track, tire='RM', mode='grip')
+        bias = res['parameters']['brake_bias']
+        self.assertIn(bias, [-1, 0])
+
+    def test_amg_gt3_fr_wheel_vs_controller_benchmark(self):
+        # AMG GT3 FR at Nurburgring
+        car = get_car("AMG GT3") or {
+            'name': 'Mercedes-AMG GT3', 'mass_kg': 1350, 'drivetrain': 'FR',
+            'group': 'Gr.3', 'balance': {'front_pct': 50, 'rear_pct': 50}
+        }
+        track = get_track("Nurburgring")
+        wheel_setup = build_setup(car=car, track=track, tire='RM', is_controller=False)
+        self.assertGreaterEqual(wheel_setup['parameters']['brake_bias'], 1)
+
+        pad_setup = build_setup(car=car, track=track, tire='RM', is_controller=True)
+        self.assertLessEqual(pad_setup['parameters']['brake_bias'], 1)
+        self.assertGreaterEqual(pad_setup['parameters']['lsd_rear']['brake'], 80)
+
+    def test_alpine_a110_mr_benchmark(self):
+        # Alpine A110 MR at Alsace
+        car = get_car("Alpine A110") or {
+            'name': 'Alpine A110', 'mass_kg': 1100, 'drivetrain': 'MR',
+            'group': 'Road Car', 'balance': {'front_pct': 44, 'rear_pct': 56}
+        }
+        track = get_track("Alsace")
+        res = build_setup(car=car, track=track, tire='SM')
+        bias = res['parameters']['brake_bias']
+        self.assertLessEqual(bias, 0)

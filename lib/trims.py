@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
-GT7 Closed-Loop Trims & Quick-Trims Delta Module
-Applies handling symptom adjustments and in-game stability index corrections,
-and constructs Section 2.F proactive dual setup variations (Tire-Saver and Max-Stability).
+GT7 Closed-Loop Trims & Handling Diagnostics Module
+Applies handling symptom adjustments and in-game stability index corrections.
 """
 
 from typing import Dict, Tuple, Optional, Any, List
@@ -12,6 +11,7 @@ import sys
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(BASE_DIR, 'scripts'))
 from gt7_constants import SLIDER_BOUNDS
+from lib.quick_trims import build_quick_trims
 
 
 def _apply_stability_trims(
@@ -68,30 +68,40 @@ def _apply_bump_symptom(p: Dict[str, Any], s: str) -> None:
         p['ride_height_mm']['rear'] += 3
 
 
+def _trim_front_tire_wear(p: Dict[str, Any], drivetrain: str) -> None:
+    """Rebalance front-axle tire wear: soften front roll stiffness and preserve front brake load."""
+    p['anti_roll_bar']['front'] = max(1, p['anti_roll_bar']['front'] - 1)
+    p['anti_roll_bar']['rear'] = min(10, p['anti_roll_bar']['rear'] + 2)
+    if p.get('downforce') and isinstance(p['downforce'], dict) and p['downforce'].get('front'):
+        p['downforce']['front'] = max(10, int(round(p['downforce']['front'] * 0.92)))
+    p['camber_deg']['front'] = max(-1.4, round(p['camber_deg']['front'] + 0.5, 1))
+    p['toe_angle']['front'] = '0.00'
+    if drivetrain == 'FR':
+        p['brake_bias'] = min(2, p['brake_bias'] + 1)
+    elif drivetrain != 'FF':
+        p['brake_bias'] = min(0, p['brake_bias'] + 1)
+    for lsd in [p[k] for k in ('lsd_rear', 'lsd_front') if k in p and isinstance(p[k], dict)]:
+        lsd['brake'] = max(20, lsd['brake'] - 4)
+
+
+def _trim_rear_tire_wear(p: Dict[str, Any], drivetrain: str) -> None:
+    """Rebalance rear-axle tire wear: soften rear acceleration locking and shift braking load forward."""
+    for lsd in [p[k] for k in ('lsd_rear', 'lsd_front') if k in p and isinstance(p[k], dict)]:
+        lsd['accel'] = max(16, min(24, lsd['accel'] - 4))
+    p['camber_deg']['rear'] = max(-1.0, round(p['camber_deg']['rear'] + 0.4, 1))
+    p['anti_roll_bar']['front'] = min(10, p['anti_roll_bar']['front'] + 1)
+    p['anti_roll_bar']['rear'] = max(1, p['anti_roll_bar']['rear'] - 1)
+    p['damping_compression_pct']['rear'] = min(80, p['damping_compression_pct']['rear'] + 2)
+    if drivetrain in ['FR', 'MR', 'RR']:
+        p['brake_bias'] = max(-2, p['brake_bias'] - 1)
+
+
 def _apply_tire_wear_symptom(p: Dict[str, Any], s: str, drivetrain: str) -> None:
     """Apply severe tire wear rebalancing adjustments."""
     if s in ['front_tire_wear', 'front_wear', 'tire_wear_front']:
-        p['anti_roll_bar']['front'] = max(1, p['anti_roll_bar']['front'] - 1)
-        p['anti_roll_bar']['rear'] = min(10, p['anti_roll_bar']['rear'] + 2)
-        if p.get('downforce') and isinstance(p['downforce'], dict) and p['downforce'].get('front'):
-            p['downforce']['front'] = max(10, int(round(p['downforce']['front'] * 0.92)))
-        p['camber_deg']['front'] = max(-1.4, round(p['camber_deg']['front'] + 0.5, 1))
-        p['toe_angle']['front'] = '0.00'
-        if drivetrain == 'FR':
-            p['brake_bias'] = min(2, p['brake_bias'] + 1)
-        elif drivetrain != 'FF':
-            p['brake_bias'] = max(-2, p['brake_bias'] - 1)
-        for lsd in [p[k] for k in ('lsd_rear', 'lsd_front') if k in p and isinstance(p[k], dict)]:
-            lsd['brake'] = max(20, lsd['brake'] - 4)
+        _trim_front_tire_wear(p, drivetrain)
     elif s in ['rear_tire_wear', 'rear_wear', 'tire_wear_rear']:
-        for lsd in [p[k] for k in ('lsd_rear', 'lsd_front') if k in p and isinstance(p[k], dict)]:
-            lsd['accel'] = max(16, min(24, lsd['accel'] - 4))
-        p['camber_deg']['rear'] = max(-1.0, round(p['camber_deg']['rear'] + 0.4, 1))
-        p['anti_roll_bar']['front'] = min(10, p['anti_roll_bar']['front'] + 1)
-        p['anti_roll_bar']['rear'] = max(1, p['anti_roll_bar']['rear'] - 1)
-        p['damping_compression_pct']['rear'] = min(80, p['damping_compression_pct']['rear'] + 2)
-        if drivetrain in ['FR', 'MR', 'RR']:
-            p['brake_bias'] = max(-2, p['brake_bias'] - 1)
+        _trim_rear_tire_wear(p, drivetrain)
 
 
 def _clamp_suspension_sliders(p: Dict[str, Any]) -> None:
@@ -156,62 +166,3 @@ def apply_closed_loop_trim(
     _clamp_suspension_sliders(p)
     _clamp_drivetrain_and_brakes(p, drivetrain, group)
     return p
-
-
-def _build_tire_saver_spec(p: Dict[str, Any], drivetrain: str, is_endurance: bool) -> Dict[str, Any]:
-    """Build tire-saver quick-trim specification."""
-    nf = p.get('natural_frequency_hz', {})
-    fn_f, fn_r = nf.get('front', 2.50), nf.get('rear', 2.70)
-    lsd_r = p.get('lsd_rear') or {'init': 8, 'accel': 20, 'brake': 50}
-
-    target_fn_f = round(max(1.40, fn_f - (0.0 if is_endurance else 0.20)), 2)
-    target_fn_r = round(max(1.40, fn_r - (0.0 if is_endurance else 0.20)), 2)
-    toe_str = '0.00° / In 0.12°' if drivetrain in ['MR', 'RR'] else '0.00° / In 0.08°'
-    accel_val = max(14, min(20, lsd_r['accel'] - (0 if is_endurance else 4)))
-
-    cam_f = p.get('camber_deg', {}).get('front', -2.8)
-    cam_r = p.get('camber_deg', {}).get('rear', -1.5)
-    cam_str = f"{min(-1.4, round(cam_f + 0.5, 1)):.1f}° / {min(-0.8, round(cam_r + 0.3, 1)):.1f}°"
-    return {
-        'natural_frequency_hz': f"{target_fn_f:.2f} / {target_fn_r:.2f} Hz",
-        'negative_camber': cam_str,
-        'toe_angle': toe_str,
-        'lsd_accel': accel_val,
-        'description': 'Softer spring rate, reduced camber & zero-scrub toe to eliminate tire overheating on long stints'
-    }
-
-
-def _build_max_stability_spec(p: Dict[str, Any], drivetrain: str) -> Dict[str, Any]:
-    """Build max stability quick-trim specification."""
-    arb = p.get('anti_roll_bar', {'front': 5, 'rear': 5})
-    exp = p.get('damping_expansion_pct', {'front': 48, 'rear': 52})
-    lsd_r = p.get('lsd_rear') or {'init': 8, 'accel': 20, 'brake': 50}
-    bias = p.get('brake_bias', 0)
-
-    stab_arb_f = min(8, arb['front'] + 1)
-    stab_arb_r = max(3, arb['rear'] - 1)
-    stab_exp_r = min(80, exp['rear'] + 4)
-    stab_toe_r = 'In 0.20°' if drivetrain in ['MR', 'RR'] else 'In 0.18°'
-    stab_lsd_brake = min(65, lsd_r['brake'] + 8)
-    stab_bias = -1 if drivetrain == 'FF' else min(0, bias)
-
-    return {
-        'anti_roll_bar': f"{stab_arb_f} / {stab_arb_r}",
-        'damping_expansion_rear': f"{stab_exp_r}%",
-        'rear_toe_in': stab_toe_r,
-        'lsd_braking_sens': stab_lsd_brake,
-        'brake_bias': stab_bias,
-        'description': 'Anchors rear axle under braking, stiffens rear rebound, and dampens yaw to prevent snap-oversteer'
-    }
-
-
-def build_quick_trims(
-    parameters: Dict[str, Any],
-    drivetrain: str = 'FR',
-    is_endurance: bool = False
-) -> Dict[str, Dict[str, Any]]:
-    """Construct Section 2.F proactive quick-trim delta table."""
-    return {
-        'tire_saver': _build_tire_saver_spec(parameters, drivetrain, is_endurance),
-        'max_stability': _build_max_stability_spec(parameters, drivetrain)
-    }

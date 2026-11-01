@@ -229,7 +229,7 @@ class TestGT7Dynamics(unittest.TestCase):
         self.assertEqual(cam_r_x, -1.2)
         self.assertEqual(toe_r_x, 'In 0.12')
 
-        # Brake bias shifts -1 rearward on balanced/front-loaded endurance runs (wf >= 0.45) to save front tires
+        # Brake bias shifts -1 forward on balanced/front-loaded endurance runs (wf >= 0.45) for front yaw damping
         bias_x, _ = gt7_dynamics.calculate_brake_bias(wf=0.46, hcg_m=0.32, wheelbase_m=2.95, drivetrain='MR', is_endurance=True)
         self.assertEqual(bias_x, -1)
 

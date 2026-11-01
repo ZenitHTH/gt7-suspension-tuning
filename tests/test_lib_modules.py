@@ -127,7 +127,7 @@ class TestLibModules(unittest.TestCase):
         self.assertEqual(res['toe_angle']['front'], '0.00')
         self.assertLess(res['downforce']['front'], 980)
         self.assertGreater(res['camber_deg']['front'], -2.2) # Flattened (-1.7)
-        self.assertEqual(res['brake_bias'], -2)
+        self.assertEqual(res['brake_bias'], 0)
 
     def test_calculate_brake_bias_ground_truth(self):
         # FF must have front bias (negative)
@@ -139,6 +139,14 @@ class TestLibModules(unittest.TestCase):
         # FR on controller must be clamped to <= 1 to avoid ABS snap
         bias_fr_pad, _ = calculate_brake_bias(wf=0.54, drivetrain='FR', is_controller=True)
         self.assertLessEqual(bias_fr_pad, 1)
+        # FR balanced car (wf < 0.52) in endurance mode must remain neutral (0), not bump to 1
+        bias_fr_bal_endur, _ = calculate_brake_bias(wf=0.48, drivetrain='FR', is_endurance=True, is_controller=False)
+        self.assertEqual(bias_fr_bal_endur, 0)
+        # FR heavy muscle car (wf=0.58) in endurance mode softens rear bias from 2 to 1
+        bias_fr_heavy_sprint, _ = calculate_brake_bias(wf=0.58, drivetrain='FR', is_endurance=False, is_controller=False)
+        bias_fr_heavy_endur, _ = calculate_brake_bias(wf=0.58, drivetrain='FR', is_endurance=True, is_controller=False)
+        self.assertEqual(bias_fr_heavy_sprint, 2)
+        self.assertEqual(bias_fr_heavy_endur, 1)
         # AWD (Genesis G70 Gr.4) must have slight front or center bias to avoid center diff binding
         bias_awd, _ = calculate_brake_bias(wf=0.53, drivetrain='AWD')
         self.assertIn(bias_awd, [-1, 0])

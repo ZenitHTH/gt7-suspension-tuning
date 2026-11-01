@@ -16,18 +16,25 @@ class TestBenchmarkValidation(unittest.TestCase):
         self.assertIn(bias, [-1, 0])
 
     def test_amg_gt3_fr_wheel_vs_controller_benchmark(self):
-        # AMG GT3 FR at Nurburgring
-        car = get_car("AMG GT3") or {
-            'name': 'Mercedes-AMG GT3', 'mass_kg': 1350, 'drivetrain': 'FR',
-            'group': 'Gr.3', 'balance': {'front_pct': 50, 'rear_pct': 50}
+        # Front-heavy FR car (Mustang Gr.3: 54:46)
+        car_mustang = get_car("Ford Mustang Gr.3") or {
+            'name': 'Ford Mustang Gr.3', 'mass_kg': 1350, 'drivetrain': 'FR',
+            'group': 'Gr.3', 'balance': {'front_pct': 54, 'rear_pct': 46}
         }
-        track = get_track("Nurburgring")
-        wheel_setup = build_setup(car=car, track=track, tire='RM', is_controller=False)
+        track = get_track("Red Bull Ring")
+        wheel_setup = build_setup(car=car_mustang, track=track, tire='RM', is_controller=False)
         self.assertGreaterEqual(wheel_setup['parameters']['brake_bias'], 1)
 
-        pad_setup = build_setup(car=car, track=track, tire='RM', is_controller=True)
+        pad_setup = build_setup(car=car_mustang, track=track, tire='RM', is_controller=True)
         self.assertLessEqual(pad_setup['parameters']['brake_bias'], 1)
         self.assertGreaterEqual(pad_setup['parameters']['lsd_rear']['brake'], 80)
+
+        # Balanced/rear-biased FR car (AMG SLS GT3: 48:52) in endurance mode (Nurburgring)
+        # must remain neutral (0) and not bump to rear bias
+        car_amg = get_car("AMG GT3")
+        track_endur = get_track("Nurburgring")
+        amg_setup = build_setup(car=car_amg, track=track_endur, tire='RM', is_controller=False)
+        self.assertEqual(amg_setup['parameters']['brake_bias'], 0)
 
     def test_alpine_a110_mr_benchmark(self):
         # Alpine A110 MR at Alsace

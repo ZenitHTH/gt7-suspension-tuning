@@ -90,7 +90,7 @@ def _calculate_drivetrain_bias(drivetrain: str, wf: float, is_controller: bool) 
     if drivetrain in ['AWD', '4WD', '4x4']:
         return -1 if wf >= 0.52 else 0
 
-    base = round(10.0 * (wf - 0.48))
+    base = round(15.0 * round(wf - 0.48, 4))
     if is_controller:
         return min(1, max(0, base))
     return max(1, min(3, base)) if wf >= 0.52 else 0
@@ -109,6 +109,6 @@ def calculate_brake_bias(
     bias = _calculate_drivetrain_bias(drivetrain, wf, is_controller)
     if is_endurance and drivetrain == 'MR' and wf >= 0.45:
         bias = -1
-    elif is_endurance and drivetrain == 'FR' and not is_controller:
-        bias = max(1, bias - 1)
+    elif is_endurance and drivetrain == 'FR' and not is_controller and bias > 1:
+        bias -= 1
     return bias, round(dynamic_pitch_transfer * 100.0, 1)

@@ -3,6 +3,12 @@ from cli import format_setup_sheet
 from setup import build_setup
 
 class TestCLIOutput(unittest.TestCase):
+    def test_format_brake_bias_ground_truth_label(self):
+        from sheet_formatter import format_brake_bias_label
+        self.assertEqual(format_brake_bias_label(-1), "-1 (หน้า / Front)")
+        self.assertEqual(format_brake_bias_label(2), "+2 (หลัง / Rear)")
+        self.assertEqual(format_brake_bias_label(0), "0 (กลาง / Center)")
+
     def test_format_setup_sheet_contains_proofs(self):
         car = {'name': 'Porsche 911 GT3 RS', 'mass_kg': 1430, 'drivetrain': 'RR', 'power_hp': 520, 'torque_nm': 470}
         setup_dict = build_setup(car, tire='RS')

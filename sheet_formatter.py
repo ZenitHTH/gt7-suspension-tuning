@@ -126,6 +126,15 @@ def _format_suspension_table(params: Dict[str, Any]) -> List[str]:
     return lines
 
 
+def format_brake_bias_label(bias: int) -> str:
+    """Format GT7 Brake Balance with in-game polarity (-5 Front to +5 Rear)."""
+    if bias == 0:
+        return "0 (กลาง / Center)"
+    if bias > 0:
+        return f"+{bias} (หลัง / Rear)"
+    return f"{bias} (หน้า / Front)"
+
+
 def _format_lsd_and_drivetrain(params: Dict[str, Any], car: Dict[str, Any]) -> List[str]:
     """Format LSD settings, brake balance, and transmission."""
     lines = []
@@ -140,7 +149,9 @@ def _format_lsd_and_drivetrain(params: Dict[str, Any], car: Dict[str, Any]) -> L
         lines.append('─' * 86)
     if params.get('awd_torque_split'):
         lines.append(f"• การกระจายแรงบิด AWD (Front:Rear): {params.get('awd_torque_split')}")
-    lines.append(f"• ตัวควบคุมสมดุลเบรก (Brake Balance Controller): {params.get('brake_bias')} (หน้า + / หลัง -)")
+    bias_val = params.get('brake_bias', 0)
+    bias_str = format_brake_bias_label(bias_val) if isinstance(bias_val, int) else str(bias_val)
+    lines.append(f"• ตัวควบคุมสมดุลเบรก (Brake Balance Controller): {bias_str} [หน้า -5 ถึง +5 หลัง]")
     lines.append(f"• ความเร็วสูงสุดอัตโนมัติ (Auto-set Top Speed): {params.get('transmission_top_speed_kmh')} km/h (เกียร์แข่ง Fully Customisable)")
     return lines
 

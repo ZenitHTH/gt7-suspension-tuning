@@ -3,6 +3,31 @@ from cli import format_setup_sheet
 from setup import build_setup
 
 class TestCLIOutput(unittest.TestCase):
+    def test_cli_sheet_contains_correct_brake_bias_format(self):
+        mock_setup = {
+            'car': {'name': 'Test FR', 'drivetrain': 'FR', 'mass_kg': 1300, 'balance': {'ratio_str': '54:46'}},
+            'track': {'name': 'Nurburgring', 'mode': 'grip'},
+            'tire_compound': 'RM',
+            'setup_mode': 'GRIP',
+            'telemetry': {'ay_est': 1.5, 'mu': 1.5, 'tot_s': 1100, 'c_f': 280, 'c_r': 270, 'fr_ratio': 1.05, 'lltd_pct': 48.0, 'pitch_transfer_pct': 18.0, 'is_no_aero': False},
+            'parameters': {
+                'ride_height_mm': {'front': 95, 'rear': 105},
+                'natural_frequency_hz': {'front': 2.6, 'rear': 2.8},
+                'anti_roll_bar': {'front': 4, 'rear': 6},
+                'damping_compression_pct': {'front': 30, 'rear': 32},
+                'damping_expansion_pct': {'front': 48, 'rear': 50},
+                'camber_deg': {'front': -2.2, 'rear': -1.2},
+                'toe_angle': {'front': '0.00', 'rear': 'In 0.10'},
+                'downforce': {'front': 100, 'rear': 200},
+                'lsd_rear': {'init': 6, 'accel': 24, 'brake': 14},
+                'brake_bias': 2,
+                'transmission_top_speed_kmh': 280
+            }
+        }
+        sheet = format_setup_sheet(mock_setup)
+        self.assertIn("+2 (หลัง / Rear)", sheet)
+        self.assertNotIn("(หน้า + / หลัง -)", sheet)
+
     def test_format_brake_bias_ground_truth_label(self):
         from sheet_formatter import format_brake_bias_label
         self.assertEqual(format_brake_bias_label(-1), "-1 (หน้า / Front)")

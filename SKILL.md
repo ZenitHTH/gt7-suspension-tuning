@@ -128,7 +128,7 @@ When searching online for reference setups:
     LSD Clutch Preload             ───►  LSD Initial Torque (0–30)  ───► ทอร์กเริ่มต้น (0–30)
     LSD Drive Ramp Angle           ───►  LSD Accel Sensitivity      ───► ความไวการเร่ง (0–100)
     LSD Coast Ramp Angle           ───►  LSD Braking Sensitivity    ───► ความไวการเบรก (0–100)
-    Brake Proportioning Bias       ───►  Brake Balance Controller   ───► ตัวควบคุมสมดุลเบรก (-5 ถึง +5)
+    Brake Proportioning Bias       ───►  Brake Balance Controller   ───► ตัวควบคุมสมดุลเบรก (-5 หน้า ถึง +5 หลัง)
     Aerodynamic Downforce          ───►  Downforce (Front / Rear)   ───► แรงกด (หน้า / หลัง)
 
 -----
@@ -141,7 +141,7 @@ When searching online for reference setups:
   1. **Unlock LSD Braking Sensitivity (`20–25` on 0–100 scale)**: *Critical Root Cause!* Overly high braking sensitivity (>40) forces both rear wheels to rotate at the same speed during trail-braking, creating massive yaw resistance and pushing the nose straight. Dropping to `20–25` frees the rear axle to pivot into apexes.
   2. **Biased Front Downforce**: Set Front Downforce to maximum (`100`) and Rear Downforce to `65–80` to suck the front tires into the asphalt and prevent high-speed nose float.
   3. **Widen ARB Asymmetry**: Soften Front ARB (`2–3`) and stiffen Rear ARB (`6–8`) to transfer dynamic roll load to the rear, biting front grip and forcing rear rotation.
-  4. **Rearward Brake Balance**: Set Brake Balance Controller to **`-2` to `-3` (Rear Bias)** to unload front tires under braking, leaving 100% front tire friction capacity for steering.
+  4. **Rearward Brake Balance**: Set Brake Balance Controller to **`+1` to `+3` (Rear Bias)** on FR to unload front tires under braking, leaving 100% front tire friction capacity for steering (clamped to `+1` on controller).
   5. **Increase Front Toe-Out**: Set to `Out 0.12° to 0.15°` for razor-sharp turn-in response.
   6. **Positive Rake Angle**: Lower front ride height relative to rear by `+8 to +12 mm` (e.g. Front 60mm / Rear 72mm).
 
@@ -202,7 +202,7 @@ When searching online for reference setups:
   5. **Soften Rear Damping Expansion**: Drop rear rebound to `42%–46%` to allow the rear chassis to lift and transfer load forward.
 
 * **Symptom 2: Wheel Shudder / Twitching under Deep Braking (เบรกลึกแล้วล้อกระตุก / ABS Micro-Lock)**
-  1. **Moderate Rear Brake Bias**: Extreme rearward bias (`-3` to `-5`) causes the unloaded rear tires to lock prematurely during heavy deceleration pitch (>70% pedal), triggering high-frequency ABS pulsing. Move bias to **`-1` or `-2`**.
+  1. **Moderate Rear Brake Bias**: Extreme rearward bias (`+3` to `+5`) causes the unloaded rear tires to lock prematurely during heavy deceleration pitch (>70% pedal), triggering high-frequency ABS pulsing. Move bias to **`+1` or `0`**.
   2. **Increase LSD Braking Sensitivity on Solid/Live Axles**: Increase rear LSD Braking from `12` to **`18–24`** (on 0–100 scale) to prevent the inside rear wheel from chattering when trail-braking into corner entry.
   3. **Increase Front Bump Damping (Compression)**: Stiffen front compression from `28%` to **`31–33%`** to prevent the front dampers from bottoming out onto bump stops under peak deceleration.
 
@@ -210,11 +210,11 @@ When searching online for reference setups:
 
 | Layout | Mass Dist. | LSD Braking | Brake Bias | Rear Rebound | Front Toe | Rear Toe | Core Trail-Braking Mechanism & Critical Warning |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
-| **FF** | ~62:38 | `10–12` | `+1 to +2` | `38%–42%` | `Out 0.08°` | `In 0.04°` | Soft front ARB (2) + Stiff rear ARB (8-9). *Warning*: Never use rear brake bias; light tail will snap violently. |
-| **FR** | ~55:45 | `12–15` | `-2 to -3` | `42%–46%` | `Out 0.06°` | `In 0.08°` | Unlocks rear axle for instant yaw pivot. Relieves front tire braking load. |
-| **MR** | ~42:58 | `42–50` | `0 to -1` | `50%–54%` | `Out 0.04°` | `In 0.22°` | Moderate-high LSD brake acts as yaw damper. *Warning*: Unlocking LSD <35 causes instant high-speed snap spin! |
+| **FF** | ~62:38 | `10–12` | `-1 to -2` | `38%–42%` | `Out 0.08°` | `In 0.04°` | Soft front ARB (2) + Stiff rear ARB (8-9). *Warning*: Never use rear brake bias (+); light tail will snap violently. |
+| **FR** | ~55:45 | `12–15` | `+1 to +3` | `42%–46%` | `Out 0.06°` | `In 0.08°` | Unlocks rear axle for instant yaw pivot. Relieves front tire braking load (clamped to `+1` on controller). |
+| **MR** | ~42:58 | `42–50` | `0 to -2` | `50%–54%` | `Out 0.04°` | `In 0.22°` | Moderate-high LSD brake acts as yaw damper. *Warning*: Unlocking LSD <35 or setting positive rear bias causes instant high-speed snap spin! |
 | **RR** | ~38:62 | `55–65` | `-1 to -2` | `48%–52%` | `Out 0.04°` | `In 0.30°` | Heavy rear pendulum. Needs high LSD braking + heavy rear toe-in + positive rake (+10mm) to pin front nose. |
-| **AWD** | ~55:45 | F:`10` / R:`14` | `-2 to -3` | `44%–48%` | `Out 0.06°` | `In 0.12°` | Front LSD fully open + Center torque split 35:65/40:60 so front wheels steer without drivetrain binding. |
+| **AWD** | ~55:45 | F:`10` / R:`14` | `-1 to 0` | `44%–48%` | `Out 0.06°` | `In 0.12°` | Front LSD fully open + Center torque split 35:65/40:60 so front wheels steer without drivetrain binding (validated 1:36.778 on Genesis Gr.4). |
 
 ### 2.F — Proactive Dual-Trim Delivery Invariant (Tire-Saver & Max Stability Quick-Trims)
 > 🏁 **STANDARD OUTPUT RULE — Never Make the User Ask for Tire-Save or Stability Trims**:
@@ -239,15 +239,15 @@ When searching online for reference setups:
 > $$E_{\text{wear}} \propto \int |F_x \cdot s_x| dt + \int |F_y \cdot s_y| dt$$
 >
 > **The Brake Bias Myth Explained**:
-> Adjusting the Brake Balance Controller (e.g. popular YouTube advice setting rear `-5`) ONLY shifts **longitudinal braking work ($F_x$)**.
-> - **When Rear `-5` Works**: On front-heavy FR/FF road cars (55:45 to 62:38), moving brake bias rearward unloads the heavy front axle and forces trailing-throttle yaw rotation into slow corners.
-> - **When Rear `-5` Fails**: On balanced or high-downforce platforms (MR, RR, AWD, Gr.1, Gr.X, GT3) navigating sustained high-G sweepers (>160 km/h), the front tires wear out from **lateral cornering scrub ($F_y$)**, NOT braking. If rear roll stiffness is too compliant, the outside front tire must resist 100% of the vehicle's cornering inertia alone. The front tires burn to 10% while rears remain at 40%.
+> Adjusting the Brake Balance Controller (e.g. popular YouTube advice setting rear `+5`) ONLY shifts **longitudinal braking work ($F_x$)**.
+> - **When Rear `+1` to `+3` Works**: On front-heavy FR road cars (52:48 to 56:44), moving brake bias rearward unloads the heavy front axle and forces trailing-throttle yaw rotation into slow corners.
+> - **When Rear `+5` Fails**: On balanced or high-downforce platforms (MR, RR, AWD, Gr.1, Gr.X, GT3) navigating sustained high-G sweepers (>160 km/h), the front tires wear out from **lateral cornering scrub ($F_y$)**, NOT braking. If rear roll stiffness is too compliant, the outside front tire must resist 100% of the vehicle's cornering inertia alone. The front tires burn to 10% while rears remain at 40%.
 >
 > #### Universal Asymmetric Tire Wear Rebalancing Matrix (When Wear Disparity > 20%):
 >
 > | Asymmetric Wear Symptom | Physical Mechanism | Universal Tuning Remedies (All Cars) |
 > | :--- | :--- | :--- |
-> | **Severe Front Tire Wear**<br>(Front $\ll$ Rear, e.g. Front 10% / Rear 40%) | Outside front tire overloaded by continuous lateral cornering scrub + excessive camber/toe friction | 1. **Shift Roll Stiffness Rearward**: Soften Front ARB by 1–2 clicks, stiffen Rear ARB by 2–3 clicks.<br>2. **Trim Front Downforce**: Reduce front aero by 5–10% to lower carcass friction down straights.<br>3. **Flatten Front Camber**: Reduce negative camber by `-0.4° to -0.6°` to distribute normal load across full tread.<br>4. **Zero Front Toe**: Set front toe strictly to `0.00°` to eliminate continuous straight-line scrub.<br>5. **Calibrate Brake Bias**: Set to `-2 to -3` (never `-5` on MR/RR to avoid ABS rear micro-lock). |
+> | **Severe Front Tire Wear**<br>(Front $\ll$ Rear, e.g. Front 10% / Rear 40%) | Outside front tire overloaded by continuous lateral cornering scrub + excessive camber/toe friction | 1. **Shift Roll Stiffness Rearward**: Soften Front ARB by 1–2 clicks, stiffen Rear ARB by 2–3 clicks.<br>2. **Trim Front Downforce**: Reduce front aero by 5–10% to lower carcass friction down straights.<br>3. **Flatten Front Camber**: Reduce negative camber by `-0.4° to -0.6°` to distribute normal load across full tread.<br>4. **Zero Front Toe**: Set front toe strictly to `0.00°` to eliminate continuous straight-line scrub.<br>5. **Calibrate Brake Bias**: Set to `+1 to +2` on FR (never `+4 to +5` on MR/RR to avoid ABS rear micro-lock). |
 > | **Severe Rear Tire Wear**<br>(Rear $\ll$ Front, e.g. Front 45% / Rear 15%) | Driven rear wheels spinning under power exit, excessive rear camber, or excessive rear toe scrub | 1. **Clamp LSD Accel Sensitivity**: Lower rear LSD Accel to `18–24` (stops corner-exit wheelspin micro-scrub).<br>2. **Flatten Rear Camber**: Reduce rear camber to `-1.0° to -1.4°` to maximize longitudinal acceleration contact patch.<br>3. **Shift Roll Stiffness Forward**: Stiffen Front ARB and soften Rear ARB to let rear squat evenly.<br>4. **Anti-Squat Damping**: Increase Rear Compression Damping by +2% to +4% to prevent sudden rear collapse under boost.<br>5. **For AWD Platforms**: Shift center torque split closer to 40:60 or 45:55 to share acceleration load with front axle. |
 
 ### 2.H — Controller (DualSense) vs Direct-Drive Wheel Dynamics & Input Assistance Traps (Update 1.71+)
@@ -381,7 +381,7 @@ graph TD
   * **FR / MR / RR (Rear-Wheel Drive)**: Output `-` in the **Front (หน้า)** column and LSD values in the **Rear (หลัง)** column.
   * **AWD / 4WD**: Output LSD values in **both** Front and Rear columns.
 * **LSD Braking Sensitivity**: `22–28` for solid/live axle FR cars (stabilizes axle chatter); `52–65` for MR/RR platforms (prevents trail-braking snap).
-* **Brake Balance Controller**: Set to **`-1` to `-2` (Rear Bias)** on front-heavy platforms to unload front tires without triggering deep-braking rear ABS shudder.
+* **Brake Balance Controller**: Set to **`+1` to `+2` (Rear Bias)** on front-heavy FR platforms (clamped to `+1` on controller) to unload front tires without triggering deep-braking rear ABS shudder. Set to `-1` to `-2` on FF, and `0` to `-2` on MR/RR/AWD.
 * **Downforce Balance & Center of Pressure (CP)**: Match aerodynamic Center of Pressure to vehicle mass distribution (e.g. 40% front / 70% rear span for MR/RR; 45% front / 55% rear for Gr.X). Avoid pinning the rear down with max downforce while leaving the front weak. When front aero is fixed/locked (e.g. Supra GT Road Car front 200), clamp rear downforce to floor (400) to maintain balance.
 * **Aerodynamic Stability Invariant (Front $\le$ Rear Downforce)**: On road circuits and non-oval tracks, Front Downforce must never exceed Rear Downforce in absolute kgf ($F_{z, front} \le F_{z, rear}$) on rear-wheel-drive platforms (FR, MR, RR). If custom GT Auto aero parts provide a large front splitter but a constrained rear wing (e.g. Front 50–200, Rear 50–100), front downforce must be clamped to the rear ceiling to prevent Center of Pressure migration ahead of CG, which causes violent high-speed snap-oversteer at speeds $>200\text{ km/h}$.
 
@@ -407,7 +407,7 @@ graph TD
 > Because you cannot transfer drive bias rearward to force throttle-on yaw rotation, you **MUST** eliminate corner-entry and mid-corner push via:
 > 1. **Ultra-Loose Front LSD**: Keep Front Initial Torque `5`, Accel `14–16`, and Braking `18–20` so the front differential does not bind or drag the nose straight.
 > 2. **Extreme ARB Asymmetry**: Set Front ARB to `2–3` and Rear ARB to `7–8` to force dynamic roll transfer to the rear outside tire.
-> 3. **Rearward Brake Bias**: Set Brake Balance Controller to `-2` or `-3` (Rear) to utilize trail-braking pitch to rotate the chassis into apexes.
+> 3. **Rearward Brake Bias**: Set Brake Balance Controller to `+1` or `+2` (Rear) to utilize trail-braking pitch to rotate the chassis into apexes (or `-1` to `0` if experiencing center diff fighting).
 > 4. **Front Camber & Toe-Out**: Run `-3.4° to -3.6°` Front Camber and `Out 0.08° to 0.12°` Front Toe-Out for crisp turn-in bite.
 
 > 📌 **Update 1.72 (Spec IV) — Gr.1 / Gr.2 / Gr.3 / Gr.4 Default Suspension & Differential Reset:**
@@ -446,7 +446,7 @@ graph TD
   2. **Inverted Aerodynamic Balance (Max Front Downforce)**: Vintage cars suffer from severe front aerodynamic lift at speed. Always install GT Auto Front Lip and set **Front Downforce to Maximum (`100`)**, while keeping Rear Downforce moderate (`85–110`). Pinning the rear down with 180+ downforce while leaving the front weak pins the car in terminal push.
   3. **Extreme ARB Asymmetry (`Front 1–2 / Rear 8–9`)**: Softening the front ARB allows the heavy front end to roll and bite into the asphalt, while a stiff rear ARB transfers dynamic roll stiffness to the outside rear tire, forcing tail rotation.
   4. **Aggressive Positive Rake (`+10 to +14 mm`)**: Set Front ride height low (`95–98 mm`) and Rear high (`108–112 mm`) to pitch aerodynamic load forward and shift static weight into the front contact patch.
-  5. **Brake Balance Controller (`-1 to -2 Rear Bias`)**: Shifting braking moderately rearward unloads front tires under light trail braking without inducing deep-braking rear ABS shudder or micro-lock.
+  5. **Brake Balance Controller (`+1 to +2 Rear Bias`)**: Shifting braking moderately rearward unloads front tires under light trail braking without inducing deep-braking rear ABS shudder or micro-lock (clamp to `+1` on controller).
   6. **Aggressive Front Toe-Out (`Out 0.12° to 0.15°`) & Camber (`-3.0° to -3.4°`)**: Pre-loads the outside front tire on turn-in to overcome the massive inertia of the V8 block.
   7. **Hardware & Settings Traps in Tuning Shop & Driving Options**:
      * ⛔ **CRITICAL TRAP — NEVER install Steering Angle Adapter (ตัวปรับมุมเลี้ยว) for Grip Racing**: In GT7, this part is exclusively for drift builds. It eliminates Ackermann steering geometry, making front wheels steer in parallel. In grip racing, turning scrubs the front tires; applying even 10% brake input immediately saturates front friction, causing instant terminal understeer ("เลี้ยวไม่เข้าเลย"). Always keep steering at **Normal / Standard Steering**.
@@ -475,8 +475,8 @@ graph TD
      * Front Camber: **`-3.0°`** (resists lateral roll distortion from 2.2 tons).
      * Rear Camber: **`-1.4° to -1.8°`** (maintains contact patch for 650+ HP electric acceleration).
       * Rear Toe-In: **`In 0.12° to 0.16°`** (stabilizes heavy rear deceleration).
-   6. **Brake Balance Controller (`-1 to -2 Rear Bias`)**:
-      * Shifts stopping force rearward to relieve the heavily loaded front tires from the 2.2-ton forward pitch.
+   6. **Brake Balance Controller (`+1 to +2 Rear Bias`)**:
+      * Shifts stopping force rearward to relieve the heavily loaded front tires from the 2.2-ton forward pitch (or `-1` to `0` if experiencing AWD center differential drag).
 
 ### 5.C — Dirt & Off-Road Jump Dynamics (Anti-Kangaroo & Tank-Slapper Landing Remediation)
 * **Archetype Circuits & Classes**: Colorado Springs, Fishermans Ranch, Sardegna Windmills; Gr.B AWD Rally cars, AWD Rally road conversions.
@@ -521,7 +521,7 @@ graph TD
     - **Asymmetric ARB (Front 1 / Rear 3–4)**: Stiffer rear transfers dynamic roll stiffness to the outside rear tire, forcing tail rotation.
     - **Front Toe-Out (`Out 0.10°`) & Reduced Rear Toe (`In 0.04°`)**: Sharpens initial turn-in bite while unshackling the rear axle.
     - **AWD Torque Split (`35:65`)**: Sends 65% power to the rear wheels to steer with throttle via controlled power slides.
-    - **Brake Balance (`-1 Rear`)**: Shifts deceleration rearward to rotate the chassis during trail-braking.
+    - **Brake Balance (`+1 Rear`)**: Shifts deceleration rearward to rotate the chassis during trail-braking.
 
 ### 5.E — Gr.B AWD Rally Car Dynamics (Tarmac Circuit vs Dirt Jump Duality)
 * **Archetype Cars**: Subaru Impreza Rally Car '98, Ford Focus RS WRC, Peugeot 205 T16 Evolution 2, Audi Sport quattro S1 Pikes Peak, Mitsubishi Lancer Evolution Final Gr.B.

@@ -155,7 +155,7 @@ class TuningService:
 **`validate` rules (errors = hard, warnings = soft):**
 - error: car not found → `Car not found: {car_id}`
 - error: any range field with `min > max` (message names the field) or any range value < 0
-- warning: any of the 8 range fields None → `No {name} range — using saved/preseeded DB values`
+- warning: any of the 6 slider-range fields (df/height/fn) is None → `No {name} range — using saved/preseeded DB values` (only these have a DB fallback; `g_ref_df`/`stability` are not included — Ruling, Task 2)
 - warning: `solve_objective` set but `g_forces` None → `Solver needs G-force calibration; solve will be skipped`
 - warning: `custom_balance` set, `abs(sum-100) > 1` → `Balance front+rear = {n} (expected 100)`
 - warning: `g_forces` set, `g_ref_df` None → `G-forces without reference downforce; profile anchored at current DF`
@@ -211,9 +211,9 @@ class RangePair(QWidget):
 
 **File `gui/form.py`. `SetupForm(QWidget)` with these public attributes (tests target them by name):**
 
-- **Vehicle group**: `car_search: QLineEdit` (textChanged → `car_combo` refills from `service.search_cars(text)`), `car_combo: QComboBox` (itemText = name, `addItem(name, data=car['id'])`), `swap_combo: QComboBox` (item 0 = `'Stock engine'` data `''`, then each swap name data swap id), `db_info_label: QLabel` (read-only multi-line: mass, power, torque, drivetrain, weight balance, axle widths).
+- **Vehicle group**: `car_search: QLineEdit` (textChanged → `car_combo` refills from `service.search_cars(text)`), `car_combo: QComboBox` (itemText = name, `addItem(name, data=car['id'])`), `swap_combo: QComboBox` (item 0 = `'Stock engine'` data `''`, then each swap name data swap id), `db_info_label: QLabel` (read-only multi-line: mass, power, torque, drivetrain, weight balance — per the verified car shape; the DB car records have no axle-width fields, so none are shown).
 - **Tire group**: `tire_combo: QComboBox` from `TIRE_COMPOUNDS`, default `'SS'`.
-- **Slider ranges group**: 8 × `RangePair` instances — `df_f`, `df_r` (kind int, max_v 1000), `hf`, `hr` (int, 400), `fn_f`, `fn_r` (kind float, max_v 10.0, 2 dp). Plus `save_ranges_btn: QPushButton` ("Save ranges to DB") → `service.save_sliders` + status flash.
+- **Slider ranges group**: 6 × `RangePair` instances — `df_f`, `df_r` (kind int, **max_v 2000** — preseeded/saved DF ranges reach 2000 in the DB; 1000 was a wrong lock, corrected after final review), `hf`, `hr` (int, 400), `fn_f`, `fn_r` (kind float, max_v 10.0, 2 dp). Plus `save_ranges_btn: QPushButton` ("Save ranges to DB") → `service.save_sliders` + status flash.
 - **Overrides group**: `mass_use_db/power_use_db/torque_use_db/balance_use_db: QCheckBox` (checked by default); `mass_spin/power_spin: QSpinBox` (0–3000), `torque_spin: QDoubleSpinBox` (0–1500); `bal_f_spin/bal_r_spin: QSpinBox` (0–100); `drivetrain_combo: QComboBox` from `DRIVETRAINS`.
 - `status_label: QLabel` at the bottom of the form for messages (warnings/errors, word-wrapped).
 
@@ -277,7 +277,7 @@ class ResultsView(QWidget):
 - Layout: `QSplitter` — left `QScrollArea` containing `SetupForm`, right `ResultsView`; bottom bar: `compute_btn: QPushButton("Compute Setup")` + `status: QLabel`.
 - `MainWindow.__init__(self, service: Optional[TuningService] = None)` (constructs one when None).
 - **Compute flow (slot `_on_compute`):** `errors = form.validate()`; if errors → `status` shows the first, stop. Else `results.clear()`, `compute_btn` disabled + text "Computing…"; create `worker = Worker(service, req)`; `thread = QThread(self)`; `thread.started.connect(worker.run)`; `worker.finished.connect(self._on_finished)`; `worker.failed.connect(self._on_failed)`; `thread.finished.connect(thread.deleteLater)`; `worker.moveToThread(thread)`; `thread.start()`.
-- **`_on_finished(r: GuiResult)`:** `thread.quit()`; `results.show_result(r)`; re-enable button; `status` = "N warning(s)" or "OK". `_on_failed(msg)`: same teardown + `results.show_error(msg)`. (Cross-thread signals are queued by default; `run()` completes before `thread.quit()` is handled.)
+- **`_on_finished(r: GuiResult)`:** `thread.quit()`; `results.show_result(r)`; re-enable button; `status` = "N warning(s)" or "OK". `_on_failed(msg)`: same teardown + `results.show_error(msg)`. (Cross-thread signals are queued by default; `run()` completes before `thread.quit()` is handled.) `closeEvent` (added in final fix wave): if a solve thread is in flight, `quit()` + bounded 1.5 s `wait(50)`/`processEvents()` poll loop; accept the close only once the `thread.finished` handler has cleared the in-flight flag, else `event.ignore()` — re-entrancy-safe; prevents the qFatal/SIGABRT abort on close-during-solve.
 - `main(auto_quit: int = 0) -> int`: `QApplication([])`, `MainWindow()`, `resize(1400, 900)`, QSS from Task 7, `show()`, `QTimer.singleShot(auto_quit, app.quit)` when `auto_quit > 0`, `return app.exec()`.
 
 **Steps:**

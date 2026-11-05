@@ -1,4 +1,4 @@
-"""Tests for gui.service.TuningService (Task 2). Pure Python, no Qt."""
+"""Tests for gui.service (Tasks 2-3): TuningService + Worker(QObject)."""
 import json
 import os
 import shutil
@@ -15,10 +15,11 @@ from unittest import mock  # noqa: E402
 
 from db.interface import TRACKS_DB, norm_str  # noqa: E402
 from db.loader import get_data_dir  # noqa: E402
+from PyQt6.QtCore import QCoreApplication  # noqa: E402
 
 import gui.service  # noqa: E402
-from gui.request import GuiRequest  # noqa: E402
-from gui.service import TuningService  # noqa: E402
+from gui.request import GuiRequest, GuiResult  # noqa: E402
+from gui.service import TuningService, Worker  # noqa: E402
 
 
 def _mr2_request() -> GuiRequest:
@@ -150,6 +151,23 @@ class TuningServiceTest(unittest.TestCase):
         self.assertNotIn('height_range', captured['kwargs'])
         self.assertEqual(captured['kwargs'], expected)
         self.assertEqual(captured['car']['name'], "Toyota MR2 GT-S '97")
+
+
+class WorkerTests(unittest.TestCase):
+    """Worker(QObject) emits `finished` with a GuiResult (Task 3)."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QCoreApplication.instance() or QCoreApplication(['test'])
+
+    def test_run_emits_finished(self):
+        collector = []
+        worker = Worker(TuningService(), _mr2_request())
+        worker.finished.connect(collector.append)
+        worker.run()  # synchronous — no QThread needed for the unit test
+        self.assertEqual(len(collector), 1)
+        self.assertIsInstance(collector[0], GuiResult)
+        self.assertTrue(collector[0].ok, msg=collector[0].error)
 
 
 if __name__ == '__main__':

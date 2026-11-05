@@ -1,11 +1,16 @@
-"""Qt-free tuning facade (Task 2).
+"""Tuning service facade + off-thread worker (Tasks 2-3).
 
 `TuningService` wraps the DB lookup layer, `scripts.gt7_db.get_swaps`, and
 `setup.build_setup` / `sheet_formatter.format_setup_sheet` behind plain
-Python methods so the Qt layer (Tasks 3-6) never touches the core directly.
+Python methods so the Qt layer never touches the core directly.
 `compute()` never raises: failures come back as `GuiResult(error=...)`.
+
+`Worker` (Task 3) is the QObject wrapper that runs `compute()` off the UI
+thread so the solver never blocks the event loop.
 """
 from typing import Any, Dict, List, Optional, Tuple
+
+from PyQt6.QtCore import QObject, pyqtSignal
 
 import setup
 from db.interface import (
@@ -179,3 +184,30 @@ class TuningService:
             return GuiResult(error=repr(e), warnings=warnings)
 
         return GuiResult(setup=setup_dict, sheet=sheet, warnings=warnings)
+
+
+class Worker(QObject):
+    """Off-thread compute wrapper (Task 3).
+
+    App-layer usage: connect `finished`/`failed` to the UI, `moveToThread()`
+    the worker, then connect the thread's `started` to `run()`. `finished`
+    carries the `GuiResult`; `failed` is belt-and-braces only, since
+    `TuningService.compute()` never raises (errors arrive as
+    `GuiResult(error=...)`).
+    """
+
+    finished = pyqtSignal(object)   # GuiResult
+    failed = pyqtSignal(str)
+
+    def __init__(self, service: TuningService, req: GuiRequest,
+                 parent: Optional[QObject] = None) -> None:
+        super().__init__(parent)
+        self._service = service
+        self._req = req
+
+    def run(self) -> None:
+        """Run `compute()` and emit `finished` (or `failed` if it ever raises)."""
+        try:
+            self.finished.emit(self._service.compute(self._req))
+        except Exception as e:  # belt-and-braces: compute() never raises
+            self.failed.emit(str(e))

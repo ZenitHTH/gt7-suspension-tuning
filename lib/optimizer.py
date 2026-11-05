@@ -198,12 +198,51 @@ def _evaluate(req: SolverRequest, params: Dict[str, Any], sim: Dict[str, Any],
     return SolverResult(params, g_pred, df_profile, sim, eq, tw, score)
 
 
+def _candidate_grid(req: SolverRequest) -> list:
+    """Enumerate (downforce_span, fn_delta, camber_delta) candidates deterministically.
+
+    Up to 30 candidates (5 spans x 3 fn deltas x 2 camber deltas); locked axes
+    collapse to a single [None] / [(0.0, 0.0)] entry.
+    """
+    locked = req.locked_params
+    spans = ([0.30, 0.45, 0.60, 0.75, 0.90]
+             if 'downforce' not in locked else [None])
+    fn_deltas = ([-0.15, 0.0, 0.15]
+                 if 'natural_frequency_hz' not in locked else [None])
+    camber_deltas = ([(0.0, 0.0), (0.4, 0.2)]
+                     if 'camber_deg' not in locked and not req.trk.is_dirt and not req.trk.is_wet
+                     else [(0.0, 0.0)])
+    return [(s, f, c) for s in spans for f in fn_deltas for c in camber_deltas]
+
+
+def _better(a: SolverResult, b: SolverResult, sim_a: Dict[str, Any], sim_b: Dict[str, Any]) -> bool:
+    """Candidate a beats incumbent b: strictly higher score, or score within 0.001
+    with larger dynamic front clearance (deterministic first-wins on exact ties)."""
+    if abs(a.objective_score - b.objective_score) < 0.001:
+        return sim_a['dynamic_outside_front_clearance_mm'] > sim_b['dynamic_outside_front_clearance_mm']
+    return a.objective_score > b.objective_score
+
+
+def _run_candidate(req: SolverRequest, span, fn_delta, camber_tuple,
+                   bounds: Tuple[int, int, int, int]) -> Tuple[SolverResult, Dict[str, Any]]:
+    """Apply one candidate's offsets to a fresh baseline copy and evaluate it."""
+    params = copy.deepcopy(req.baseline_params)
+    if span is not None:
+        _optimize_downforce(req, params, span=span)
+    if fn_delta is not None:
+        _optimize_frequencies(req, params, delta=fn_delta)
+    if camber_tuple != (0.0, 0.0):
+        _optimize_camber(req, params, delta_f=camber_tuple[0], delta_r=camber_tuple[1])
+    sim = _optimize_ride_heights(req, params, bounds)
+    return _evaluate(req, params, sim, bounds), sim
+
+
 def solve_optimal_setup(request: SolverRequest) -> SolverResult:
     """Solve multi-variable suspension parameters satisfying aero and clearance constraints."""
-    params = copy.deepcopy(request.baseline_params)
-    _optimize_downforce(request, params)
-    _optimize_frequencies(request, params)
-    _optimize_camber(request, params)
     bounds = _resolve_height_bounds(request)
-    sim = _optimize_ride_heights(request, params, bounds)
-    return _evaluate(request, params, sim, bounds)
+    best, best_sim = None, None
+    for span, fn_delta, camber_tuple in _candidate_grid(request):
+        result, sim = _run_candidate(request, span, fn_delta, camber_tuple, bounds)
+        if best is None or _better(result, best, sim, best_sim):
+            best, best_sim = result, sim
+    return best

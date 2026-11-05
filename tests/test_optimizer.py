@@ -186,5 +186,32 @@ class TestReverseOptimizer(unittest.TestCase):
         self.assertEqual(res.parameters['camber_deg']['front'], cam_f)
 
 
+    def test_refine_never_degrades_score_and_stays_feasible(self):
+        """Refinement is a non-degrading improvement gate: disabling it must give
+        a score <= the full solver's score, and both must be feasible."""
+        import copy as _copy
+        from lib import optimizer
+        req = SolverRequest(
+            veh=self.veh, trk=self.trk, baseline_params=self.params,
+            telem=self.telem, sliders=self.sliders, g_model=self.g_model,
+            objective='balanced', speed_kmh=240.0
+        )
+        res_full = solve_optimal_setup(req)
+        original_refine = optimizer._refine
+        optimizer._refine = lambda *a, **k: None
+        try:
+            res_grid = solve_optimal_setup(SolverRequest(
+                veh=self.veh, trk=self.trk,
+                baseline_params=_copy.deepcopy(self.params),
+                telem=self.telem, sliders=self.sliders, g_model=self.g_model,
+                objective='balanced', speed_kmh=240.0
+            ))
+        finally:
+            optimizer._refine = original_refine
+        self.assertGreaterEqual(res_full.objective_score, res_grid.objective_score - 1e-9)
+        self.assertFalse(res_full.trail_simulation['bottoming_or_fender_hit'])
+        self.assertFalse(res_grid.trail_simulation['bottoming_or_fender_hit'])
+
+
 if __name__ == '__main__':
     unittest.main()

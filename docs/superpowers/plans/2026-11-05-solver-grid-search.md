@@ -284,10 +284,10 @@ def test_refine_never_degrades_score_and_stays_feasible(self):
         optimizer._refine = original_refine
     self.assertGreaterEqual(res_full.objective_score, res_grid.objective_score - 1e-9)
     self.assertFalse(res_full.trail_simulation['bottoming_or_fender_hit'])
-    self.assertEqual(res_full.parameters, res_grid.parameters)
+    self.assertFalse(res_grid.trail_simulation['bottoming_or_fender_hit'])
 ```
 
-(With `_refine` disabled the two runs are the identical grid pass, so their parameters must match exactly; the score inequality is the primary gate.)
+(Refinement may legitimately change the winner - the score inequality is the gate; parameters are asserted only through the feasibility checks.)
 
 - [ ] **Step 2: Run test, verify it fails** (`optimizer._refine` does not exist -> AttributeError):
 

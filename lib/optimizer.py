@@ -237,12 +237,41 @@ def _run_candidate(req: SolverRequest, span, fn_delta, camber_tuple,
     return _evaluate(req, params, sim, bounds), sim
 
 
+def _refine(req: SolverRequest, best: SolverResult, best_sim: Dict[str, Any],
+            best_meta: Tuple, bounds: Tuple[int, int, int, int]):
+    """One local pass: +/-0.05 span and +/-0.05 fn around the grid winner.
+
+    Returns (result, sim, meta) for the best neighbor that strictly beats the
+    incumbent, or None.
+    """
+    span, fn_delta, camber_tuple = best_meta
+    neighbors = []
+    if span is not None and 'downforce' not in req.locked_params:
+        for s in (round(span - 0.05, 2), round(span + 0.05, 2)):
+            if 0.30 <= s <= 1.00 and abs(s - span) > 1e-9:
+                neighbors.append((s, fn_delta))
+    if 'natural_frequency_hz' not in req.locked_params:
+        for d in ((fn_delta - 0.05) if fn_delta is not None else -0.05,
+                  (fn_delta + 0.05) if fn_delta is not None else 0.05):
+            neighbors.append((span, round(d, 3)))
+    best_neighbor = None
+    for n_span, n_fn in neighbors:
+        result, sim = _run_candidate(req, n_span, n_fn, camber_tuple, bounds)
+        if result.objective_score > best.objective_score + 1e-4:
+            if best_neighbor is None or _better(result, best_neighbor[0], sim, best_neighbor[1]):
+                best_neighbor = (result, sim, (n_span, n_fn, camber_tuple))
+    return best_neighbor
+
+
 def solve_optimal_setup(request: SolverRequest) -> SolverResult:
     """Solve multi-variable suspension parameters satisfying aero and clearance constraints."""
     bounds = _resolve_height_bounds(request)
-    best, best_sim = None, None
+    best, best_sim, best_meta = None, None, None
     for span, fn_delta, camber_tuple in _candidate_grid(request):
         result, sim = _run_candidate(request, span, fn_delta, camber_tuple, bounds)
         if best is None or _better(result, best, sim, best_sim):
-            best, best_sim = result, sim
+            best, best_sim, best_meta = result, sim, (span, fn_delta, camber_tuple)
+    refined = _refine(request, best, best_sim, best_meta, bounds)
+    if refined is not None:
+        best, best_sim, best_meta = refined
     return best

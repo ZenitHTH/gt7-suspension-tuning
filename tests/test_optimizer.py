@@ -116,5 +116,29 @@ class TestReverseOptimizer(unittest.TestCase):
         self.assertEqual(res.parameters['camber_deg']['rear'], 0.0)
 
 
+    def test_span_parameter_exposes_downforce_axis(self):
+        """Span 0.90 must push more downforce than span 0.40 and raise G."""
+        from lib.optimizer import _optimize_downforce, predict_g_at_downforce
+        import copy as _copy
+        p_hi = _copy.deepcopy(self.params)
+        p_lo = _copy.deepcopy(self.params)
+        req_hi = SolverRequest(
+            veh=self.veh, trk=self.trk, baseline_params=p_hi,
+            telem=self.telem, sliders=self.sliders, g_model=self.g_model,
+            objective='balanced', speed_kmh=240.0
+        )
+        req_lo = SolverRequest(
+            veh=self.veh, trk=self.trk, baseline_params=p_lo,
+            telem=self.telem, sliders=self.sliders, g_model=self.g_model,
+            objective='balanced', speed_kmh=240.0
+        )
+        _optimize_downforce(req_hi, p_hi, span=0.90)
+        _optimize_downforce(req_lo, p_lo, span=0.40)
+        self.assertGreater(p_hi['downforce']['rear'], p_lo['downforce']['rear'])
+        g_hi = predict_g_at_downforce(self.g_model, (p_hi['downforce']['front'], p_hi['downforce']['rear']))
+        g_lo = predict_g_at_downforce(self.g_model, (p_lo['downforce']['front'], p_lo['downforce']['rear']))
+        self.assertGreater(g_hi['g_240'], g_lo['g_240'])
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -210,11 +210,12 @@ def _evaluate(req: SolverRequest, params: Dict[str, Any], sim: Dict[str, Any],
 def _candidate_grid(req: SolverRequest) -> list:
     """Enumerate (downforce_span, fn_delta, camber_delta) candidates deterministically.
 
-    Up to 30 candidates (5 spans x 3 fn deltas x 2 camber deltas); locked axes
-    collapse to a single [None] / [(0.0, 0.0)] entry.
+    Up to 36 candidates (6 spans x 3 fn deltas x 2 camber deltas); span 1.00 lets
+    max_grip reach the full downforce slider. Locked axes collapse to a single
+    [None] / [(0.0, 0.0)] entry.
     """
     locked = req.locked_params
-    spans = ([0.30, 0.45, 0.60, 0.75, 0.90]
+    spans = ([0.30, 0.45, 0.60, 0.75, 0.90, 1.00]
              if 'downforce' not in locked else [None])
     fn_deltas = ([-0.15, 0.0, 0.15]
                  if 'natural_frequency_hz' not in locked else [None])

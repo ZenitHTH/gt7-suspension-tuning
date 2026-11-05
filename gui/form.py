@@ -1,15 +1,16 @@
-"""SetupForm — left-pane input form (Task 4: vehicle, tire, ranges, overrides).
+"""SetupForm — left-pane input form (Tasks 4-5).
 
 Picking a car prefills everything derivable from the DB; `collect()` reads
-the Task 4 panels into a partial `GuiRequest` (calibration/session fields
-stay at defaults until Task 5).
+all panels into a fully-populated `GuiRequest`; `validate()` runs
+`service.validate()` and renders errors/warnings into the status label.
 """
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QCheckBox,
     QComboBox,
+    QCompleter,
     QDoubleSpinBox,
     QGroupBox,
     QHBoxLayout,
@@ -21,11 +22,29 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from db.interface import TRACKS_DB
 from gui.components import RangePair
-from gui.request import DRIVETRAINS, TIRE_COMPOUNDS, GuiRequest
+from gui.request import (
+    DRIVETRAINS,
+    MODES,
+    SOLVE_OBJECTIVES,
+    SYMPTOMS,
+    TIRE_COMPOUNDS,
+    GuiRequest,
+)
 from gui.service import TuningService
 
 _STATUS_KINDS = ('ok', 'warn', 'error')
+
+# Human display names for the six SYMPTOMS keys (checkbox labels).
+_SYMPTOM_DISPLAY = {
+    'entry_push': 'Entry push / understeer',
+    'exit_snap': 'Exit snap / oversteer',
+    'bottoming': 'Bottoming',
+    'curb_hop': 'Curb hop',
+    'front_tire_wear': 'Front tire wear',
+    'rear_tire_wear': 'Rear tire wear',
+}
 
 
 class SetupForm(QWidget):
@@ -159,6 +178,11 @@ class SetupForm(QWidget):
 
         root.addWidget(overrides_group)
 
+        # ---- Calibration / Session / Symptoms groups (Task 5) -------------
+        self._build_calibration_group(root)
+        self._build_session_group(root)
+        self._build_symptoms_group(root)
+
         # ---- Status label --------------------------------------------------
         self.status_label = QLabel()
         self.status_label.setObjectName('statusLabel')  # theme: ok/warn/error colors
@@ -177,6 +201,160 @@ class SetupForm(QWidget):
 
     def _on_swap_index_changed(self, _index: int) -> None:
         self._on_swap_selected(self.swap_combo.currentData() or '')
+
+    # ------------------------------------------------------- group builders
+
+    def _build_calibration_group(self, root: QVBoxLayout) -> None:
+        group = QGroupBox('Calibration')
+        layout = QVBoxLayout(group)
+
+        for attr, text in (('g60_spin', 'G @ 60 km/h'),
+                           ('g120_spin', 'G @ 120 km/h'),
+                           ('g240_spin', 'G @ 240 km/h')):
+            row = QHBoxLayout()
+            hint = QLabel(text)
+            hint.setObjectName('hintLabel')
+            row.addWidget(hint)
+            spin = QDoubleSpinBox(decimals=2)
+            spin.setRange(0.0, 9.0)
+            spin.setSpecialValueText('')
+            setattr(self, attr, spin)
+            spin.valueChanged.connect(self._update_solve_gate)
+            row.addWidget(spin)
+            layout.addLayout(row)
+
+        ref_row = QHBoxLayout()
+        ref_hint = QLabel('Ref downforce (front / rear)')
+        ref_hint.setObjectName('hintLabel')
+        ref_row.addWidget(ref_hint)
+        self.gref_f_spin = QSpinBox()
+        self.gref_f_spin.setRange(0, 1000)
+        self.gref_r_spin = QSpinBox()
+        self.gref_r_spin.setRange(0, 1000)
+        ref_row.addWidget(self.gref_f_spin)
+        ref_row.addWidget(self.gref_r_spin)
+        layout.addLayout(ref_row)
+
+        solve_row = QHBoxLayout()
+        solve_hint = QLabel('Solve')
+        solve_hint.setObjectName('hintLabel')
+        solve_row.addWidget(solve_hint)
+        self.solve_combo = QComboBox()
+        self.solve_combo.addItem('—', '')
+        for objective in SOLVE_OBJECTIVES:
+            self.solve_combo.addItem(objective, objective)
+        self.solve_combo.setEnabled(False)  # gated on G-force calibration
+        solve_row.addWidget(self.solve_combo)
+        layout.addLayout(solve_row)
+
+        hint = QLabel('Measure peak lateral G in-game at 60/120/240 km/h '
+                      'and the downforce you were running.')
+        hint.setObjectName('hintLabel')
+        hint.setWordWrap(True)
+        layout.addWidget(hint)
+
+        root.addWidget(group)
+        self._update_solve_gate()
+
+    def _build_session_group(self, root: QVBoxLayout) -> None:
+        group = QGroupBox('Session')
+        layout = QVBoxLayout(group)
+
+        track_row = QHBoxLayout()
+        track_hint = QLabel('Track')
+        track_hint.setObjectName('hintLabel')
+        track_row.addWidget(track_hint)
+        self.track_combo = QComboBox()
+        self.track_combo.setEditable(True)
+        self.track_combo.addItem('— (no track)', '')
+        for track in TRACKS_DB:
+            self.track_combo.addItem(track['name'], track['id'])
+        self.track_combo.setCompleter(QCompleter([t['name'] for t in TRACKS_DB]))
+        track_row.addWidget(self.track_combo)
+        layout.addLayout(track_row)
+
+        mode_row = QHBoxLayout()
+        mode_hint = QLabel('Mode')
+        mode_hint.setObjectName('hintLabel')
+        mode_row.addWidget(mode_hint)
+        self.mode_combo = QComboBox()
+        for mode in MODES:
+            self.mode_combo.addItem(mode, mode)
+        mode_row.addWidget(self.mode_combo)
+        layout.addLayout(mode_row)
+
+        speed_row = QHBoxLayout()
+        speed_hint = QLabel('Speed (km/h)')
+        speed_hint.setObjectName('hintLabel')
+        speed_row.addWidget(speed_hint)
+        self.speed_spin = QDoubleSpinBox(decimals=1)
+        self.speed_spin.setRange(30.0, 400.0)
+        self.speed_spin.setValue(240.0)
+        speed_row.addWidget(self.speed_spin)
+        layout.addLayout(speed_row)
+
+        self.widebody_check = QCheckBox('Widebody kit')
+        layout.addWidget(self.widebody_check)
+        self.controller_check = QCheckBox('Controller driving')
+        layout.addWidget(self.controller_check)
+
+        root.addWidget(group)
+
+    def _build_symptoms_group(self, root: QVBoxLayout) -> None:
+        group = QGroupBox('Symptoms & stability')
+        layout = QVBoxLayout(group)
+
+        self.symptom_checks: Dict[str, QCheckBox] = {}
+        for key in SYMPTOMS:
+            check = QCheckBox(_SYMPTOM_DISPLAY[key])
+            self.symptom_checks[key] = check
+            layout.addWidget(check)
+
+        stab_row = QHBoxLayout()
+        stab_hint = QLabel('Stability (lo / hi)')
+        stab_hint.setObjectName('hintLabel')
+        stab_row.addWidget(stab_hint)
+        self.stab_low_spin = QDoubleSpinBox(decimals=2)
+        self.stab_low_spin.setRange(0.0, 1.0)
+        self.stab_low_spin.setSpecialValueText('')
+        self.stab_high_spin = QDoubleSpinBox(decimals=2)
+        self.stab_high_spin.setRange(0.0, 1.0)
+        self.stab_high_spin.setSpecialValueText('')
+        stab_row.addWidget(self.stab_low_spin)
+        stab_row.addWidget(self.stab_high_spin)
+        layout.addLayout(stab_row)
+
+        root.addWidget(group)
+
+    # ------------------------------------------------------- collect helpers
+
+    def _update_solve_gate(self, *_args: Any) -> None:
+        """Enable solve_combo only when all three G spins are non-zero."""
+        calibrated = all(s.value() > 0.0
+                         for s in (self.g60_spin, self.g120_spin, self.g240_spin))
+        self.solve_combo.setEnabled(calibrated)
+
+    def _track_id(self) -> Optional[str]:
+        """Resolve the track combo to a track id.
+
+        Placeholder or empty text → None. Edited text matching no track →
+        None + a status note (the service never sees a bogus id).
+        """
+        text = self.track_combo.currentText()
+        if not text or text == self.track_combo.itemText(0):
+            return None
+        for i in range(self.track_combo.count()):
+            if self.track_combo.itemText(i) == text:
+                return self.track_combo.itemData(i)
+        self.set_status('Unknown track ignored', 'warn')
+        return None
+
+    def _ref_df(self) -> Optional[Tuple[int, int]]:
+        """(front, rear) when either ref spin is non-zero (else None)."""
+        lo, hi = self.gref_f_spin.value(), self.gref_r_spin.value()
+        if lo == 0 and hi == 0:
+            return None
+        return (lo, hi)
 
     def _refill_cars(self, text: str) -> None:
         """Refill car_combo from service.search_cars(text); preserve the
@@ -331,12 +509,15 @@ class SetupForm(QWidget):
     # ------------------------------------------------------------- collect
 
     def collect(self) -> GuiRequest:
-        """Read the Task 4 panels into a GuiRequest.
+        """Read all panels into a GuiRequest.
 
         RangePair.value() None (0/0) → None for that pair; unchecked
         *_use_db → spinbox value becomes the override (checked → None);
-        balance only when balance_use_db is off. Session/calibration
-        fields keep their dataclass defaults until Task 5.
+        balance only when balance_use_db is off. Calibration/session:
+        g_forces only when all 3 G spins non-zero; g_ref_df when either ref
+        spin non-zero; solve_objective / track_id from combo data ('' →
+        None, edited unknown track → None + status note); stability only
+        when both spins non-zero; symptoms = checked keys (empty → None).
         """
         req = GuiRequest(
             car_id=self.car_combo.currentData() or '',
@@ -357,7 +538,40 @@ class SetupForm(QWidget):
         req.custom_drivetrain = self.drivetrain_combo.currentText()
         if not self.balance_use_db.isChecked():
             req.custom_balance = (self.bal_f_spin.value(), self.bal_r_spin.value())
+
+        g60, g120, g240 = (self.g60_spin.value(), self.g120_spin.value(),
+                           self.g240_spin.value())
+        if g60 > 0 and g120 > 0 and g240 > 0:
+            req.g_forces = (g60, g120, g240)
+        req.g_ref_df = self._ref_df()
+        req.solve_objective = self.solve_combo.currentData() or None
+        req.track_id = self._track_id()
+        req.mode = self.mode_combo.currentText()
+        req.speed_kmh = self.speed_spin.value()
+        lo, hi = self.stab_low_spin.value(), self.stab_high_spin.value()
+        if lo > 0 and hi > 0:
+            req.stability = (lo, hi)
+        checked = [key for key, check in self.symptom_checks.items()
+                   if check.isChecked()]
+        req.symptoms = checked or None
+        req.is_widebody = self.widebody_check.isChecked()
+        req.is_controller = self.controller_check.isChecked()
         return req
+
+    # ------------------------------------------------------------- validate
+
+    def validate(self) -> List[str]:
+        """`collect()` → `service.validate()`; render errors (red) and
+        warnings (⚠-prefixed, amber) into status_label; return the errors."""
+        req = self.collect()
+        errors, warnings = self.service.validate(req)
+        if errors:
+            self.set_status('\n'.join(errors), 'error')
+        elif warnings:
+            self.set_status('\n'.join(f'⚠ {w}' for w in warnings), 'warn')
+        else:
+            self.set_status('', 'ok')
+        return errors
 
     # ------------------------------------------------------------- status
 

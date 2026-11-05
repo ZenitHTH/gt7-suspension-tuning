@@ -1,4 +1,5 @@
-"""Tests for gui.form (Task 4): SetupForm vehicle/tire/ranges/overrides."""
+"""Tests for gui.form (Tasks 4-5): SetupForm vehicle/tire/ranges/overrides +
+calibration/session/symptoms, collect(), validate()."""
 import os
 import sys
 import unittest
@@ -100,7 +101,7 @@ class SetupFormTest(unittest.TestCase):
         form.bal_f_spin.setValue(42)
         form.bal_r_spin.setValue(58)
         self.assertEqual(form.collect().custom_balance, (42, 58))
-        # Session fields keep dataclass defaults (Task 5 fills them)
+        # Session fields unset → None (placeholder track, no G-forces, no solve)
         self.assertIsNone(form.collect().track_id)
         self.assertIsNone(form.collect().g_forces)
         self.assertIsNone(form.collect().solve_objective)
@@ -131,6 +132,61 @@ class SetupFormTest(unittest.TestCase):
         with mock.patch.object(form.service, 'get_car', return_value=None):
             form.swap_combo.setCurrentIndex(form.swap_combo.count() - 1)
         self.assertIn('not found', form.status_label.text())
+
+
+    def test_gforces_gate_solve(self):
+        form = self.form
+        self.assertFalse(form.solve_combo.isEnabled())
+        form.g60_spin.setValue(1.04)
+        form.g120_spin.setValue(1.19)
+        self.assertFalse(form.solve_combo.isEnabled())  # 240 still unset
+        form.g240_spin.setValue(1.38)
+        self.assertTrue(form.solve_combo.isEnabled())
+        form.g120_spin.setValue(0.0)
+        self.assertFalse(form.solve_combo.isEnabled())
+
+    def test_collect_full_request(self):
+        form = _select_car(self.form, '207')  # MR2: no preseeded ranges
+        form.df_f.set_value((50, 200))
+        form.df_r.set_value((140, 290))
+        form.hf.set_value((185, 215))
+        form.hr.set_value((190, 220))
+        form.fn_f.set_value((1.0, 3.0))
+        form.fn_r.set_value((1.0, 3.0))
+        form.g60_spin.setValue(1.04)
+        form.g120_spin.setValue(1.19)
+        form.g240_spin.setValue(1.38)
+        form.gref_f_spin.setValue(200)
+        form.gref_r_spin.setValue(310)
+        idx = form.solve_combo.findData('balanced')
+        assert idx >= 0
+        form.solve_combo.setCurrentIndex(idx)
+        form.power_use_db.setChecked(False)
+        form.power_spin.setValue(630)
+        form.balance_use_db.setChecked(False)
+        form.bal_f_spin.setValue(42)
+        form.bal_r_spin.setValue(58)
+        form.symptom_checks['front_tire_wear'].setChecked(True)
+        form.stab_low_spin.setValue(0.1)
+        form.stab_high_spin.setValue(0.3)
+        req = form.collect()
+        self.assertEqual(req.car_id, '207')
+        self.assertEqual(req.g_forces, (1.04, 1.19, 1.38))
+        self.assertEqual(req.g_ref_df, (200, 310))
+        self.assertEqual(req.solve_objective, 'balanced')
+        self.assertEqual(req.custom_power, 630)
+        self.assertEqual(req.custom_balance, (42, 58))
+        self.assertEqual(req.symptoms, ['front_tire_wear'])
+        self.assertEqual(req.stability, (0.1, 0.3))
+
+    def test_validate_blocks_bad_range(self):
+        form = self.form
+        form.on_car_selected('207')  # valid car: only the range errors remain
+        form.df_f.set_value((200, 50))  # min > max
+        errors = form.validate()
+        self.assertGreaterEqual(len(errors), 1)
+        self.assertTrue(form.status_label.text())
+        self.assertIn('DF front', form.status_label.text())
 
 
 if __name__ == '__main__':

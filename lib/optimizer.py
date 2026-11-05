@@ -13,6 +13,7 @@ from typing import Dict, Tuple, Any, Optional
 from lib.calibrator import GForceModel, predict_g_at_downforce, build_df_g_profile
 from lib.equilibrium import simulate_high_speed_trail_braking, solve_suspension_equilibrium
 from lib.tire_wear import calculate_tire_wear_index
+from lib.grip import calculate_grip_check
 
 
 @dataclass
@@ -37,6 +38,7 @@ class SolverResult:
     equilibrium_proof: Dict[str, Any]
     tire_wear: Dict[str, Any]
     objective_score: float
+    grip_check: Optional[Dict] = None
 
 
 def _resolve_df_ranges(sliders: Dict[str, Any], df: Dict[str, Any]) -> Tuple[Tuple[int, int], Tuple[int, int]]:
@@ -180,10 +182,14 @@ def _eval_wear(req: SolverRequest, params: Dict[str, Any]) -> Dict[str, Any]:
     )
 
 
-def _calculate_score(objective: str, g_240: float, front_wear: float) -> float:
+def _calculate_score(objective: str, g_240: float, front_wear: float,
+                     grip_min_margin: Optional[float] = None) -> float:
     """Evaluate scalar objective score for optimal setup comparison."""
     weights = {'max_grip': g_240, 'min_tire_wear': -front_wear}
-    return round(weights.get(objective, g_240 - 0.25 * front_wear), 3)
+    score = weights.get(objective, g_240 - 0.25 * front_wear)
+    if grip_min_margin is not None and grip_min_margin < 1.0:
+        score -= 0.20 * (1.0 - grip_min_margin)
+    return round(score, 3)
 
 
 def _evaluate(req: SolverRequest, params: Dict[str, Any], sim: Dict[str, Any],
@@ -192,10 +198,13 @@ def _evaluate(req: SolverRequest, params: Dict[str, Any], sim: Dict[str, Any],
     eq, tw = _solve_eq(req, params), _eval_wear(req, params)
     active_df = (params['downforce']['front'], params['downforce']['rear']) if params.get('downforce') else (0, 0)
     g_pred = predict_g_at_downforce(req.g_model, active_df)
+    g_check = calculate_grip_check(req.veh, req.telem['mu'], g_pred['g_240'],
+                                   req.telem.get('lltd_pct', 50.0) / 100.0)
     df_ranges = _resolve_df_ranges(req.sliders, params.get('downforce') or {})
     df_profile = build_df_g_profile(req.g_model, df_ranges, active_df)
-    score = _calculate_score(req.objective, g_pred['g_240'], tw['front_wear_factor'])
-    return SolverResult(params, g_pred, df_profile, sim, eq, tw, score)
+    score = _calculate_score(req.objective, g_pred['g_240'], tw['front_wear_factor'],
+                             g_check['margins']['min'])
+    return SolverResult(params, g_pred, df_profile, sim, eq, tw, score, g_check)
 
 
 def _candidate_grid(req: SolverRequest) -> list:

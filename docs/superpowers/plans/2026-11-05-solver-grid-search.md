@@ -439,7 +439,7 @@ def _calculate_score(objective: str, g_240: float, front_wear: float,
                              tw['front_wear_factor'], grip['margins']['min'])
     return SolverResult(params, g_pred, df_profile, sim, eq, tw, score, grip)
 ```
-  4. `setup.py`, immediately after the `sol = lib.solve_optimal_setup(req)` line (setup.py:136): `telem['grip_check'] = sol.grip_check` (guard with `if sol is not None:` if the existing code path allows a None sol).
+  4. ~~`setup.py`, immediately after the `sol = lib.solve_optimal_setup(req)` line (setup.py:136): `telem['grip_check'] = sol.grip_check`~~ - SKIPPED (verified redundant): `_solve_or_simulate_dynamics` (setup.py:136-137) already returns `sol.g_prediction`, and `_build_telemetry_dict` computes `grip_check` from `lat_g = g_pred['g_240']` with the same `telem['mu']`/`telem['lltd_pct']` inputs as `_evaluate` - the displayed margins are already the winner's margins at the winner's G. Adding the assignment would be a dead line.
 
 - [ ] **Step 4: Run full suite, verify green** - note: `test_max_grip_vs_min_tire_wear_objectives` wear sub-assertion was relaxed from strict `assertLess` to `assertLessEqual` (see Review Focus #2) because the grid legitimately lets `max_grip` pick the low-wear soft-fn/neutral-camber setup - G is downforce-driven, so the old forced fn+0.15/camber+0.4 heuristic gave no G benefit in the physics model. The `g_240` ordering assertion (strict) is unchanged.
 
@@ -507,7 +507,7 @@ Failure modes the tests above do NOT fully cover (reviewer, check these):
 2. **`_better` tie-break with `min_tire_wear`** - the score is negative there; the 0.001 tie window and clearance break still apply. Covered by the existing `test_max_grip_vs_min_tire_wear_objectives` only indirectly.
 3. **`telem['lltd_pct']` absence** - if a future caller builds `telem` without `lltd_pct`, `_evaluate` raises KeyError (setup.py always provides it; no test for the missing key). Acceptable per YAGNI, flag if it changes.
 4. **Refinement when the grid winner already has the best neighbor** - `_refine` must return None cleanly (no IndexError when `neighbors` is empty, e.g. road car with fn locked).
-5. **`setup.py` refresh ordering** - `telem['grip_check'] = sol.grip_check` must happen AFTER the solver call and BEFORE sheet rendering; verify against the actual call sites (setup.py:131-140) since the plan pins line numbers, not structure.
+5. **`setup.py` refresh ordering** - RESOLVED: no new line needed; `_build_telemetry_dict` already derives `grip_check` from `sol.g_prediction` on the solve path (verified setup.py:136-137 + line 192).
 
 ## Out of Scope (explicit)
 

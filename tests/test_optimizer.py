@@ -213,5 +213,27 @@ class TestReverseOptimizer(unittest.TestCase):
         self.assertFalse(res_grid.trail_simulation['bottoming_or_fender_hit'])
 
 
+    def test_score_penalizes_sub_1x_grip_margin(self):
+        """Objective score must penalize candidates whose tire margin < 1.0x."""
+        import unittest.mock as mock
+        from lib import optimizer
+        from lib.optimizer import _calculate_score
+        score_ok = _calculate_score('balanced', 1.8, 1.2, 1.35)
+
+        def _low_margin(*a, **k):
+            return {'margins': {'min': 0.85}, 'status': 'warn'}
+
+        with mock.patch.object(optimizer, 'calculate_grip_check', side_effect=_low_margin):
+            req = SolverRequest(
+                veh=self.veh, trk=self.trk, baseline_params=self.params,
+                telem=self.telem, sliders=self.sliders, g_model=self.g_model,
+                objective='balanced', speed_kmh=240.0
+            )
+            res = solve_optimal_setup(req)
+        score_low = _calculate_score('balanced', 1.8, 1.2, 0.85)
+        self.assertLess(score_low, score_ok)
+        self.assertEqual(res.grip_check['margins']['min'], 0.85)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -350,10 +350,16 @@ class SetupForm(QWidget):
         return None
 
     def _ref_df(self) -> Optional[Tuple[int, int]]:
-        """(front, rear) when either ref spin is non-zero (else None)."""
+        """(front, rear) when either ref spin is non-zero (else None); a
+        single set value is used for both axes (the service warning covers
+        the gap)."""
         lo, hi = self.gref_f_spin.value(), self.gref_r_spin.value()
         if lo == 0 and hi == 0:
             return None
+        if lo == 0:
+            return (hi, hi)
+        if hi == 0:
+            return (lo, lo)
         return (lo, hi)
 
     def _refill_cars(self, text: str) -> None:

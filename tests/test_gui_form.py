@@ -179,6 +179,19 @@ class SetupFormTest(unittest.TestCase):
         self.assertEqual(req.symptoms, ['front_tire_wear'])
         self.assertEqual(req.stability, (0.1, 0.3))
 
+    def test_collect_partial_gref_df_applies_both_axes(self):
+        form = _select_car(self.form, '207')
+        # Front-only: the single set value is used for both axes
+        form.gref_f_spin.setValue(200)
+        self.assertEqual(form.collect().g_ref_df, (200, 200))
+        # Rear-only: likewise
+        form.gref_f_spin.setValue(0)
+        form.gref_r_spin.setValue(310)
+        self.assertEqual(form.collect().g_ref_df, (310, 310))
+        # Both zero → unset
+        form.gref_r_spin.setValue(0)
+        self.assertIsNone(form.collect().g_ref_df)
+
     def test_validate_blocks_bad_range(self):
         form = self.form
         form.on_car_selected('207')  # valid car: only the range errors remain

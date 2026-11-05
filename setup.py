@@ -30,6 +30,7 @@ def _build_telemetry_dict(
     wf_pct = f"{veh.front_weight_ratio * 100.0:.1f}% F / {veh.rear_weight_ratio * 100.0:.1f}% R"
     lat_g = g_pred['g_240'] if g_pred else round(telem['ay_est'], 2)
     actual_fr = round(params['natural_frequency_hz']['rear'] / max(0.1, params['natural_frequency_hz']['front']), 2)
+    grip_check = lib.calculate_grip_check(veh, telem['mu'], lat_g, telem['lltd_pct'] / 100.0)
     return {
         'mass_sprung_total_kg': telem['tot_s'],
         'mass_sprung_corner_f_kg': telem['c_f'],
@@ -45,7 +46,8 @@ def _build_telemetry_dict(
         'equilibrium_proof': eq_proof,
         'tire_wear_analysis': tire_wear,
         'dynamic_g_force': g_pred,
-        'downforce_g_profile': g_prof
+        'downforce_g_profile': g_prof,
+        'grip_check': grip_check
     }
 
 
@@ -186,6 +188,6 @@ def build_setup(
     params['endurance_notes'] = _apply_setup_notes(
         veh, trk, tire, params, telem, sim, eq, sim_spd, stability, symptoms, is_widebody, is_controller
     )
-    params['quick_trims'] = lib.build_quick_trims(params, drivetrain=veh.drivetrain, is_endurance=trk.is_endurance)
+    params['quick_trims'] = lib.build_quick_trims(params, drivetrain=veh.drivetrain, is_endurance=trk.is_endurance, power_hp=veh.power_hp, mass_kg=veh.mass_kg)
     telem_dict = _build_telemetry_dict(veh, telem, (sim, eq, wear, g_pred, g_prof), params)
     return _assemble_final_result(out_car, (track, tire, mode), telem_dict, params)

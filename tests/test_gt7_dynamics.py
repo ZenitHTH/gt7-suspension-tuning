@@ -250,6 +250,8 @@ class TestGT7Dynamics(unittest.TestCase):
         sheet = gt7_tuner.format_setup_sheet(setup)
         self.assertIn('Tire-Saver Spec', sheet)
         self.assertIn('Max Stability Spec', sheet)
+        # F355 @ 520 HP / 1200 kg -> ptw 433 > 250: computed ECU-limit note renders
+        self.assertIn('ECU Limit', sheet)
 
     def test_high_speed_trail_brake_compression_and_bottoming_guard(self):
         import gt7_tuner

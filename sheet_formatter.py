@@ -86,7 +86,22 @@ def _format_simulation_proofs(telem: Dict[str, Any]) -> List[str]:
     if telem.get('tire_wear_analysis'):
         tw = telem['tire_wear_analysis']
         lines.append(f"• การวิเคราะห์การสึกหรอของยาง (Tire Wear Index): หน้า {tw['front_wear_factor']}x | หลัง {tw['rear_wear_factor']}x (สัดส่วนความสึกหรอ หลัง/หน้า: {tw['relative_rear_bias']})")
+    if telem.get('grip_check'):
+        lines.extend(_format_grip_check_lines(telem['grip_check']))
     return lines
+
+
+def _format_grip_check_lines(gc: Dict[str, Any]) -> List[str]:
+    """Format tire grip limit check lines."""
+    status = '✅ ผ่าน (In Limit)' if gc['status'] == 'pass' else '⚠️ เกินขีดจำกัด (Beyond Tire Limit)'
+    bal = {'understeer': 'Understeer (หน้ าออกก่ อน)', 'oversteer': 'Oversteer (หลังออกก่ อน)', 'neutral': 'Neutral (สมดูล)'}[gc['handling_balance']]
+    fz = gc['corner_fz_n']
+    mg = gc['margins']
+    return [
+        f"• การตรวจสอบขีดจำกั ดการยิ่ ดเกาะยาง (Tire Grip Limit Check) ที่ {gc['ay_check_g']}G μ={gc['mu_ref']}: {status}",
+        f"  ↳ แรงกด Fz (N): หน้ านอก {fz['front_outside']} | หน้ าใน {fz['front_inside']} | หลังนอก {fz['rear_outside']} | หลังใน {fz['rear_inside']} (ถ่ ่ายเทด้ านนอก +{gc['transfer_front_n']} N หน้ า)",
+        f"  ↳ Headroom (μ/limit): หน้ า {mg['front']}x | หลัง {mg['rear']}x | นอยสุด {mg['min']}x → สมดูลเลี้ ยว: {bal} (K={gc['understeer_gradient']})"
+    ]
 
 
 def _format_damper_alignment_rows(params: Dict[str, Any]) -> List[str]:
@@ -159,16 +174,23 @@ def _format_lsd_and_drivetrain(params: Dict[str, Any], car: Dict[str, Any]) -> L
 def _format_quick_trim_details(qt: Dict[str, Any]) -> List[str]:
     """Format individual quick-trim section rows."""
     ts, ms = qt.get('tire_saver', {}), qt.get('max_stability', {})
-    return [
+    lines = [
         '─' * 86,
         "⚡ QUICK-TRIMS DELTA TABLE (โหมดปรับด่วน: ถนอมยาง & เน้นความนิ่ง - Section 2.F):",
         "• [Tire-Saver Spec / โหมดถนอมยาง]:",
         f"  สปริง: {ts.get('natural_frequency_hz')} | แคมเบอร์: {ts.get('negative_camber')} | โท: {ts.get('toe_angle')} | LSD Accel: {ts.get('lsd_accel')}",
-        f"  ↳ {ts.get('description')}",
+        f"  ↳ {ts.get('description')}"
+    ]
+    if ts.get('ecu_limit'):
+        lines.append(f"  [ECU Limit] {ts['ecu_limit']['label']}")
+    lines.extend([
         "• [Max Stability Spec / โหมดเน้นความนิ่ง]:",
         f"  ARB: {ms.get('anti_roll_bar')} | หลัง Rebound: {ms.get('damping_expansion_rear')} | โทหลัง: {ms.get('rear_toe_in')} | LSD Brake: {ms.get('lsd_braking_sens')} | สมดุลเบรก: {ms.get('brake_bias')}",
         f"  ↳ {ms.get('description')}"
-    ]
+    ])
+    return lines
+
+
 
 
 def _format_notes_and_quick_trims(params: Dict[str, Any]) -> List[str]:

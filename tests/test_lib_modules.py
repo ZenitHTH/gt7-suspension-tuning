@@ -189,5 +189,26 @@ class TestLibModules(unittest.TestCase):
         self.assertEqual(df_constrained['rear'], 80)
         self.assertEqual(df_constrained['front'], 80) # Clamped from 118 to 80!
 
+    def test_tire_saver_ecu_limit_note_high_ptw(self):
+        """High power-to-weight cars get a computed ECU 70% rear-wear delta note."""
+        params = {
+            'natural_frequency_hz': {'front': 2.33, 'rear': 2.52},
+            'camber_deg': {'front': -2.7, 'rear': -1.6},
+            'toe_angle': {'front': -0.04, 'rear': 0.16}
+        }
+        qt = build_quick_trims(params, drivetrain='MR', is_endurance=False,
+                               power_hp=630.0, mass_kg=1289.0)
+        note = qt['tire_saver'].get('ecu_limit')
+        self.assertIsNotNone(note)
+        self.assertLess(note['rear_wear_70'], note['rear_wear_now'])
+        self.assertIn('441', note['label'])  # 70% of 630 HP
+
+    def test_tire_saver_ecu_limit_omitted_low_ptw(self):
+        """Below ptw 250 the rear wear factor is 1.0, so ECU% cannot help - no note."""
+        params = {'natural_frequency_hz': {'front': 2.0, 'rear': 2.2}}
+        qt = build_quick_trims(params, drivetrain='FR', is_endurance=False,
+                               power_hp=150.0, mass_kg=1400.0)
+        self.assertNotIn('ecu_limit', qt['tire_saver'])
+
 if __name__ == '__main__':
     unittest.main()

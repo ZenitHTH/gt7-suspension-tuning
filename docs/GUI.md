@@ -27,6 +27,8 @@ fallback was not needed, the wheel installs fine).
 
 A range pair left at `0/0` means "use saved/preseeded DB values"; G-force
 calibration unlocks the Solve dropdown (the solver anchors to your tires).
+**Save ranges to DB** merges the current form values into the car's saved
+`slider_ranges` in `data/cars_master.json`, shadowing any preseeded values.
 
 ## MR2 worked example
 

@@ -73,6 +73,22 @@ class SetupFormTest(unittest.TestCase):
         self.assertEqual(form.swap_combo.count(), 1)
         self.assertEqual(form.swap_combo.itemText(0), 'Stock engine')
 
+    def test_car_3374_prefill_df_ranges_not_clamped(self):
+        """Regression (final review): df_f/df_r spinboxes used to cap at
+        1000, silently clamping car 3374's DB preseeded DF ranges
+        ([800,1200] / [1200,1600]) to (800,1000) / (1000,1000) — wrong
+        default-flow sheets and a clobber path via Save-ranges-to-DB."""
+        form = _select_car(self.form, '3374')
+        self.assertEqual(form.df_f.value(), (800, 1200))
+        self.assertEqual(form.df_r.value(), (1200, 1600))
+        # The spinbox caps must at least reach the preseeded maxima.
+        self.assertGreaterEqual(form.df_f.max_spin.maximum(), 1200)
+        self.assertGreaterEqual(form.df_r.max_spin.maximum(), 1600)
+        # Unclamped collect() hands the solver the exact DB ranges.
+        req = form.collect()
+        self.assertEqual(req.df_front, (800, 1200))
+        self.assertEqual(req.df_rear, (1200, 1600))
+
     def test_car_not_found_clears_and_notes(self):
         form = self.form
         form.on_car_selected('nope')

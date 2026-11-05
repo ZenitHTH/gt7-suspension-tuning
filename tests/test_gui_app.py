@@ -112,6 +112,59 @@ class MainWindowTest(unittest.TestCase):
         self.assertIn('not found', win.results.browser.toPlainText())
         self.assertTrue(win.compute_btn.isEnabled())
 
+    def test_close_during_solve_stops_thread_cleanly(self):
+        """Regression (final review): closing the window while a solve runs
+        used to destroy the worker QThread while it was still running →
+        qFatal 'QThread: Destroyed while thread is still running' +
+        SIGABRT. closeEvent now polls (bounded) until the thread is
+        provably stopped; the test process surviving is itself the
+        assertion, plus the explicit state asserts below."""
+        win = self.win
+        _fill_mr2_tutorial(win)  # form validates clean (as in the e2e test)
+        service = win.service
+        ran = []
+
+        def slow_compute(req):
+            ran.append('compute')
+            time.sleep(0.4)
+            return GuiResult(error='slow compute (test stub)')
+        original = service.compute
+        service.compute = slow_compute
+        try:
+            win._on_compute()
+            thread = win._thread
+            self.assertIsNotNone(thread)
+            # Closing *now* is the "during solve" moment: the worker
+            # thread is alive and the solve is not finished. Do not pump
+            # events first — a pump (in this offscreen environment) would
+            # run the stub solve to completion and tear the thread down,
+            # leaving no mid-solve close to exercise.
+            t0 = time.monotonic()
+            win.close()  # closeEvent: bounded quit+poll on the solve thread
+            waited = time.monotonic() - t0
+            # closeEvent absorbed the 0.4 s stub solve (inside its ~1.5 s
+            # bound) → close accepted, window gone. waited >= 0.25 guards
+            # against a vacuous instant-accept.
+            self.assertGreaterEqual(waited, 0.25)
+            self.assertLess(waited, 2.0)
+            self.assertFalse(win.isVisible())
+            # The worker really ran the stub, and the thread fully stopped:
+            self.assertIn('compute', ran)
+            self.assertFalse(win._in_flight)
+            # Thread state, tolerating an already deleteLater'd wrapper.
+            try:
+                self.assertFalse(thread.isRunning(), 'solve thread still running')
+            except RuntimeError:
+                pass  # C++ thread object already deleted → stopped
+
+            # Re-entrancy: a second close must accept immediately (no hang).
+            t1 = time.monotonic()
+            win.close()
+            self.assertLess(time.monotonic() - t1, 0.5)
+            self.assertFalse(win.isVisible())
+        finally:
+            service.compute = original
+
 
 if __name__ == '__main__':
     unittest.main()

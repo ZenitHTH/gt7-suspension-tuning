@@ -103,8 +103,10 @@ class SetupForm(QWidget):
         # ---- Slider ranges group -----------------------------------------
         ranges_group = QGroupBox('In-game slider ranges')
         rlayout = QVBoxLayout(ranges_group)
-        self.df_f = RangePair('DF front', kind='int', max_v=1000)
-        self.df_r = RangePair('DF rear', kind='int', max_v=1000)
+        # max_v 2000: preseeded DF ranges in the DB reach 1700 (cars
+        # 3342/3374/3517); the old 1000 cap silently clamped prefills.
+        self.df_f = RangePair('DF front', kind='int', max_v=2000)
+        self.df_r = RangePair('DF rear', kind='int', max_v=2000)
         self.hf = RangePair('Height front', kind='int', max_v=400)
         self.hr = RangePair('Height rear', kind='int', max_v=400)
         self.fn_f = RangePair('Nat freq front', kind='float', max_v=10.0)

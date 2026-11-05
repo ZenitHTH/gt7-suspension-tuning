@@ -1,0 +1,137 @@
+"""Tests for gui.form (Task 4): SetupForm vehicle/tire/ranges/overrides."""
+import os
+import sys
+import unittest
+from unittest import mock
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, BASE_DIR)
+
+os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
+os.environ.setdefault('QT_LOGGING_RULES', 'qt.qpa.fonts.warning=false')
+
+from PyQt6.QtWidgets import QApplication  # noqa: E402
+
+from gui.form import SetupForm  # noqa: E402
+from gui.service import TuningService  # noqa: E402
+
+
+_APP: QApplication | None = None  # keep a reference so the app isn't GC'd
+
+
+def _ensure_app() -> QApplication:
+    """Return the running QApplication, creating one if needed.
+
+    A bare QCoreApplication left by another test module (test_gui_service
+    WorkerTests) is not a QApplication: QApplication.instance() still
+    returns it, so fall through and build a real QApplication.
+    """
+    global _APP
+    if _APP is None:
+        existing = QApplication.instance()
+        _APP = existing if isinstance(existing, QApplication) else QApplication([])
+    return _APP
+
+
+def _select_car(form: SetupForm, car_id: str) -> SetupForm:
+    idx = form.car_combo.findData(car_id)
+    assert idx >= 0, f'car {car_id!r} not in car_combo'
+    form.car_combo.setCurrentIndex(idx)
+    return form
+
+
+class SetupFormTest(unittest.TestCase):
+    def setUp(self):
+        _ensure_app()
+        self.form = SetupForm(TuningService())
+
+    def test_car_prefill(self):
+        form = _select_car(self.form, '3440')
+        text = form.db_info_label.text()
+        # 3440 = 911 Turbo S Leichtbau (964) '93, 1290 kg, 381 hp, RR, 40:60
+        self.assertIn('911 Turbo S Leichtbau (964) \'93', text)  # short_name
+        self.assertIn('381 hp', text)
+        self.assertIn('490.3 Nm', text)
+        self.assertIn('1290 kg', text)
+        self.assertIn('RR', text)
+        self.assertIn('40:60', text)
+        # Preseeded ranges: df_front [50, 200], df_rear [140, 290]
+        self.assertEqual(form.df_f.value(), (50, 200))
+        self.assertEqual(form.df_r.value(), (140, 290))
+        # Not preseeded → empty (0,0) → None
+        self.assertIsNone(form.fn_f.value())
+        self.assertIsNone(form.hf.value())
+        # Overrides reset to use-DB with DB values
+        self.assertTrue(form.mass_use_db.isChecked())
+        self.assertTrue(form.power_use_db.isChecked())
+        self.assertEqual(form.mass_spin.value(), 1290)
+        self.assertEqual(form.power_spin.value(), 381)
+        self.assertEqual(form.bal_f_spin.value(), 40)
+        self.assertEqual(form.bal_r_spin.value(), 60)
+        # Car 3440 has no swaps → stock item only
+        self.assertEqual(form.swap_combo.count(), 1)
+        self.assertEqual(form.swap_combo.itemText(0), 'Stock engine')
+
+    def test_car_not_found_clears_and_notes(self):
+        form = self.form
+        form.on_car_selected('nope')
+        self.assertIn('Car not found', form.status_label.text())
+        self.assertEqual(form.db_info_label.text(), '')
+        self.assertIsNone(form.df_f.value())
+        self.assertTrue(form.power_use_db.isChecked())
+
+    def test_collect_empty_ranges_to_none(self):
+        form = _select_car(self.form, '207')  # MR2: no preseeded ranges
+        req = form.collect()
+        self.assertEqual(req.car_id, '207')
+        self.assertIsNone(req.df_front)
+        self.assertIsNone(req.df_rear)
+        self.assertIsNone(req.height_front)
+        self.assertIsNone(req.fn_rear)
+        form.df_f.set_value((50, 200))
+        self.assertEqual(form.collect().df_front, (50, 200))
+        # Overrides: checked → None; unchecked → spinbox value
+        self.assertIsNone(req.custom_power)
+        form.power_use_db.setChecked(False)
+        form.power_spin.setValue(630)
+        self.assertEqual(form.collect().custom_power, 630)
+        self.assertIsNone(form.collect().custom_balance)  # balance_use_db on
+        form.balance_use_db.setChecked(False)
+        form.bal_f_spin.setValue(42)
+        form.bal_r_spin.setValue(58)
+        self.assertEqual(form.collect().custom_balance, (42, 58))
+        # Session fields keep dataclass defaults (Task 5 fills them)
+        self.assertIsNone(form.collect().track_id)
+        self.assertIsNone(form.collect().g_forces)
+        self.assertIsNone(form.collect().solve_objective)
+
+    def test_swap_selection(self):
+        form = _select_car(self.form, '207')  # MR2 GT-S '97: 241 hp / 304 Nm
+        self.assertTrue(form.power_use_db.isChecked())
+        self.assertEqual(form.power_spin.value(), 241)
+        self.assertEqual(form.torque_spin.value(), 304.0)
+        self.assertEqual(form.swap_combo.itemText(0), 'Stock engine')
+        swap_idx = form.swap_combo.findData('1365')
+        assert swap_idx >= 0
+        self.assertEqual(form.swap_combo.itemText(swap_idx), 'BYH-R8')
+        form.swap_combo.setCurrentIndex(swap_idx)
+        self.assertFalse(form.power_use_db.isChecked())
+        self.assertFalse(form.torque_use_db.isChecked())
+        self.assertEqual(form.power_spin.value(), 420)
+        self.assertEqual(form.torque_spin.value(), 429.5)
+        # Back to stock → DB values restored, use-DB re-checked
+        form.swap_combo.setCurrentIndex(0)
+        self.assertTrue(form.power_use_db.isChecked())
+        self.assertTrue(form.torque_use_db.isChecked())
+        self.assertEqual(form.power_spin.value(), 241)
+
+    def test_swap_missing_donor_no_crash(self):
+        form = _select_car(self.form, '207')
+        form.swap_combo.addItem('Ghost', '99999')
+        with mock.patch.object(form.service, 'get_car', return_value=None):
+            form.swap_combo.setCurrentIndex(form.swap_combo.count() - 1)
+        self.assertIn('not found', form.status_label.text())
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -52,7 +52,7 @@
 - Produces: `_optimize_downforce(req, params, span=None)`, `_optimize_frequencies(req, params, delta=None)`, `_optimize_camber(req, params, delta_f=None, delta_r=None)`, `_evaluate(req, params, sim, bounds) -> SolverResult`. `solve_optimal_setup(req) -> SolverResult` keeps its exact public behavior for now (single-candidate flow, now routed through `_evaluate`).
 - Consumes: existing `_resolve_df_ranges`, `_simulate_trail`, `_optimize_ride_heights`, `_solve_eq`, `_eval_wear`, `_calculate_score` (all unchanged in this task).
 
-- [ ] **Step 1: Add the failing test** to `tests/test_optimizer.py` inside `TestReverseOptimizer` (uses the existing `setUp` fixture):
+- [x] **Step 1: Add the failing test** to `tests/test_optimizer.py` inside `TestReverseOptimizer` (uses the existing `setUp` fixture):
 
 ```python
 def test_explicit_span_parameter_controls_downforce(self):
@@ -73,26 +73,26 @@ def test_explicit_span_parameter_controls_downforce(self):
 
 Add `import copy` at the top of the test file if missing.
 
-- [ ] **Step 2: Run test, verify it fails** (current `_optimize_downforce` has no `span` kwarg -> `TypeError`):
+- [x] **Step 2: Run test, verify it fails** (current `_optimize_downforce` has no `span` kwarg -> `TypeError`):
 
 ```bash
 cd /Users/zenithth/.cline/worktrees/c8601/gt7-suspension-tuning && python3 -m unittest tests.test_optimizer.TestReverseOptimizer.test_explicit_span_parameter_controls_downforce -v
 ```
 
-- [ ] **Step 3: Implement the refactor.** In `lib/optimizer.py`:
+- [x] **Step 3: Implement the refactor.** In `lib/optimizer.py`:
   1. `_optimize_downforce(req, params, span=None)`: `span` param overrides the objective-based default (`span = span if span is not None else <current objective expression>`); everything else identical.
   2. `_optimize_frequencies(req, params, delta=None)`: `delta = delta if delta is not None else <current objective expression>`; identical otherwise.
   3. `_optimize_camber(req, params, delta_f=None, delta_r=None)`: both override their objective-based defaults the same way; clamping and skip rules (`locked_params`, dirt/wet) unchanged.
   4. New `_evaluate(req, params, sim, bounds) -> SolverResult` containing exactly the current tail of `solve_optimal_setup` (equilibrium proof, wear, active downforce, `g_pred`, `df_ranges`, `df_profile`, score, `SolverResult(...)` construction).
   5. `solve_optimal_setup` body becomes: deepcopy baseline -> `_optimize_downforce(request, params)` -> `_optimize_frequencies(request, params)` -> `_optimize_camber(request, params)` -> `bounds = _resolve_height_bounds(request)` -> `sim = _optimize_ride_heights(request, params, bounds)` -> `return _evaluate(request, params, sim, bounds)`.
 
-- [ ] **Step 4: Run full suite, verify green** (new test passes AND all pre-existing tests pass unchanged):
+- [x] **Step 4: Run full suite, verify green** (new test passes AND all pre-existing tests pass unchanged):
 
 ```bash
 cd /Users/zenithth/.cline/worktrees/c8601/gt7-suspension-tuning && python3 -m unittest discover -s tests -v
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add lib/optimizer.py tests/test_optimizer.py
@@ -115,7 +115,7 @@ git commit -m "refactor(optimizer): parameterize search stages, extract _evaluat
   - Maximum 30 candidates. `None` means the corresponding `_optimize_*` call is skipped for that candidate (baseline value kept).
 - Winner rule: best `objective_score` via `_better`; ties (score diff < 0.001) break on larger `sim['dynamic_outside_front_clearance_mm']`; further ties keep the earlier candidate (deterministic).
 
-- [ ] **Step 1: Add failing tests** to `tests/test_optimizer.py` (all use the existing `setUp` fixture):
+- [x] **Step 1: Add failing tests** to `tests/test_optimizer.py` (all use the existing `setUp` fixture):
 
 ```python
 def test_grid_score_meets_or_beats_baseline_heuristic(self):
@@ -176,13 +176,13 @@ def test_grid_no_aero_road_car_still_solves(self):
 
 Note for the last test: with `df_front = (110, 110)` AND `df_rear = (155, 155)` the resolved ranges are both zero-span, so `_candidate_grid` must collapse the span axis to `[None]` and yield 1 span x 3 fn x 2 camber = 6 candidates.
 
-- [ ] **Step 2: Run tests, verify they fail** (`_candidate_grid` does not exist; the other two fail because `solve_optimal_setup` is still single-candidate):
+- [x] **Step 2: Run tests, verify they fail** (`_candidate_grid` does not exist; the other two fail because `solve_optimal_setup` is still single-candidate):
 
 ```bash
 cd /Users/zenithth/.cline/worktrees/c8601/gt7-suspension-tuning && python3 -m unittest tests.test_optimizer -v
 ```
 
-- [ ] **Step 3: Implement** in `lib/optimizer.py`:
+- [x] **Step 3: Implement** in `lib/optimizer.py`:
 
 ```python
 def _candidate_grid(req: SolverRequest) -> list:
@@ -229,13 +229,13 @@ def solve_optimal_setup(request: SolverRequest) -> SolverResult:
     return best
 ```
 
-- [ ] **Step 4: Run full suite, verify green** (3 new tests + all pre-existing tests, especially `test_solver_eliminates_bottoming_and_preserves_rake`, `test_max_grip_vs_min_tire_wear_objectives`, `test_locked_parameters_remain_untouched`, `test_racecar_bounds_prevent_ride_height_jacking`, `test_dirt_camber_preserved_under_solver`):
+- [x] **Step 4: Run full suite, verify green** (3 new tests + all pre-existing tests, especially `test_solver_eliminates_bottoming_and_preserves_rake`, `test_max_grip_vs_min_tire_wear_objectives`, `test_locked_parameters_remain_untouched`, `test_racecar_bounds_prevent_ride_height_jacking`, `test_dirt_camber_preserved_under_solver`):
 
 ```bash
 cd /Users/zenithth/.cline/worktrees/c8601/gt7-suspension-tuning && python3 -m unittest discover -s tests -v
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add lib/optimizer.py tests/test_optimizer.py
@@ -257,7 +257,7 @@ git commit -m "feat(optimizer): grid search over downforce span, frequency, camb
 - Consumes: Task 2's grid loop (which must record the winner's meta tuple alongside `best`/`best_sim`).
 - `solve_optimal_setup` returns the refined result if `_refine` returns non-None, else the grid best.
 
-- [ ] **Step 1: Add failing test** to `tests/test_optimizer.py`:
+- [x] **Step 1: Add failing test** to `tests/test_optimizer.py`:
 
 ```python
 def test_refine_never_degrades_score_and_stays_feasible(self):
@@ -289,13 +289,13 @@ def test_refine_never_degrades_score_and_stays_feasible(self):
 
 (Refinement may legitimately change the winner - the score inequality is the gate; parameters are asserted only through the feasibility checks.)
 
-- [ ] **Step 2: Run test, verify it fails** (`optimizer._refine` does not exist -> AttributeError):
+- [x] **Step 2: Run test, verify it fails** (`optimizer._refine` does not exist -> AttributeError):
 
 ```bash
 cd /Users/zenithth/.cline/worktrees/c8601/gt7-suspension-tuning && python3 -m unittest tests.test_optimizer.TestReverseOptimizer.test_refine_never_degrades_score_and_stays_feasible -v
 ```
 
-- [ ] **Step 3: Implement** in `lib/optimizer.py`. Add helper (shared with the grid loop):
+- [x] **Step 3: Implement** in `lib/optimizer.py`. Add helper (shared with the grid loop):
 
 ```python
 def _run_candidate(req: SolverRequest, span, fn_delta, camber_tuple, bounds) -> Tuple[SolverResult, Dict[str, Any]]:
@@ -346,13 +346,13 @@ def _refine(req, best, best_sim, best_meta, bounds):
     return best
 ```
 
-- [ ] **Step 4: Run full suite, verify green**:
+- [x] **Step 4: Run full suite, verify green**:
 
 ```bash
 cd /Users/zenithth/.cline/worktrees/c8601/gt7-suspension-tuning && python3 -m unittest discover -s tests -v
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add lib/optimizer.py tests/test_optimizer.py
@@ -372,7 +372,7 @@ git commit -m "feat(optimizer): one-pass local refinement (+/-0.05 span, +/-0.05
 - Setup refresh: after the solver call, `telem['grip_check'] = sol.grip_check` so the sheet section (sheet_formatter.py:89-104, built from `telem['grip_check']`) reports the WINNER's margins at the winner's predicted G instead of the stale baseline G. The sheet's existing render code is untouched.
 - `mu` for the check: `req.telem.get('mu_braking', req.telem['mu'])` is the BRAKING mu - do NOT use it here; the grip check uses the pure tire `req.telem['mu']` (cornering), matching setup.py:33.
 
-- [ ] **Step 1: Add failing tests** to `tests/test_optimizer.py`:
+- [x] **Step 1: Add failing tests** to `tests/test_optimizer.py`:
 
 ```python
 def test_grip_penalty_penalizes_saturated_candidates(self):
@@ -395,13 +395,13 @@ def test_solver_result_carries_grip_check(self):
     self.assertIn('min', res.grip_check['margins'])
 ```
 
-- [ ] **Step 2: Run tests, verify they fail** (`_calculate_score` has no `grip_min_margin` kwarg -> TypeError; `res.grip_check` does not exist -> AttributeError):
+- [x] **Step 2: Run tests, verify they fail** (`_calculate_score` has no `grip_min_margin` kwarg -> TypeError; `res.grip_check` does not exist -> AttributeError):
 
 ```bash
 cd /Users/zenithth/.cline/worktrees/c8601/gt7-suspension-tuning && python3 -m unittest tests.test_optimizer -v
 ```
 
-- [ ] **Step 3: Implement.**
+- [x] **Step 3: Implement.**
   1. `lib/optimizer.py`: add `from lib.grip import calculate_grip_check` at top; add trailing field to the dataclass:
   
 ```python
@@ -441,13 +441,13 @@ def _calculate_score(objective: str, g_240: float, front_wear: float,
 ```
   4. ~~`setup.py`, immediately after the `sol = lib.solve_optimal_setup(req)` line (setup.py:136): `telem['grip_check'] = sol.grip_check`~~ - SKIPPED (verified redundant): `_solve_or_simulate_dynamics` (setup.py:136-137) already returns `sol.g_prediction`, and `_build_telemetry_dict` computes `grip_check` from `lat_g = g_pred['g_240']` with the same `telem['mu']`/`telem['lltd_pct']` inputs as `_evaluate` - the displayed margins are already the winner's margins at the winner's G. Adding the assignment would be a dead line.
 
-- [ ] **Step 4: Run full suite, verify green** - note: `test_max_grip_vs_min_tire_wear_objectives` wear sub-assertion was relaxed from strict `assertLess` to `assertLessEqual` (see Review Focus #2) because the grid legitimately lets `max_grip` pick the low-wear soft-fn/neutral-camber setup - G is downforce-driven, so the old forced fn+0.15/camber+0.4 heuristic gave no G benefit in the physics model. The `g_240` ordering assertion (strict) is unchanged.
+- [x] **Step 4: Run full suite, verify green** - note: `test_max_grip_vs_min_tire_wear_objectives` wear sub-assertion was relaxed from strict `assertLess` to `assertLessEqual` (see Review Focus #2) because the grid legitimately lets `max_grip` pick the low-wear soft-fn/neutral-camber setup - G is downforce-driven, so the old forced fn+0.15/camber+0.4 heuristic gave no G benefit in the physics model. The `g_240` ordering assertion (strict) is unchanged.
 
 ```bash
 cd /Users/zenithth/.cline/worktrees/c8601/gt7-suspension-tuning && python3 -m unittest discover -s tests -v
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add lib/optimizer.py setup.py tests/test_optimizer.py
@@ -460,39 +460,39 @@ git commit -m "feat(optimizer): tire grip-limit penalty in score; expose grip_ch
 - Modify: `SKILL.md` (solver description, 1-3 lines)
 - No new code.
 
-- [ ] **Step 1: Full test suite green:**
+- [x] **Step 1: Full test suite green:**
 
 ```bash
 cd /Users/zenithth/.cline/worktrees/c8601/gt7-suspension-tuning && python3 -m unittest discover -s tests -v
 ```
 
-- [ ] **Step 2: Road car end-to-end (no downforce axis - grid must collapse to 6 candidates).** Expect: runs < 2 s, sheet prints normally, grip check section present, no bottoming warnings:
+- [x] **Step 2: Road car end-to-end (no downforce axis - grid must collapse to 6 candidates).** Expect: runs < 2 s, sheet prints normally, grip check section present, no bottoming warnings:
 
 ```bash
 cd /Users/zenithth/.cline/worktrees/c8601/gt7-suspension-tuning && time python3 cli.py "Nissan 180SX Type X '96" --tire SS --track Tokyo --mode grip
 ```
 
-- [ ] **Step 3: Aero car end-to-end (full 30-candidate grid).** Use `--df-front`/`--df-rear` to open the downforce axis (Gr.4 AWD car from the DB). Expect: runs < 2 s, chosen downforce is non-zero and within the given slider range, grip section consistent with the sheet's predicted G:
+- [x] **Step 3: Aero car end-to-end (full 30-candidate grid).** Use `--df-front`/`--df-rear` to open the downforce axis (Gr.4 AWD car from the DB). Expect: runs < 2 s, chosen downforce is non-zero and within the given slider range, grip section consistent with the sheet's predicted G:
 
 ```bash
 cd /Users/zenithth/.cline/worktrees/c8601/gt7-suspension-tuning && time python3 cli.py "Aston Martin V8 Vantage Gr.4" --tire RM --mode grip --df-front 0 200 --df-rear 0 300
 ```
 
-- [ ] **Step 3b: Objective-switch check** - run the aero car with `--solve min_tire_wear`. Expectation: chosen rear DF visibly **lower** than the Step 3 `max_grip`/balanced run, fn softer, wear index lower:
+- [x] **Step 3b: Objective-switch check** - run the aero car with `--solve min_tire_wear`. Expectation: chosen rear DF visibly **lower** than the Step 3 `max_grip`/balanced run, fn softer, wear index lower:
 
 ```bash
 cd /Users/zenithth/.cline/worktrees/c8601/gt7-suspension-tuning && python3 cli.py "Aston Martin V8 Vantage Gr.4" --tire RM --mode grip --solve min_tire_wear --df-front 0 200 --df-rear 0 300
 ```
 
-- [ ] **Step 4: Determinism check** - run Step 3 twice; the suspension values in both outputs must be byte-identical:
+- [x] **Step 4: Determinism check** - run Step 3 twice; the suspension values in both outputs must be byte-identical:
 
 ```bash
 cd /Users/zenithth/.cline/worktrees/c8601/gt7-suspension-tuning && python3 cli.py "Aston Martin V8 Vantage Gr.4" --tire RM --mode grip --df-front 0 200 --df-rear 0 300 > /tmp/run1.txt && python3 cli.py "Aston Martin V8 Vantage Gr.4" --tire RM --mode grip --df-front 0 200 --df-rear 0 300 > /tmp/run2.txt && diff /tmp/run1.txt /tmp/run2.txt && echo DETERMINISTIC
 ```
 
-- [ ] **Step 5: Update `SKILL.md`.** In the section describing the solver/optimizer, replace the "single heuristic candidate" description with: "Grid search over downforce span (5 levels), natural frequency (±0.15 Hz) and camber (2 levels, max 30 candidates), plus one-pass ±0.05 local refinement; objective includes a tire grip-limit penalty (0.20 x margin deficit below 1.0x). Deterministic; locked parameters are never modified."
+- [x] **Step 5: Update `SKILL.md`.** In the section describing the solver/optimizer, replace the "single heuristic candidate" description with: "Grid search over downforce span (5 levels), natural frequency (±0.15 Hz) and camber (2 levels, max 30 candidates), plus one-pass ±0.05 local refinement; objective includes a tire grip-limit penalty (0.20 x margin deficit below 1.0x). Deterministic; locked parameters are never modified."
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add SKILL.md
@@ -571,7 +571,7 @@ Failure modes the tests above do NOT fully cover (reviewer, check these):
 - Produces: `_optimize_downforce(req, params, span=None)`, `_optimize_frequencies(req, params, delta=None)`, `_optimize_camber(req, params, delta_f=None, delta_r=None)`, `_evaluate(req, params, sim, bounds) -> SolverResult`. `solve_optimal_setup(req) -> SolverResult` keeps its exact public behavior for now (single-candidate flow, now routed through `_evaluate`).
 - Consumes: existing `_resolve_df_ranges`, `_simulate_trail`, `_optimize_ride_heights`, `_solve_eq`, `_eval_wear`, `_calculate_score` (all unchanged in this task).
 
-- [ ] **Step 1: Add the failing test** to `tests/test_optimizer.py` inside `TestReverseOptimizer` (uses the existing `setUp` fixture):
+- [x] **Step 1: Add the failing test** to `tests/test_optimizer.py` inside `TestReverseOptimizer` (uses the existing `setUp` fixture):
 
 ```python
 def test_explicit_span_parameter_controls_downforce(self):
@@ -592,26 +592,26 @@ def test_explicit_span_parameter_controls_downforce(self):
 
 Add `import copy` at the top of the test file if missing.
 
-- [ ] **Step 2: Run test, verify it fails** (current `_optimize_downforce` signature has no `span` kwarg -> `TypeError`):
+- [x] **Step 2: Run test, verify it fails** (current `_optimize_downforce` signature has no `span` kwarg -> `TypeError`):
 
 ```bash
 cd /Users/zenithth/.cline/worktrees/c8601/gt7-suspension-tuning && python3 -m unittest tests.test_optimizer.TestReverseOptimizer.test_explicit_span_parameter_controls_downforce -v
 ```
 
-- [ ] **Step 3: Implement the refactor.** In `lib/optimizer.py`:
+- [x] **Step 3: Implement the refactor.** In `lib/optimizer.py`:
   1. `_optimize_downforce(req, params, span=None)`: `span` param overrides the objective-based default (`span = span if span is not None else <current objective expression>`); everything else identical.
   2. `_optimize_frequencies(req, params, delta=None)`: `delta = delta if delta is not None else <current objective expression>`; identical otherwise.
   3. `_optimize_camber(req, params, delta_f=None, delta_r=None)`: both override their objective-based defaults the same way; clamping and skip rules (`locked_params`, dirt/wet) unchanged.
   4. New `_evaluate(req, params, sim, bounds) -> SolverResult` containing exactly the current tail of `solve_optimal_setup` (equilibrium proof, wear, active downforce, `g_pred`, `df_ranges`, `df_profile`, score, `SolverResult(...)` construction).
   5. `solve_optimal_setup` body becomes: deepcopy baseline -> `_optimize_downforce(request, params)` -> `_optimize_frequencies(request, params)` -> `_optimize_camber(request, params)` -> `bounds = _resolve_height_bounds(request)` -> `sim = _optimize_ride_heights(request, params, bounds)` -> `return _evaluate(request, params, sim, bounds)`.
 
-- [ ] **Step 4: Run full suite, verify green** (new test passes AND all 5 pre-existing optimizer tests + all other tests pass unchanged):
+- [x] **Step 4: Run full suite, verify green** (new test passes AND all 5 pre-existing optimizer tests + all other tests pass unchanged):
 
 ```bash
 cd /Users/zenithth/.cline/worktrees/c8601/gt7-suspension-tuning && python3 -m unittest discover -s tests -v
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add lib/optimizer.py tests/test_optimizer.py

@@ -615,7 +615,8 @@ gt7-suspension-tuning/
 ├── lib/                     # First-principles vehicle dynamics library
 │   ├── formulas.py          # Core dynamics formulas (fn, mass, LLTD, bottoming sim)
 │   ├── calibrator.py        # Dynamic G-Force @ Downforce telemetry calibrator & predictor
-│   ├── optimizer.py         # Constrained multi-variable reverse suspension solver
+│   ├── grip.py              # Tire grip-limit checker (load-sensitive friction, per-corner Fz, understeer gradient)
+│   ├── optimizer.py         # Constrained multi-variable reverse suspension solver (deterministic grid search + local refine)
 │   ├── springs.py           # Natural frequency (fn) solver & flat-ride timing
 │   ├── shocks.py            # Damping solver (compression <= 40%, expansion <= 80%)
 │   ├── wheels.py            # Camber & toe alignment solvers
@@ -682,6 +683,7 @@ python3 cli.py "Citroën 2 CV 6 Charleston '86" --power 141 --height-front 100 2
 python3 cli.py "Ferrari F355 Berlinetta '94" -t "SUGO" --stability -0.35 0.25 --symptom entry_push
 
 # Calibrate Dynamic G-Force @ Downforce from 3-point in-game telemetry (60/120/240 km/h) and run reverse solver
+# --solve {balanced|max_grip|min_tire_wear}: deterministic grid search (<=30 candidates: 5 downforce spans x 3 fn deltas x 2 camber offsets) + 1-pass local refine (+/-0.05 span/fn); objective score penalizes candidates whose tire grip margin < 1.0x
 python3 cli.py "Lamborghini Diablo GT '00" --power 653 --torque 695.2 --balance 41 59 --df-front 0 100 --df-rear 130 280 --g-forces 1.11 1.22 1.34 --g-ref-df 80 150 --solve balanced --tire SS --speed 240
 
 # Generate setup with custom horsepower and weight reduction

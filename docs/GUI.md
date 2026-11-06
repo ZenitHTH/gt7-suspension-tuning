@@ -33,6 +33,23 @@ The launcher `cd`s to the project root, creates `.venv/` + installs
 (**Qt binding used: PyQt6 6.12.0**, Python 3.15 — the plan's PySide6
 fallback was not needed, the wheel installs fine).
 
+### Windows "fatal error" — troubleshooting
+
+`run_gui.bat` is self-diagnosing: it pre-checks Python bitness and imports
+PyQt6 before launch, so a failure prints the real cause (and always `pause`s
+so the console doesn't vanish). If you still get a crash, map it:
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `32-bit Python detected` | 32-bit Python — PyQt6 is 64-bit only (top cause) | Install the **64-bit** python.org build, delete `.venv`, re-run |
+| `PyQt6 failed to import` | Missing VC++ runtime / half-built venv | Install "Microsoft Visual C++ Redistributable (x64)"; delete `.venv`, re-run |
+| `python is not recognized` | Python not on PATH | Install 64-bit Python, tick "Add to PATH", reopen the folder |
+| `.exe` says "Windows protected your PC" / won't start | Antivirus / SmartScreen blocking an **unsigned** exe | "More info → Run anyway", or allow the folder in AV; rebuild without `--windowed` to see the real error |
+| Native crash with no traceback | Qt init fault (rare) | Run the exe from `cmd` (console build) and capture the text |
+
+The exact `[FATAL]` line the launcher prints (or the traceback above it) is
+all that's needed to pin the remaining cases.
+
 ## Input tiers
 
 | # | Tier | Example (MR2) | Source |

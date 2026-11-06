@@ -173,6 +173,13 @@ def build_setup(
     ranges = (df_front_range, df_rear_range, height_range, height_front_range, height_rear_range, fn_front_range, fn_rear_range)
     sliders, overrides = _prepare_setup_inputs(car, custom_mass, custom_power, custom_torque, custom_drivetrain, custom_balance, ranges)
     veh, trk, out_car = init_vehicle_and_track_specs(car, track, tire, mode, overrides, is_widebody)
+    tire_switched_from: Optional[str] = None
+    # GT7 forces surface-appropriate tires on dirt/wet circuits, so e.g. an
+    # SS run on a dirt circuit is not a physical configuration: auto-switch.
+    if trk.is_dirt and tire != 'Dirt':
+        tire_switched_from, tire = tire, 'Dirt'
+    elif trk.is_wet and tire != 'Wet':
+        tire_switched_from, tire = tire, 'Wet'
     params, telem = compute_baseline_suspension(veh, trk, tire, sliders, is_widebody, is_controller, g_forces=g_forces)
 
     sim_spd = float(speed_kmh) if speed_kmh is not None else (240.0 if veh.is_racecar else 200.0)
@@ -190,4 +197,6 @@ def build_setup(
     )
     params['quick_trims'] = lib.build_quick_trims(params, drivetrain=veh.drivetrain, is_endurance=trk.is_endurance, power_hp=veh.power_hp, mass_kg=veh.mass_kg)
     telem_dict = _build_telemetry_dict(veh, telem, (sim, eq, wear, g_pred, g_prof), params)
+    if tire_switched_from:
+        telem_dict['tire_switched_from'] = tire_switched_from
     return _assemble_final_result(out_car, (track, tire, mode), telem_dict, params)

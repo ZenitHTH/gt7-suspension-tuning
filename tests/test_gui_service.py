@@ -59,6 +59,15 @@ class TuningServiceTest(unittest.TestCase):
         self.assertIn('Car not found: nope', res.error)
         self.assertIsNone(res.setup)
 
+    def test_dirt_mode_switches_tire_and_warns(self):
+        req = _mr2_request()
+        req.tire, req.mode = 'SS', 'dirt'
+        res = self.svc.compute(req)
+        self.assertTrue(res.ok, msg=res.error)
+        self.assertEqual(res.setup['tire_compound'], 'Dirt')
+        self.assertTrue(any('Tire auto-switched SS → Dirt' in w for w in res.warnings))
+        self.assertIn('Tire auto-switched SS → Dirt', res.sheet)
+
     def test_validate_errors(self):
         errors, _ = self.svc.validate(GuiRequest(car_id='nope'))
         self.assertIn('Car not found: nope', errors)

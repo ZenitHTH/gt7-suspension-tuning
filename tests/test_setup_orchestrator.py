@@ -48,5 +48,36 @@ class TestSetupOrchestrator(unittest.TestCase):
         sheet = cli.format_setup_sheet(res)
         self.assertIn("No-Aero High Rake", sheet)
 
+    def test_grip_mode_keeps_requested_tire(self):
+        car = {'name': 'Grip Test', 'mass_kg': 1200, 'drivetrain': 'FR', 'power_hp': 400, 'torque_nm': 450}
+        res = setup.build_setup(car, tire='SS', mode='grip')
+        self.assertEqual(res['tire_compound'], 'SS')
+        self.assertNotIn('tire_switched_from', res['telemetry'])
+
+    def test_dirt_mode_forces_dirt_tire(self):
+        """Dirt circuit + street tire: GT7 forces D-Tires there, so the
+        orchestrator auto-switches and says so."""
+        car = {'name': 'Dirt Test', 'mass_kg': 1200, 'drivetrain': 'FR', 'power_hp': 400, 'torque_nm': 450}
+        res = setup.build_setup(car, tire='SS', mode='dirt')
+        self.assertEqual(res['tire_compound'], 'Dirt')
+        self.assertEqual(res['telemetry'].get('tire_switched_from'), 'SS')
+        self.assertAlmostEqual(res['telemetry']['tire_friction_mu'], 0.90)
+        sheet = cli.format_setup_sheet(res)
+        self.assertIn('Tire auto-switched SS → Dirt', sheet)
+
+    def test_dirt_mode_explicit_dirt_tire_no_switch(self):
+        car = {'name': 'Dirt Test 2', 'mass_kg': 1200, 'drivetrain': 'FR', 'power_hp': 400, 'torque_nm': 450}
+        res = setup.build_setup(car, tire='Dirt', mode='dirt')
+        self.assertEqual(res['tire_compound'], 'Dirt')
+        self.assertNotIn('tire_switched_from', res['telemetry'])
+
+    def test_wet_mode_forces_wet_tire(self):
+        car = {'name': 'Wet Test', 'mass_kg': 1200, 'drivetrain': 'FR', 'power_hp': 400, 'torque_nm': 450}
+        res = setup.build_setup(car, tire='CS', mode='wet')
+        self.assertEqual(res['tire_compound'], 'Wet')
+        self.assertEqual(res['telemetry'].get('tire_switched_from'), 'CS')
+        self.assertAlmostEqual(res['telemetry']['tire_friction_mu'], 1.00)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -209,8 +209,15 @@ def format_setup_sheet(setup_dict: Dict[str, Any]) -> str:
     """Format setup into dual English/Thai GT7 tuning sheet."""
     car, params = setup_dict['car'], setup_dict['parameters']
     telem, track = setup_dict.get('telemetry', {}), setup_dict.get('track')
+    header = _format_header(car, track, setup_dict['tire_compound'], setup_dict['setup_mode'])
+    switched = telem.get('tire_switched_from')
+    if switched:
+        header.append(
+            f"⚠️  Tire auto-switched {switched} → {setup_dict['tire_compound']}: "
+            f"{setup_dict['setup_mode'].upper()} circuit requires the surface tire (GT7)"
+        )
     sections = [
-        _format_header(car, track, setup_dict['tire_compound'], setup_dict['setup_mode']),
+        header,
         _format_telemetry(telem),
         _format_simulation_proofs(telem),
         _format_suspension_table(params),

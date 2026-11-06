@@ -183,6 +183,12 @@ class TuningService:
         except Exception as e:
             return GuiResult(error=repr(e), warnings=warnings)
 
+        switched = setup_dict.get('telemetry', {}).get('tire_switched_from')
+        if switched:
+            warnings.append(
+                f"Tire auto-switched {switched} → {setup_dict['tire_compound']} "
+                f"({req.mode} circuit requires the surface tire)"
+            )
         return GuiResult(setup=setup_dict, sheet=sheet, warnings=warnings)
 
 

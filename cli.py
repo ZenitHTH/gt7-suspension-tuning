@@ -136,6 +136,9 @@ def main():
     _save_slider_ranges_if_requested(args, car_data)
     setup_kwargs = _extract_setup_kwargs(args, car_data, get_track(args.track) if args.track else None)
     res = setup.build_setup(**setup_kwargs)
+    if res['telemetry'].get('tire_switched_from') and not args.json:
+        print(f"⚠️  Tire auto-switched {res['telemetry']['tire_switched_from']} → {res['tire_compound']} "
+              f"({args.mode} circuit requires the surface tire)")
     print(json.dumps(res, indent=2, ensure_ascii=False) if args.json else format_setup_sheet(res))
 
 

@@ -308,7 +308,7 @@ class SetupForm(QWidget):
             layout.addWidget(check)
 
         stab_row = QHBoxLayout()
-        stab_hint = QLabel('Stability (lo / hi)  − oversteer · + understeer')
+        stab_hint = QLabel('Stability (lo / hi)  − understeer · + oversteer')
         stab_hint.setObjectName('hintLabel')
         stab_row.addWidget(stab_hint)
         self.stab_low_spin = QDoubleSpinBox(decimals=2)

@@ -78,6 +78,18 @@ class TuningServiceTest(unittest.TestCase):
         errors, _ = self.svc.validate(GuiRequest(car_id='207', fn_front=(-1.5, 3.5)))
         self.assertTrue(any('natural frequency front' in e for e in errors), errors)
 
+    def test_validate_stability_allows_negatives(self):
+        # stability is a signed (low, high) index (−1.00 understeer …
+        # +1.00 oversteer), NOT a min/max range: negative readings are
+        # valid and must not raise a 'value below 0' error, and no
+        # min>max ordering applies (low-speed may exceed high-speed).
+        req = _mr2_request()
+        req.stability = (-0.35, 0.25)  # SKILL.md §2.A example reading
+        errors, _ = self.svc.validate(req)
+        self.assertEqual(errors, [], errors)
+        errors, _ = self.svc.validate(GuiRequest(car_id='207', stability=(-0.9, -0.5)))
+        self.assertEqual(errors, [], errors)
+
     def test_validate_warnings(self):
         _, warnings = self.svc.validate(GuiRequest(car_id='207', solve_objective='balanced'))
         self.assertTrue(any('Solver needs G-force calibration' in w for w in warnings), warnings)

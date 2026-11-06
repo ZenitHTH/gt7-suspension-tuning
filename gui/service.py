@@ -39,9 +39,12 @@ _SLIDER_RANGE_FIELDS: Tuple[Tuple[str, str], ...] = (
     ('fn_rear', 'natural frequency rear'),
 )
 # All two-value range fields checked for min/max ordering and negatives.
+# NOTE: `stability` is deliberately NOT here — it is a signed
+# (low_speed, high_speed) index on −1.00 (understeer) … +1.00 (oversteer),
+# not a (min, max) range, so neither the ordering check nor the
+# below-0 check applies (negative readings are valid input).
 _RANGE_FIELDS: Tuple[Tuple[str, str], ...] = _SLIDER_RANGE_FIELDS + (
     ('g_ref_df', 'G-force reference downforce'),
-    ('stability', 'stability'),
 )
 
 

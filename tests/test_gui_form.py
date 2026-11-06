@@ -145,7 +145,7 @@ class SetupFormTest(unittest.TestCase):
         self.assertIsNone(form.collect().track_id)
 
     def test_stability_range_allows_negative_and_collects(self):
-        # GT7 stability index spans −1.0 (oversteer) … +1.0 (understeer);
+        # GT7 stability index spans −1.0 (understeer) … +1.0 (oversteer);
         # the form must accept negative readings and collect them.
         form = _select_car(self.form, '207')
         self.assertEqual(form.stab_low_spin.minimum(), -1.0)

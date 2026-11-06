@@ -39,7 +39,23 @@ jobs:
           elif [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
             VER="${GITHUB_REF_NAME#v}"
           else
-            VER="$(tr -d '[:space:]' < VERSION)"
+            # Auto-increment on every push to main: patch-bump the highest
+            # existing vX.Y.Z tag; when no tags exist yet, fall back to the
+            # VERSION file. (Releases are created by this workflow, so the
+            # tag list is the single source of truth for the next number.)
+            latest="$(git ls-remote --tags origin \
+              | sed -n 's@.*refs/tags/v\([0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}\)$@\1@p' \
+              | sort -V | tail -n 1)"
+            if [[ -n "${latest}" ]]; then
+              major="${latest%%.*}"
+              rest="${latest#*.}"
+              minor="${rest%%.*}"
+              patch="${rest#*.}"
+              VER="${major}.${minor}.$((patch + 1))"
+              echo "Auto-incrementing from v${latest} -> v${VER}"
+            else
+              VER="$(tr -d '[:space:]' < VERSION)"
+            fi
           fi
           VER="${VER#v}"
           echo "version=${VER}" >> "$GITHUB_OUTPUT"

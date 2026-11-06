@@ -6,6 +6,8 @@ description: Use when tuning, configuring, or troubleshooting suspension, wheel 
 
 A complete vehicle dynamics translation guide connecting real-world race engineering mathematics to the Gran Turismo 7 simulation engine, supporting both English and Thai in-game terminology.
 
+**Modeling fidelity stance (80% sim / 20% arcade):** GT7 targets realistic behavior but keeps arcade accessibility (playable on a DualShock4). The tool is tuned to match what the *game* does, not idealized physics: the downforce slider is modeled as a **direct grip scalar** (it carries its own share of the cornering G, so the tire-friction check only budgets the non-aero part), and calibrated inputs (measured G-forces) always outrank model corrections. Do **not** "fix" the model toward pure real-world downforce physics (e.g. DF adding friction-circle Fz) without in-game A/B evidence — that would make the sheets diverge from the car's actual in-game behavior. Setup outputs stay pad-friendly: the `--controller` flag (GUI: Controller checkbox) locks the LSD to its most stable settings and adds a 4 mm ride-height buffer so results are forgiving to play with a gamepad (DualShock4/DualSense).
+
 -----
 
 ## 0. Minimum Required Intake Data & In-Game Measurement Telemetry

@@ -229,10 +229,13 @@ class SetupForm(QWidget):
         ref_hint = QLabel('Ref downforce (front / rear)')
         ref_hint.setObjectName('hintLabel')
         ref_row.addWidget(ref_hint)
+        # Cap matches the DF range spinboxes (2000): preseeded DB DF ranges
+        # reach 1700 (cars 3342/3374/3517), so a 1000 cap would silently
+        # clamp the downforce the user was running when measuring the Gs.
         self.gref_f_spin = QSpinBox()
-        self.gref_f_spin.setRange(0, 1000)
+        self.gref_f_spin.setRange(0, 2000)
         self.gref_r_spin = QSpinBox()
-        self.gref_r_spin.setRange(0, 1000)
+        self.gref_r_spin.setRange(0, 2000)
         ref_row.addWidget(self.gref_f_spin)
         ref_row.addWidget(self.gref_r_spin)
         layout.addLayout(ref_row)

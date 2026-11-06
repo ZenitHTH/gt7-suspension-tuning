@@ -233,6 +233,10 @@ class SetupFormTest(unittest.TestCase):
 
     def test_collect_partial_gref_df_applies_both_axes(self):
         form = _select_car(self.form, '207')
+        # Ref DF must accept the top of preseeded DB DF ranges (1700);
+        # a 1000 cap silently clamped it (same bug class as the DF pairs).
+        self.assertGreaterEqual(form.gref_f_spin.maximum(), 1700)
+        self.assertGreaterEqual(form.gref_r_spin.maximum(), 1700)
         # Front-only: the single set value is used for both axes
         form.gref_f_spin.setValue(200)
         self.assertEqual(form.collect().g_ref_df, (200, 200))

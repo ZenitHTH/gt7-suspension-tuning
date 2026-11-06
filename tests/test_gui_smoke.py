@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 import unittest
+from typing import Optional
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, BASE_DIR)
@@ -20,6 +21,15 @@ def _ensure_app() -> QApplication:
     return QApplication.instance() or QApplication([])
 
 
+def _venv_python() -> Optional[str]:
+    """Project venv python, per platform; None when the venv is absent
+    (e.g. running from a fresh checkout / git archive)."""
+    rel = os.path.join('.venv', 'Scripts', 'python.exe') if os.name == 'nt' \
+        else os.path.join('.venv', 'bin', 'python')
+    path = os.path.join(BASE_DIR, rel)
+    return path if os.path.exists(path) else None
+
+
 class GuiSmokeTest(unittest.TestCase):
     def test_main_defined_in_gui_app(self):
         _ensure_app()
@@ -32,10 +42,11 @@ class GuiSmokeTest(unittest.TestCase):
         qss_lines = [line for line in gui.theme.QSS.splitlines() if line.strip()]
         self.assertLessEqual(len(qss_lines), 70, 'QSS must stay <= 70 lines')
 
+    @unittest.skipUnless(_venv_python(), 'project venv not built (run the launcher first)')
     def test_subprocess_launch_offscreen_exits_zero(self):
         env = dict(os.environ, QT_QPA_PLATFORM='offscreen', GT7_GUI_AUTO_QUIT_MS='500')
         proc = subprocess.run(
-            [os.path.join(BASE_DIR, '.venv', 'bin', 'python'), '-m', 'gui'],
+            [_venv_python(), '-m', 'gui'],
             cwd=BASE_DIR, env=env, timeout=15, capture_output=True, text=True,
         )
         self.assertEqual(proc.returncode, 0, proc.stderr)

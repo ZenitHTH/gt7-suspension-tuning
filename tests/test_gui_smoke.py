@@ -42,6 +42,15 @@ class GuiSmokeTest(unittest.TestCase):
         qss_lines = [line for line in gui.theme.QSS.splitlines() if line.strip()]
         self.assertLessEqual(len(qss_lines), 70, 'QSS must stay <= 70 lines')
 
+    def test_theme_sets_noto_sans_font_and_white_text(self):
+        # Regression: theme must use the bundled Noto Sans family (with
+        # fallback stack) and pure white text on the dark chrome.
+        app = _ensure_app()
+        gui.theme.apply(app)
+        self.assertIn('Noto Sans', app.font().families())
+        self.assertNotIn('#e6e8ee', gui.theme.QSS,
+                         'dark-chrome text must be pure white (#ffffff)')
+
     @unittest.skipUnless(_venv_python(), 'project venv not built (run the launcher first)')
     def test_subprocess_launch_offscreen_exits_zero(self):
         env = dict(os.environ, QT_QPA_PLATFORM='offscreen', GT7_GUI_AUTO_QUIT_MS='500')

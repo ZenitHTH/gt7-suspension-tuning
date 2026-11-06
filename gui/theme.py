@@ -13,10 +13,18 @@ import struct
 import tempfile
 import zlib
 
+from PyQt6.QtGui import QFont, QFontDatabase
 from PyQt6.QtWidgets import QApplication
 
-# Design Spec token `text-primary` — the arrow glyph color.
-_ARROW_RGB = (0xE6, 0xE8, 0xEE)
+import db.loader
+
+# Design Spec token `text-primary` — the arrow glyph color (pure white on dark chrome).
+_ARROW_RGB = (0xFF, 0xFF, 0xFF)
+
+# Noto Sans is the theme font. It ships inside data/fonts (bundled by
+# --add-data) and is registered via QFontDatabase so it resolves on any OS;
+# the fallback stack covers machines where registration is unavailable.
+_FONT_STACK = ['Noto Sans', 'Segoe UI', 'SF Pro Text', 'Arial']
 
 
 def _arrow_png(up: bool) -> bytes:
@@ -54,7 +62,7 @@ def _arrow_paths() -> tuple:
 
 
 QSS = """
-QMainWindow, QSplitter, QStatusBar { background: #1b1d23; color: #e6e8ee; font-size: 13px; }
+QMainWindow, QSplitter, QStatusBar { background: #1b1d23; color: #ffffff; font-size: 13px; }
 QSplitter::handle { background: #3a3f4d; }
 QStatusBar { font-size: 12px; }
 QStatusBar::item { border: none; }
@@ -62,24 +70,24 @@ QWidget#statusLabel { font-size: 12px; }
 QWidget#statusLabel[ok="true"] { color: #4ade80; }
 QWidget#statusLabel[warn="true"] { color: #ffb454; font-weight: bold; }
 QWidget#statusLabel[error="true"] { color: #ff6369; font-weight: bold; }
-QLabel { color: #e6e8ee; font-size: 13px; }
-QLabel#dbInfoLabel, QLabel#hintLabel { color: #9aa0ae; font-size: 12px; }
+QLabel { color: #ffffff; font-size: 13px; }
+QLabel#dbInfoLabel, QLabel#hintLabel { color: #ffffff; font-size: 12px; }
 QLabel#warningsLabel { color: #ffb454; font-weight: bold; }
 QGroupBox { background: #23262e; border: 1px solid #3a3f4d; border-radius: 8px; margin-top: 12px; padding: 12px; }
-QGroupBox::title { subcontrol-origin: margin; left: 12px; padding: 0 4px; color: #e6e8ee; font-weight: bold; font-size: 13px; }
-QSpinBox, QDoubleSpinBox, QComboBox, QLineEdit { background: #14161a; color: #e6e8ee; border: 1px solid #3a3f4d; border-radius: 4px; padding: 4px 8px; min-height: 28px; }
+QGroupBox::title { subcontrol-origin: margin; left: 12px; padding: 0 4px; color: #ffffff; font-weight: bold; font-size: 13px; }
+QSpinBox, QDoubleSpinBox, QComboBox, QLineEdit { background: #14161a; color: #ffffff; border: 1px solid #3a3f4d; border-radius: 4px; padding: 4px 8px; min-height: 28px; }
 QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus, QLineEdit:focus { border: 2px solid #e5484d; }
-QSpinBox:disabled, QDoubleSpinBox:disabled, QComboBox:disabled, QLineEdit:disabled { color: #9aa0ae; opacity: 0.5; }
+QSpinBox:disabled, QDoubleSpinBox:disabled, QComboBox:disabled, QLineEdit:disabled { color: #ffffff; opacity: 0.5; }
 QComboBox::drop-down { border: none; }
 QComboBox::down-arrow { image: url("__ARROW_DOWN__"); }
-QComboBox QAbstractItemView { background: #14161a; color: #e6e8ee; border: 1px solid #3a3f4d; selection-background-color: #e5484d; }
+QComboBox QAbstractItemView { background: #14161a; color: #ffffff; border: 1px solid #3a3f4d; selection-background-color: #e5484d; }
 QSpinBox::line-edit, QDoubleSpinBox::line-edit { background: #14161a; border: none; }
 QSpinBox::up-button, QDoubleSpinBox::up-button { subcontrol-origin: border; subcontrol-position: top right; width: 18px; border-left: 1px solid #3a3f4d; background: #1b1d23; }
 QSpinBox::down-button, QDoubleSpinBox::down-button { subcontrol-origin: border; subcontrol-position: bottom right; width: 18px; border-left: 1px solid #3a3f4d; border-top: 1px solid #3a3f4d; background: #1b1d23; }
 QSpinBox::up-arrow, QDoubleSpinBox::up-arrow { image: url("__ARROW_UP__"); }
 QSpinBox::down-arrow, QDoubleSpinBox::down-arrow { image: url("__ARROW_DOWN__"); }
-QPushButton { background: #23262e; color: #e6e8ee; border: 1px solid #3a3f4d; border-radius: 4px; padding: 6px 12px; }
-QPushButton:hover { border-color: #9aa0ae; }
+QPushButton { background: #23262e; color: #ffffff; border: 1px solid #3a3f4d; border-radius: 4px; padding: 6px 12px; }
+QPushButton:hover { border-color: #ffffff; }
 QPushButton#computeButton { background: #e5484d; color: #ffffff; font-weight: bold; min-height: 40px; }
 QPushButton#computeButton:hover { background: #f2555a; }
 QPushButton#computeButton:pressed { background: #c73a3f; }
@@ -94,13 +102,31 @@ QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { width: 0; }
 """
 
 
+def _register_fonts(app: QApplication) -> None:
+    """Register the bundled Noto Sans TTFs so the family resolves on any OS.
+
+    No-op when a file is missing (e.g. trimmed data dir via GT7_DATA_DIR);
+    the fallback stack in `_FONT_STACK` then covers rendering.
+    """
+    fonts_dir = os.path.join(db.loader.get_data_dir(), 'fonts')
+    for name in ('NotoSans-Regular.ttf', 'NotoSans-Bold.ttf'):
+        path = os.path.join(fonts_dir, name)
+        if os.path.isfile(path):
+            QFontDatabase.addApplicationFont(path)
+
+
 def apply(app: QApplication) -> None:
-    """Apply the theme stylesheet to the application.
+    """Apply the theme: register bundled fonts, set the application font,
+    then the stylesheet.
 
     `QSS` carries `__ARROW_UP__`/`__ARROW_DOWN__` placeholders which are
     replaced with the generated PNG paths so the spinbox/combo arrow glyphs
     stay visible regardless of the platform style.
     """
+    _register_fonts(app)
+    font = QFont()
+    font.setFamilies(_FONT_STACK)
+    app.setFont(font)
     up, down = _arrow_paths()
     app.setStyleSheet(
         QSS.replace('__ARROW_UP__', up).replace('__ARROW_DOWN__', down))

@@ -28,6 +28,7 @@ echo [3/3] Done.
 echo     App:  dist\GT7Tuner\GT7Tuner.exe
 echo     To share: zip the whole dist\GT7Tuner folder (target PC needs nothing installed).
 echo     Saved slider ranges persist in dist\GT7Tuner\_internal\data\cars_master.json.
+echo     Override the data location with the GT7_DATA_DIR env var if needed.
 echo     To debug a silent crash: remove --windowed, rebuild, and run the exe from cmd.
 pause
 exit /b 0

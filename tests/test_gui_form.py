@@ -217,6 +217,17 @@ class SetupFormTest(unittest.TestCase):
         self.assertTrue(form.status_label.text())
         self.assertIn('DF front', form.status_label.text())
 
+    def test_save_ranges_read_only_db_no_crash(self):
+        """A save that raises (read-only volume / AV lock) must surface as a
+        red status, never crash the GUI."""
+        form = _select_car(self.form, '3440')  # preseeded df ranges → non-empty
+        def _raise(*a, **k):
+            raise PermissionError(13, 'Read-only file system', 'data/cars_master.json')
+        form.service.save_sliders = _raise
+        form._on_save_ranges()  # must not raise
+        self.assertIn('Save failed', form.status_label.text())
+        self.assertTrue(form.status_label.property('error'))
+
 
 if __name__ == '__main__':
     unittest.main()

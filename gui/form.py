@@ -508,7 +508,12 @@ class SetupForm(QWidget):
         if not non_empty:
             self.set_status('Nothing to save: all ranges are 0/0', 'warn')
             return
-        saved = self.service.save_sliders(car_id, non_empty)
+        try:
+            saved = self.service.save_sliders(car_id, non_empty)
+        except Exception as exc:
+            # Read-only volume / AV lock must never crash the GUI (qFatal).
+            self.set_status(f'Save failed: {exc}', 'error')
+            return
         if saved:
             self.set_status(f'Saved {len(non_empty)} range(s) to DB', 'ok')
         else:

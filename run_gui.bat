@@ -5,6 +5,9 @@ REM prints the real cause instead of a silent "fatal error" crash.
 setlocal
 cd /d "%~dp0"
 
+REM UTF-8 console output so Thai/symbol text cannot abort the launcher
+set PYTHONIOENCODING=utf-8
+
 REM --- resolve a Python launcher --------------------------------------------
 set "PY="
 where py >nul 2>nul && set "PY=py"

@@ -24,5 +24,26 @@ class TestDBInterface(unittest.TestCase):
         self.assertIn("height_front", ranges)
         self.assertEqual(ranges["height_front"], [45, 60])
 
+class TestDataDirOverride(unittest.TestCase):
+    def test_gt7_data_dir_env_override(self):
+        """GT7_DATA_DIR env var takes precedence for loader resolution."""
+        import json as _json
+        import tempfile
+        import db.loader as loader
+        with tempfile.TemporaryDirectory() as tmp:
+            with open(os.path.join(tmp, 'env_probe.json'), 'w', encoding='utf-8') as f:
+                _json.dump([{'id': 1, 'name': 'Env Car'}], f)
+            old = os.environ.get('GT7_DATA_DIR')
+            os.environ['GT7_DATA_DIR'] = tmp
+            try:
+                self.assertEqual(loader.get_data_dir(), os.path.abspath(tmp))
+                self.assertEqual(loader.load_json('env_probe.json')[0]['name'], 'Env Car')
+            finally:
+                if old is None:
+                    del os.environ['GT7_DATA_DIR']
+                else:
+                    os.environ['GT7_DATA_DIR'] = old
+
+
 if __name__ == '__main__':
     unittest.main()

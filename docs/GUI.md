@@ -18,6 +18,16 @@ run_gui.bat                          (double-click or cmd)
 powershell -ExecutionPolicy Bypass -File .\run_gui.ps1
 ```
 
+Standalone `.exe` (no Python on the target machine — build ON a Windows box,
+PyInstaller cannot cross-compile from macOS):
+
+```bat
+build_exe.bat                        (installs PyInstaller once, builds dist\GT7Tuner\)
+```
+
+Result: `dist\GT7Tuner\GT7Tuner.exe` — zip the whole folder to share; saved
+slider ranges persist in `_internal\data\cars_master.json`.
+
 The launcher `cd`s to the project root, creates `.venv/` + installs
 `PyQt6>=6.7,<7` if missing, then runs `.venv/bin/python -m gui`
 (**Qt binding used: PyQt6 6.12.0**, Python 3.15 — the plan's PySide6

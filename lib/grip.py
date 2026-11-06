@@ -6,7 +6,7 @@ friction, saturation direction (which axle gives up first), and a signed
 understeer gradient.
 """
 
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 G = 9.81
 LOAD_SENSITIVITY_EXP = 0.15            # mu_eff = mu_ref * (Fz_ref/Fz)**0.15
@@ -26,7 +26,8 @@ def calculate_grip_check(
     ay_g: float,
     lltd_f: float,
     aero_g: float = 0.0,
-    mu_is_measured: bool = False
+    mu_is_measured: bool = False,
+    mu_map: Optional[float] = None
 ) -> Dict[str, Any]:
     """Check tire grip limit at ay_g lateral acceleration.
 
@@ -42,6 +43,11 @@ def calculate_grip_check(
         (calibrated G60) rather than a tire-map constant. Measured anchors
         already reflect corner-loaded tire behavior, so the load-sensitivity
         correction is skipped to avoid double-counting.
+    mu_map: the selected tire compound's map friction (constants.TIRE_MU_MAP).
+        Cross-checked against the friction demand: when the measured anchor
+        exceeds the selected compound's map, the setup is flagged (usually a
+        compound-selection or data error). Gives the calibrated check real
+        discriminative power (anchor-vs-anchor alone is always 1.0).
     """
     m = float(veh.mass_kg)
     wf = min(0.85, max(0.15, float(veh.front_weight_ratio)))
@@ -99,8 +105,12 @@ def calculate_grip_check(
         saturation = 'rear'
     else:
         saturation = 'balanced'
+    map_headroom = round(float(mu_map) / ay_fric, 2) if mu_map else None
     if min_margin >= 1.0:
-        status = 'pass'
+        if mu_is_measured and map_headroom is not None and map_headroom < 0.95:
+            status = 'warn'  # measured friction exceeds the selected compound
+        else:
+            status = 'pass'
     elif mu_is_measured:
         status = 'warn'          # measured anchor: real data says over budget
     else:
@@ -112,6 +122,7 @@ def calculate_grip_check(
         'ay_fric_g': round(ay_fric, 2),
         'aero_g': round(max(0.0, float(aero_g)), 2),
         'mu_ref': round(float(mu), 2),
+        'map_headroom': map_headroom,
         'static_load_n': {'front': int(round(wf_n)), 'rear': int(round(wr_n))},
         'corner_fz_n': {
             'front_outside': int(round(fz_f_out)), 'front_inside': int(round(fz_f_in)),

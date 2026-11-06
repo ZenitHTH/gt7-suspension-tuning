@@ -97,6 +97,8 @@ def _format_grip_check_lines(gc: Dict[str, Any]) -> List[str]:
         status = '✅ ผ่าน (In Limit)'
     elif gc['status'] == 'info':
         status = 'ℹ️ ค่าประมาณ (Estimate — no calibration)'
+    elif gc.get('map_headroom') is not None and gc['map_headroom'] < 0.95:
+        status = '⚠️ เกินค่า Map ของยาง (Exceeds tire map — check compound/data)'
     else:
         status = '⚠️ เกินขีดจำกัด (Beyond Tire Limit)'
     bal = {'understeer': 'Understeer (หน้ าออกก่ อน)', 'oversteer': 'Oversteer (หลังออกก่ อน)', 'neutral': 'Neutral (สมดูล)'}[gc['handling_balance']]
@@ -105,8 +107,11 @@ def _format_grip_check_lines(gc: Dict[str, Any]) -> List[str]:
     g_label = f"{gc['ay_check_g']}G"
     if gc.get('aero_g', 0.0) > 0.01:
         g_label = f"{gc['ay_check_g']}G = ยาง {gc.get('ay_fric_g', gc['ay_check_g'])}G + แอโร {gc['aero_g']}G"
+    mu_label = f"μ={gc['mu_ref']}"
+    if gc.get('map_headroom') is not None:
+        mu_label += f" (map {gc['map_headroom']}x)"
     return [
-        f"• การตรวจสอบขีดจำกั ดการยิ่ ดเกาะยาง (Tire Grip Limit Check) ที่ {g_label} μ={gc['mu_ref']}: {status}",
+        f"• การตรวจสอบขีดจำกั ดการยิ่ ดเกาะยาง (Tire Grip Limit Check) ที่ {g_label} {mu_label}: {status}",
         f"  ↳ แรงกด Fz (N): หน้ านอก {fz['front_outside']} | หน้ าใน {fz['front_inside']} | หลังนอก {fz['rear_outside']} | หลังใน {fz['rear_inside']} (ถ่ ่ายเทด้ านนอก +{gc['transfer_front_n']} N หน้ า)",
         f"  ↳ Headroom (μ/limit): หน้ า {mg['front']}x | หลัง {mg['rear']}x | นอยสุด {mg['min']}x → สมดูลเลี้ ยว: {bal} (K={gc['understeer_gradient']})"
     ]

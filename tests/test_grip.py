@@ -85,6 +85,21 @@ class TestGripCheck(unittest.TestCase):
         self.assertAlmostEqual(gc['margins']['min'], 1.0, places=2)
         self.assertEqual(gc['status'], 'pass')
 
+    def test_map_headroom_passes_when_compound_has_room(self):
+        # MR2: measured 1.04G anchor, SS map 1.35 -> compound has headroom.
+        gc = calculate_grip_check(_veh(wf=0.42, mass=1289.0), 1.04, 1.38, 0.45,
+                                  aero_g=0.34, mu_is_measured=True, mu_map=1.35)
+        self.assertAlmostEqual(gc['map_headroom'], 1.30, places=2)
+        self.assertEqual(gc['status'], 'pass')
+
+    def test_map_exceeded_by_measured_anchor_warns(self):
+        # Measured 1.50G friction on a tire whose map says 1.35: the compound
+        # selection or the data is wrong — the calibrated check must say so.
+        gc = calculate_grip_check(_veh(wf=0.50), 1.50, 1.60, 0.50,
+                                  aero_g=0.10, mu_is_measured=True, mu_map=1.35)
+        self.assertLess(gc['map_headroom'], 0.95)
+        self.assertEqual(gc['status'], 'warn')
+
 
 if __name__ == '__main__':
     unittest.main()

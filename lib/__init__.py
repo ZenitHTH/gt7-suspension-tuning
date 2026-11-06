@@ -42,6 +42,7 @@ from lib.calibrator import (
     predict_g_at_downforce,
     build_df_g_profile
 )
+from lib.grip import calculate_grip_check
 from lib.optimizer import (
     SolverRequest,
     SolverResult,

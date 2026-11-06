@@ -198,8 +198,13 @@ def _evaluate(req: SolverRequest, params: Dict[str, Any], sim: Dict[str, Any],
     eq, tw = _solve_eq(req, params), _eval_wear(req, params)
     active_df = (params['downforce']['front'], params['downforce']['rear']) if params.get('downforce') else (0, 0)
     g_pred = predict_g_at_downforce(req.g_model, active_df)
+    # Friction anchor is the G-model's 60 km/h point (downforce ~0 there);
+    # everything above it at 240 km/h is carried by the aero system, not the
+    # tire friction budget.
+    aero_g = max(0.0, g_pred['g_240'] - req.g_model.base_g[0])
     g_check = calculate_grip_check(req.veh, req.telem['mu'], g_pred['g_240'],
-                                   req.telem.get('lltd_pct', 50.0) / 100.0)
+                                   req.telem.get('lltd_pct', 50.0) / 100.0,
+                                   aero_g=aero_g, mu_is_measured=req.g_model.is_calibrated)
     df_ranges = _resolve_df_ranges(req.sliders, params.get('downforce') or {})
     df_profile = build_df_g_profile(req.g_model, df_ranges, active_df)
     score = _calculate_score(req.objective, g_pred['g_240'], tw['front_wear_factor'],

@@ -93,12 +93,20 @@ def _format_simulation_proofs(telem: Dict[str, Any]) -> List[str]:
 
 def _format_grip_check_lines(gc: Dict[str, Any]) -> List[str]:
     """Format tire grip limit check lines."""
-    status = '✅ ผ่าน (In Limit)' if gc['status'] == 'pass' else '⚠️ เกินขีดจำกัด (Beyond Tire Limit)'
+    if gc['status'] == 'pass':
+        status = '✅ ผ่าน (In Limit)'
+    elif gc['status'] == 'info':
+        status = 'ℹ️ ค่าประมาณ (Estimate — no calibration)'
+    else:
+        status = '⚠️ เกินขีดจำกัด (Beyond Tire Limit)'
     bal = {'understeer': 'Understeer (หน้ าออกก่ อน)', 'oversteer': 'Oversteer (หลังออกก่ อน)', 'neutral': 'Neutral (สมดูล)'}[gc['handling_balance']]
     fz = gc['corner_fz_n']
     mg = gc['margins']
+    g_label = f"{gc['ay_check_g']}G"
+    if gc.get('aero_g', 0.0) > 0.01:
+        g_label = f"{gc['ay_check_g']}G = ยาง {gc.get('ay_fric_g', gc['ay_check_g'])}G + แอโร {gc['aero_g']}G"
     return [
-        f"• การตรวจสอบขีดจำกั ดการยิ่ ดเกาะยาง (Tire Grip Limit Check) ที่ {gc['ay_check_g']}G μ={gc['mu_ref']}: {status}",
+        f"• การตรวจสอบขีดจำกั ดการยิ่ ดเกาะยาง (Tire Grip Limit Check) ที่ {g_label} μ={gc['mu_ref']}: {status}",
         f"  ↳ แรงกด Fz (N): หน้ านอก {fz['front_outside']} | หน้ าใน {fz['front_inside']} | หลังนอก {fz['rear_outside']} | หลังใน {fz['rear_inside']} (ถ่ ่ายเทด้ านนอก +{gc['transfer_front_n']} N หน้ า)",
         f"  ↳ Headroom (μ/limit): หน้ า {mg['front']}x | หลัง {mg['rear']}x | นอยสุด {mg['min']}x → สมดูลเลี้ ยว: {bal} (K={gc['understeer_gradient']})"
     ]

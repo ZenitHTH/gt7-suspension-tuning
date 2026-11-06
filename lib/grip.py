@@ -24,7 +24,9 @@ def calculate_grip_check(
     veh: Any,
     mu: float,
     ay_g: float,
-    lltd_f: float
+    lltd_f: float,
+    aero_g: float = 0.0,
+    mu_is_measured: bool = False
 ) -> Dict[str, Any]:
     """Check tire grip limit at ay_g lateral acceleration.
 
@@ -32,11 +34,20 @@ def calculate_grip_check(
     mu: tire friction coefficient (constants.TIRE_MU_MAP)
     ay_g: target cornering G (typically predicted g_240)
     lltd_f: front share of lateral load transfer (0.0-1.0)
+    aero_g: share of ay_g carried by downforce (G units). In GT7 the downforce
+        slider contributes lateral grip directly, so only the friction part
+        (ay_g - aero_g) must be carried by tire friction. Defaults to 0.0
+        (pure-friction assumption, e.g. road cars without a G model).
+    mu_is_measured: True when `mu` is a measured in-game friction anchor
+        (calibrated G60) rather than a tire-map constant. Measured anchors
+        already reflect corner-loaded tire behavior, so the load-sensitivity
+        correction is skipped to avoid double-counting.
     """
     m = float(veh.mass_kg)
     wf = min(0.85, max(0.15, float(veh.front_weight_ratio)))
     lltd_f = min(1.0, max(0.0, float(lltd_f)))
     ay = max(0.05, float(ay_g))
+    ay_fric = max(ay - max(0.0, float(aero_g)), 0.05)
 
     # 1. Static axle loads (N)
     wf_n = m * G * wf
@@ -54,12 +65,19 @@ def calculate_grip_check(
     fz_r_out = wr_n / 2.0 + d_r / 2.0
     fz_r_in = max(0.0, wr_n / 2.0 - d_r / 2.0)
 
-    # 4. Load-sensitive friction limit (outside tire binds first)
+    # 4. Load-sensitive friction limit (outside tire binds first).
+    #    Demand is the friction-only part of the cornering G: downforce
+    #    carries its own share (GT7's DF slider is a direct grip scalar), so
+    #    comparing total G to the tire map structurally under-reports margin
+    #    on any aero car and made the check warn on essentially every setup.
     fz_ref = m * G / 4.0
-    mu_f_out = _load_sensitivity_mu(mu, fz_f_out, fz_ref)
-    mu_r_out = _load_sensitivity_mu(mu, fz_r_out, fz_ref)
-    margin_f = mu_f_out / ay
-    margin_r = mu_r_out / ay
+    if mu_is_measured:
+        mu_f_out, mu_r_out = float(mu), float(mu)
+    else:
+        mu_f_out = _load_sensitivity_mu(mu, fz_f_out, fz_ref)
+        mu_r_out = _load_sensitivity_mu(mu, fz_r_out, fz_ref)
+    margin_f = mu_f_out / ay_fric
+    margin_r = mu_r_out / ay_fric
     min_margin = min(margin_f, margin_r)
 
     # 5. Understeer gradient K (rad per G): >0 understeer, <0 oversteer
@@ -81,10 +99,18 @@ def calculate_grip_check(
         saturation = 'rear'
     else:
         saturation = 'balanced'
-    status = 'pass' if min_margin >= 1.0 else 'warn'
+    if min_margin >= 1.0:
+        status = 'pass'
+    elif mu_is_measured:
+        status = 'warn'          # measured anchor: real data says over budget
+    else:
+        status = 'info'          # uncalibrated: estimate vs estimate, no
+                                 # independent tire data — reference only
 
     return {
         'ay_check_g': round(ay, 2),
+        'ay_fric_g': round(ay_fric, 2),
+        'aero_g': round(max(0.0, float(aero_g)), 2),
         'mu_ref': round(float(mu), 2),
         'static_load_n': {'front': int(round(wf_n)), 'rear': int(round(wr_n))},
         'corner_fz_n': {

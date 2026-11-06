@@ -25,6 +25,7 @@ class GForceModel:
     front_weight_ratio: float
     ref_downforce: Tuple[int, int]
     ref_eff_df: float
+    is_calibrated: bool = False
 
 
 def _cp_balance_efficiency(df_front: int, df_rear: int, front_weight_ratio: float) -> float:
@@ -49,9 +50,9 @@ def calibrate_g_model(config: GForceCalibrationInput) -> GForceModel:
     if not config.measured_g:
         mu = config.base_mu
         base_g = (mu, round(mu + 0.08 * (eff_ref / 300.0), 2), round(mu + 0.22 * (eff_ref / 300.0), 2))
-        return GForceModel(base_g, k_aero, config.front_weight_ratio, ref_df, eff_ref)
+        return GForceModel(base_g, k_aero, config.front_weight_ratio, ref_df, eff_ref, is_calibrated=False)
 
-    return GForceModel(config.measured_g, k_aero, config.front_weight_ratio, ref_df, eff_ref)
+    return GForceModel(config.measured_g, k_aero, config.front_weight_ratio, ref_df, eff_ref, is_calibrated=True)
 
 
 def _calculate_speed_g(ref_g: float, delta_eff_df: float, k_aero: float, speed_kmh: float) -> float:

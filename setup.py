@@ -23,14 +23,17 @@ def _build_telemetry_dict(
     veh: Any,
     telem: Dict[str, Any],
     sim_pack: Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any]],
-    params: Dict[str, Any]
+    params: Dict[str, Any],
+    g_model: Any = None
 ) -> Dict[str, Any]:
     """Format derived physical telemetry dictionary."""
     sim, eq_proof, tire_wear, g_pred, g_prof = sim_pack
     wf_pct = f"{veh.front_weight_ratio * 100.0:.1f}% F / {veh.rear_weight_ratio * 100.0:.1f}% R"
     lat_g = g_pred['g_240'] if g_pred else round(telem['ay_est'], 2)
     actual_fr = round(params['natural_frequency_hz']['rear'] / max(0.1, params['natural_frequency_hz']['front']), 2)
-    grip_check = lib.calculate_grip_check(veh, telem['mu'], lat_g, telem['lltd_pct'] / 100.0)
+    aero_g = max(0.0, g_pred['g_240'] - g_model.base_g[0]) if (g_pred and g_model) else 0.0
+    grip_check = lib.calculate_grip_check(veh, telem['mu'], lat_g, telem['lltd_pct'] / 100.0,
+                                          aero_g=aero_g, mu_is_measured=bool(g_model and g_model.is_calibrated))
     return {
         'mass_sprung_total_kg': telem['tot_s'],
         'mass_sprung_corner_f_kg': telem['c_f'],
@@ -189,14 +192,15 @@ def build_setup(
         params = lib.apply_closed_loop_trim(params, stability, symptoms, veh.drivetrain, veh.group, is_controller=is_controller)
 
     g_cfg = lib.GForceCalibrationInput(g_forces, calib_ref_df, telem['mu'], veh.front_weight_ratio, veh.mass_kg)
-    solver_req = lib.SolverRequest(veh, trk, params, telem, sliders, lib.calibrate_g_model(g_cfg), solve_objective or 'balanced', (), sim_spd)
+    g_model = lib.calibrate_g_model(g_cfg)
+    solver_req = lib.SolverRequest(veh, trk, params, telem, sliders, g_model, solve_objective or 'balanced', (), sim_spd)
     params, sim, eq, wear, g_pred, g_prof = _solve_or_simulate_dynamics(solver_req, solve_objective)
 
     params['endurance_notes'] = _apply_setup_notes(
         veh, trk, tire, params, telem, sim, eq, sim_spd, stability, symptoms, is_widebody, is_controller
     )
     params['quick_trims'] = lib.build_quick_trims(params, drivetrain=veh.drivetrain, is_endurance=trk.is_endurance, power_hp=veh.power_hp, mass_kg=veh.mass_kg)
-    telem_dict = _build_telemetry_dict(veh, telem, (sim, eq, wear, g_pred, g_prof), params)
+    telem_dict = _build_telemetry_dict(veh, telem, (sim, eq, wear, g_pred, g_prof), params, g_model)
     if tire_switched_from:
         telem_dict['tire_switched_from'] = tire_switched_from
     return _assemble_final_result(out_car, (track, tire, mode), telem_dict, params)

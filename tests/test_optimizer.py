@@ -68,7 +68,10 @@ class TestReverseOptimizer(unittest.TestCase):
         )
         res_grip = solve_optimal_setup(req_grip)
         res_wear = solve_optimal_setup(req_wear)
-        self.assertGreater(res_grip.g_prediction['g_240'], res_wear.g_prediction['g_240'])
+        # max_grip maximizes G; min_tire_wear's score (-wear) is DF-agnostic,
+        # so its winner may match max_grip's downforce (equal G) — it may not
+        # exceed it.
+        self.assertGreaterEqual(res_grip.g_prediction['g_240'], res_wear.g_prediction['g_240'])
         # Grid semantics: max_grip does not penalize wear, so its winner can tie
         # min_tire_wear on wear (both may pick the soft-fn/neutral-camber setup).
         # Invariant: min_tire_wear winner never wears MORE than max_grip winner.

@@ -18,8 +18,10 @@ if not defined PY (
 
 if not exist ".venv\Scripts\python.exe" (
     %PY% -m venv .venv
-    ".venv\Scripts\python.exe" -m pip install --upgrade pip "PyQt6>=6.7,<7"
 )
+REM PyQt6 only if missing (repairs half-built venvs)
+".venv\Scripts\python.exe" -c "import PyQt6" >nul 2>nul
+if errorlevel 1 ".venv\Scripts\python.exe" -m pip install --upgrade pip "PyQt6>=6.7,<7"
 
 echo [1/3] Installing PyInstaller into .venv...
 ".venv\Scripts\python.exe" -m pip install --upgrade pyinstaller

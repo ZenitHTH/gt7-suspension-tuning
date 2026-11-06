@@ -23,21 +23,13 @@ if not defined PY (
     exit /b 1
 )
 
-REM --- ensure venv + PyQt6 ---------------------------------------------------
+REM --- ensure venv exists (created if missing) --------------------------------
 if not exist ".venv\Scripts\python.exe" (
-    echo First run: creating .venv and installing PyQt6...
+    echo First run: creating .venv...
     %PY% -m venv .venv
     if not exist ".venv\Scripts\python.exe" (
         echo.
         echo [FATAL] Could not create .venv. Try running this from an admin cmd.
-        pause
-        exit /b 1
-    )
-    ".venv\Scripts\python.exe" -m pip install --upgrade pip
-    ".venv\Scripts\python.exe" -m pip install "PyQt6>=6.7,<7"
-    if errorlevel 1 (
-        echo.
-        echo [FATAL] pip install failed (see above). Usually a network/proxy issue.
         pause
         exit /b 1
     )
@@ -54,6 +46,20 @@ if errorlevel 3 (
     echo   then delete this .venv folder and re-run run_gui.bat.
     pause
     exit /b 1
+)
+
+REM --- install PyQt6 only if missing (repairs half-built venvs) --------------
+"%VPY%" -c "import PyQt6" >nul 2>nul
+if errorlevel 1 (
+    echo Installing PyQt6 into .venv (first time, ~1 minute)...
+    "%VPY%" -m pip install --upgrade pip
+    "%VPY%" -m pip install "PyQt6>=6.7,<7"
+    if errorlevel 1 (
+        echo.
+        echo [FATAL] pip install failed (see above). Usually a network/proxy issue.
+        pause
+        exit /b 1
+    )
 )
 
 REM --- preflight 2: PyQt6 actually imports (catches DLL / VC++-runtime crash) --

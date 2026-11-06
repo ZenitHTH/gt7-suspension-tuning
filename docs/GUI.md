@@ -28,8 +28,10 @@ build_exe.bat                        (installs PyInstaller once, builds dist\GT7
 Result: `dist\GT7Tuner\GT7Tuner.exe` — zip the whole folder to share; saved
 slider ranges persist in `_internal\data\cars_master.json`.
 
-The launcher `cd`s to the project root, creates `.venv/` + installs
-`PyQt6>=6.7,<7` if missing, then runs `.venv/bin/python -m gui`
+The launcher `cd`s to the project root, runs from `.venv/` always: it
+creates the venv if missing and installs `PyQt6>=6.7,<7` when the
+`import PyQt6` check fails (so a half-built venv is repaired on re-run,
+not skipped), then runs `.venv/bin/python -m gui`
 (**Qt binding used: PyQt6 6.12.0**, Python 3.15 — the plan's PySide6
 fallback was not needed, the wheel installs fine).
 

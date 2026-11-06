@@ -4434,7 +4434,33 @@
         "donor_car": "Mitsubishi Lancer Evolution Final Gr.B Rally Car"
       }
     ],
-    "is_donor_for": []
+    "is_donor_for": [],
+    "slider_ranges": {
+      "df_front": [
+        20,
+        40
+      ],
+      "df_rear": [
+        40,
+        60
+      ],
+      "height_front": [
+        90,
+        195
+      ],
+      "height_rear": [
+        90,
+        195
+      ],
+      "fn_front": [
+        1.5,
+        3.5
+      ],
+      "fn_rear": [
+        1.5,
+        3.5
+      ]
+    }
   },
   {
     "id": "1510",

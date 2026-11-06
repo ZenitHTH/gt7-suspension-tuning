@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import QApplication  # noqa: E402
 
 from gui.form import SetupForm  # noqa: E402
 from gui.service import TuningService  # noqa: E402
+from db.interface import TRACKS_DB  # noqa: E402
 
 
 _APP: QApplication | None = None  # keep a reference so the app isn't GC'd
@@ -121,6 +122,41 @@ class SetupFormTest(unittest.TestCase):
         self.assertIsNone(form.collect().track_id)
         self.assertIsNone(form.collect().g_forces)
         self.assertIsNone(form.collect().solve_objective)
+
+    def test_track_search_filters_dropdown(self):
+        # Track selector mirrors the car pattern: search box + filtered
+        # dropdown (no free-text editing → _track_id can't see a bogus id).
+        form = self.form
+        target = next(t for t in TRACKS_DB if 'suz' in t['name'].lower())
+        full_count = form.track_combo.count()
+        self.assertGreater(full_count, 2, 'placeholder + all tracks')
+        form.track_search.setText('suz')
+        self.assertLess(form.track_combo.count(), full_count, 'search must filter')
+        for i in range(1, form.track_combo.count()):
+            self.assertIn('suz', form.track_combo.itemText(i).lower())
+        self.assertEqual(form.track_combo.itemText(0), '— (no track)')
+        self.assertGreater(form.track_combo.findData(target['id']), 0)
+        form.track_combo.setCurrentIndex(form.track_combo.findData(target['id']))
+        self.assertEqual(form.collect().track_id, target['id'])
+        # clearing the search restores the full list; placeholder → None
+        form.track_search.setText('')
+        self.assertEqual(form.track_combo.count(), full_count)
+        form.track_combo.setCurrentIndex(0)
+        self.assertIsNone(form.collect().track_id)
+
+    def test_stability_range_allows_negative_and_collects(self):
+        # GT7 stability index spans −1.0 (oversteer) … +1.0 (understeer);
+        # the form must accept negative readings and collect them.
+        form = _select_car(self.form, '207')
+        self.assertEqual(form.stab_low_spin.minimum(), -1.0)
+        self.assertEqual(form.stab_low_spin.maximum(), 1.0)
+        self.assertEqual(form.stab_high_spin.minimum(), -1.0)
+        self.assertEqual(form.stab_high_spin.maximum(), 1.0)
+        form.stab_low_spin.setValue(-0.5)  # loose/oversteer at low speed
+        req = form.collect()
+        self.assertEqual(req.stability, (-0.5, 0.0))
+        form.stab_low_spin.setValue(0.0)   # neutral reading → treated as unset
+        self.assertIsNone(form.collect().stability)
 
     def test_swap_selection(self):
         form = _select_car(self.form, '207')  # MR2 GT-S '97: 241 hp / 304 Nm

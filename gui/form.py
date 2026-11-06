@@ -10,7 +10,6 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QCheckBox,
     QComboBox,
-    QCompleter,
     QDoubleSpinBox,
     QGroupBox,
     QHBoxLayout,
@@ -193,6 +192,7 @@ class SetupForm(QWidget):
 
         # Initial state: full car list; selecting car 0 prefills the form.
         self._refill_cars('')
+        self._refill_tracks('')
 
     # ------------------------------------------------------------------ wiring
 
@@ -262,18 +262,13 @@ class SetupForm(QWidget):
         group = QGroupBox('Session')
         layout = QVBoxLayout(group)
 
-        track_row = QHBoxLayout()
-        track_hint = QLabel('Track')
-        track_hint.setObjectName('hintLabel')
-        track_row.addWidget(track_hint)
+        self.track_search = QLineEdit()
+        self.track_search.setPlaceholderText('Search tracks by name')
+        self.track_search.textChanged.connect(self._refill_tracks)
+        layout.addWidget(self.track_search)
+
         self.track_combo = QComboBox()
-        self.track_combo.setEditable(True)
-        self.track_combo.addItem('— (no track)', '')
-        for track in TRACKS_DB:
-            self.track_combo.addItem(track['name'], track['id'])
-        self.track_combo.setCompleter(QCompleter([t['name'] for t in TRACKS_DB]))
-        track_row.addWidget(self.track_combo)
-        layout.addLayout(track_row)
+        layout.addWidget(self.track_combo)
 
         mode_row = QHBoxLayout()
         mode_hint = QLabel('Mode')
@@ -313,14 +308,14 @@ class SetupForm(QWidget):
             layout.addWidget(check)
 
         stab_row = QHBoxLayout()
-        stab_hint = QLabel('Stability (lo / hi)')
+        stab_hint = QLabel('Stability (lo / hi)  − oversteer · + understeer')
         stab_hint.setObjectName('hintLabel')
         stab_row.addWidget(stab_hint)
         self.stab_low_spin = QDoubleSpinBox(decimals=2)
-        self.stab_low_spin.setRange(0.0, 1.0)
+        self.stab_low_spin.setRange(-1.0, 1.0)
         self.stab_low_spin.setSpecialValueText('')
         self.stab_high_spin = QDoubleSpinBox(decimals=2)
-        self.stab_high_spin.setRange(0.0, 1.0)
+        self.stab_high_spin.setRange(-1.0, 1.0)
         self.stab_high_spin.setSpecialValueText('')
         stab_row.addWidget(self.stab_low_spin)
         stab_row.addWidget(self.stab_high_spin)
@@ -337,19 +332,9 @@ class SetupForm(QWidget):
         self.solve_combo.setEnabled(calibrated)
 
     def _track_id(self) -> Optional[str]:
-        """Resolve the track combo to a track id.
-
-        Placeholder or empty text → None. Edited text matching no track →
-        None + a status note (the service never sees a bogus id).
-        """
-        text = self.track_combo.currentText()
-        if not text or text == self.track_combo.itemText(0):
-            return None
-        for i in range(self.track_combo.count()):
-            if self.track_combo.itemText(i) == text:
-                return self.track_combo.itemData(i)
-        self.set_status('Unknown track ignored', 'warn')
-        return None
+        """Resolve the track combo to a track id; placeholder → None."""
+        data = self.track_combo.currentData()
+        return data if data else None
 
     def _ref_df(self) -> Optional[Tuple[int, int]]:
         """(front, rear) when either ref spin is non-zero (else None); a
@@ -363,6 +348,20 @@ class SetupForm(QWidget):
         if hi == 0:
             return (lo, lo)
         return (lo, hi)
+
+    def _refill_tracks(self, text: str) -> None:
+        """Refill track_combo from TRACKS_DB filtered by `text`
+        (case-insensitive substring); '— (no track)' stays at index 0."""
+        keep = self.track_combo.currentData()
+        self.track_combo.blockSignals(True)
+        self.track_combo.clear()
+        self.track_combo.addItem('— (no track)', '')
+        for track in TRACKS_DB:
+            if not text or text.lower() in track['name'].lower():
+                self.track_combo.addItem(track['name'], track['id'])
+        if keep:
+            self.track_combo.setCurrentIndex(self.track_combo.findData(keep))
+        self.track_combo.blockSignals(False)
 
     def _refill_cars(self, text: str) -> None:
         """Refill car_combo from service.search_cars(text); preserve the
@@ -562,7 +561,9 @@ class SetupForm(QWidget):
         req.mode = self.mode_combo.currentText()
         req.speed_kmh = self.speed_spin.value()
         lo, hi = self.stab_low_spin.value(), self.stab_high_spin.value()
-        if lo > 0 and hi > 0:
+        # 0.0/0.0 is a neutral reading = no trim, so treat it as unset
+        # (keeps the setup notes free of a no-op stability line).
+        if lo != 0.0 or hi != 0.0:
             req.stability = (lo, hi)
         checked = [key for key, check in self.symptom_checks.items()
                    if check.isChecked()]

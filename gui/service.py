@@ -31,8 +31,8 @@ from gui.request import GuiRequest, GuiResult
 # saved/preseeded DB fallback values, so the "No {name} range" warning
 # applies to them alone.
 _SLIDER_RANGE_FIELDS: Tuple[Tuple[str, str], ...] = (
-    ('df_front', 'DF front'),
-    ('df_rear', 'DF rear'),
+    ('df_front', 'Downforce front'),
+    ('df_rear', 'Downforce rear'),
     ('height_front', 'height front'),
     ('height_rear', 'height rear'),
     ('fn_front', 'natural frequency front'),

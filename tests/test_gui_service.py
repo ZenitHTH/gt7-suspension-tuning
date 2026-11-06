@@ -73,7 +73,7 @@ class TuningServiceTest(unittest.TestCase):
         self.assertIn('Car not found: nope', errors)
 
         errors, _ = self.svc.validate(GuiRequest(car_id='207', df_front=(200, 50)))
-        self.assertTrue(any('DF front' in e for e in errors), errors)
+        self.assertTrue(any('Downforce front' in e for e in errors), errors)
 
         errors, _ = self.svc.validate(GuiRequest(car_id='207', fn_front=(-1.5, 3.5)))
         self.assertTrue(any('natural frequency front' in e for e in errors), errors)

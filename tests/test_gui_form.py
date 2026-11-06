@@ -255,7 +255,7 @@ class SetupFormTest(unittest.TestCase):
         errors = form.validate()
         self.assertGreaterEqual(len(errors), 1)
         self.assertTrue(form.status_label.text())
-        self.assertIn('DF front', form.status_label.text())
+        self.assertIn('Downforce front', form.status_label.text())
 
     def test_save_ranges_read_only_db_no_crash(self):
         """A save that raises (read-only volume / AV lock) must surface as a

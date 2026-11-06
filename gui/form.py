@@ -104,12 +104,12 @@ class SetupForm(QWidget):
         rlayout = QVBoxLayout(ranges_group)
         # max_v 2000: preseeded DF ranges in the DB reach 1700 (cars
         # 3342/3374/3517); the old 1000 cap silently clamped prefills.
-        self.df_f = RangePair('DF front', kind='int', max_v=2000)
-        self.df_r = RangePair('DF rear', kind='int', max_v=2000)
+        self.df_f = RangePair('Downforce front', kind='int', max_v=2000)
+        self.df_r = RangePair('Downforce rear', kind='int', max_v=2000)
         self.hf = RangePair('Height front', kind='int', max_v=400)
         self.hr = RangePair('Height rear', kind='int', max_v=400)
-        self.fn_f = RangePair('Nat freq front', kind='float', max_v=10.0)
-        self.fn_r = RangePair('Nat freq rear', kind='float', max_v=10.0)
+        self.fn_f = RangePair('Natural frequency front', kind='float', max_v=10.0)
+        self.fn_r = RangePair('Natural frequency rear', kind='float', max_v=10.0)
         for pair in (self.df_f, self.df_r, self.hf, self.hr, self.fn_f, self.fn_r):
             rlayout.addWidget(pair)
         r_hint = QLabel('0/0 = use saved/preseeded DB values')
@@ -311,7 +311,7 @@ class SetupForm(QWidget):
             layout.addWidget(check)
 
         stab_row = QHBoxLayout()
-        stab_hint = QLabel('Stability (lo / hi)  − understeer · + oversteer')
+        stab_hint = QLabel('Stability (low / high speed)  − understeer · + oversteer')
         stab_hint.setObjectName('hintLabel')
         stab_row.addWidget(stab_hint)
         self.stab_low_spin = QDoubleSpinBox(decimals=2)

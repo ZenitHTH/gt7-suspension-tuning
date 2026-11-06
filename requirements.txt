@@ -1,0 +1,2 @@
+# Runtime dependency (GUI). The CLI (cli.py) and physics core are stdlib-only.
+PyQt6>=6.7,<7

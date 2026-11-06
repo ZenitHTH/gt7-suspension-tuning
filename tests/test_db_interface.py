@@ -45,5 +45,32 @@ class TestDataDirOverride(unittest.TestCase):
                     os.environ['GT7_DATA_DIR'] = old
 
 
+class TestAtomicSliderSave(unittest.TestCase):
+    def test_midwrite_failure_leaves_db_intact(self):
+        # A crash/AV-lock mid-write must not truncate the database.
+        import json
+        import tempfile
+        import db.interface as di
+        payload = [{'id': '9999', 'name': 'Atomic Car'}]
+        with tempfile.TemporaryDirectory() as tmp:
+            db_file = os.path.join(tmp, 'cars_master.json')
+            with open(db_file, 'w', encoding='utf-8') as f:
+                json.dump(payload, f)
+            original_dump = di.json.dump
+
+            def boom(*_a, **_k):
+                raise OSError('disk full / AV lock')
+
+            di.json.dump = boom
+            try:
+                with self.assertRaises(OSError):
+                    di.save_car_sliders('9999', {'df_front': (10, 20)}, db_path=db_file)
+            finally:
+                di.json.dump = original_dump
+            with open(db_file, 'r', encoding='utf-8') as f:
+                self.assertEqual(json.load(f), payload)  # original intact
+            self.assertFalse(os.path.exists(db_file + '.tmp'))  # no leftover
+
+
 if __name__ == '__main__':
     unittest.main()

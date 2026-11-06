@@ -133,6 +133,9 @@ def main():
         return
 
     car_data = _resolve_car_data(args)
+    if args.balance and abs(args.balance[0] + args.balance[1] - 100) > 1:
+        print(f"Note: --balance {args.balance[0]}+{args.balance[1]} != 100 — "
+              f"using front {args.balance[0]}% (rear ignored).")
     _save_slider_ranges_if_requested(args, car_data)
     setup_kwargs = _extract_setup_kwargs(args, car_data, get_track(args.track) if args.track else None)
     res = setup.build_setup(**setup_kwargs)

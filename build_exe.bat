@@ -5,8 +5,19 @@ REM (PyInstaller cannot cross-compile from macOS/Linux).
 setlocal
 cd /d "%~dp0"
 
+set "PY="
+where py >nul 2>nul && set "PY=py"
+if not defined PY (
+    where python >nul 2>nul && set "PY=python"
+)
+if not defined PY (
+    echo [FATAL] Python for Windows not found on PATH (see run_gui.bat).
+    pause
+    exit /b 1
+)
+
 if not exist ".venv\Scripts\python.exe" (
-    py -m venv .venv
+    %PY% -m venv .venv
     ".venv\Scripts\python.exe" -m pip install --upgrade pip "PyQt6>=6.7,<7"
 )
 

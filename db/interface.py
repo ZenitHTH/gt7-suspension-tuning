@@ -170,9 +170,24 @@ def _update_car_slider_dict(target_car: Dict[str, Any], sliders: Dict[str, Any])
 
 
 def _persist_cars_file(target_path: str, cars: List[Dict[str, Any]]) -> None:
-    """Write updated cars collection to json file."""
-    with open(target_path, 'w', encoding='utf-8') as f:
-        json.dump(cars, f, ensure_ascii=False, indent=2)
+    """Write updated cars collection to json file.
+
+    Atomic (tmp + fsync + os.replace): a crash or antivirus lock mid-write
+    leaves the previous file intact instead of a truncated 600 KB database.
+    """
+    tmp_path = target_path + '.tmp'
+    try:
+        with open(tmp_path, 'w', encoding='utf-8') as f:
+            json.dump(cars, f, ensure_ascii=False, indent=2)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp_path, target_path)
+    except BaseException:
+        try:
+            os.remove(tmp_path)
+        except OSError:
+            pass
+        raise
 
 
 def save_car_sliders(car_id: str, sliders: Dict[str, Any], db_path: Optional[str] = None) -> Dict[str, Any]:

@@ -11,6 +11,13 @@ runs on a worker `QThread`, so the UI never blocks.
 ./run_gui.sh
 ```
 
+Windows (same logic, auto-creates a Windows `.venv` on first run):
+
+```bat
+run_gui.bat                          (double-click or cmd)
+powershell -ExecutionPolicy Bypass -File .\run_gui.ps1
+```
+
 The launcher `cd`s to the project root, creates `.venv/` + installs
 `PyQt6>=6.7,<7` if missing, then runs `.venv/bin/python -m gui`
 (**Qt binding used: PyQt6 6.12.0**, Python 3.15 — the plan's PySide6

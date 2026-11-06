@@ -13,13 +13,16 @@ def resolve_slider_ranges(car: Dict[str, Any], explicit: Dict[str, Any]) -> Dict
     """Merge user explicit slider ranges with pre-seeded or saved vehicle ranges."""
     saved = car.get('slider_ranges') or {}
     resolved = {}
-    for key in ['df_front', 'df_rear', 'height_range', 'height_front', 'height_rear', 'fn_front', 'fn_rear']:
+    for key in ['df_front', 'df_rear', 'height_range', 'height_front', 'height_rear', 'fn_front', 'fn_rear', 'compression', 'expansion']:
         val = explicit.get(key)
         if val is None and key in saved:
             val = tuple(saved[key])
         resolved[key] = val
-    resolved['comp_range'] = tuple(saved['damping_comp']) if 'damping_comp' in saved else None
-    resolved['exp_range'] = tuple(saved['damping_exp']) if 'damping_exp' in saved else None
+    # Explicit damper ranges win; otherwise fall back to saved DB values.
+    resolved['comp_range'] = resolved.get('compression') or (
+        tuple(saved['damping_comp']) if 'damping_comp' in saved else None)
+    resolved['exp_range'] = resolved.get('expansion') or (
+        tuple(saved['damping_exp']) if 'damping_exp' in saved else None)
     return resolved
 
 

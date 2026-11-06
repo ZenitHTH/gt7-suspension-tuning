@@ -27,7 +27,8 @@ class GuiRequestTest(unittest.TestCase):
         self.assertEqual(req.mode, 'grip')
         for field in (
             'df_front', 'df_rear', 'height_front', 'height_rear',
-            'fn_front', 'fn_rear', 'custom_mass', 'custom_power',
+            'fn_front', 'fn_rear', 'compression_range', 'expansion_range',
+            'custom_mass', 'custom_power',
             'custom_torque', 'custom_drivetrain', 'custom_balance',
             'track_id', 'g_forces', 'g_ref_df', 'solve_objective',
             'speed_kmh', 'stability', 'symptoms',

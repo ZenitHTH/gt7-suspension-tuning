@@ -10,6 +10,28 @@ import cli
 from db.interface import get_car
 
 class TestSetupOrchestrator(unittest.TestCase):
+    def test_damper_ranges_explicit_wins_and_clamps(self):
+        from setup_engine import resolve_slider_ranges
+        # Explicit damper ranges win over saved DB values; unset -> saved.
+        car = {'slider_ranges': {'damping_comp': [20, 40], 'damping_exp': [30, 60]}}
+        r = resolve_slider_ranges(car, {'compression': (50, 60), 'expansion': None})
+        self.assertEqual(r['comp_range'], (50, 60))
+        self.assertEqual(r['exp_range'], (30, 60))
+        r2 = resolve_slider_ranges(car, {'compression': None, 'expansion': None})
+        self.assertEqual(r2['comp_range'], (20, 40))
+        self.assertEqual(r2['exp_range'], (30, 60))
+
+        # End-to-end: the user range clamps the model-derived damper values.
+        f355 = get_car("Ferrari F355")
+        res = setup.build_setup(f355, tire='SS', compression_range=(25, 35),
+                                expansion_range=(45, 55))
+        dc = res['parameters']['damping_compression_pct']
+        de = res['parameters']['damping_expansion_pct']
+        for v in (dc['front'], dc['rear']):
+            self.assertTrue(25 <= v <= 35, f'compression {v} outside 25-35')
+        for v in (de['front'], de['rear']):
+            self.assertTrue(45 <= v <= 55, f'expansion {v} outside 45-55')
+
     def test_build_setup_and_format_sheet(self):
         car = get_car("Ferrari F355")
         self.assertIsNotNone(car)

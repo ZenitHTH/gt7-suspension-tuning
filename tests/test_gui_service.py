@@ -78,6 +78,9 @@ class TuningServiceTest(unittest.TestCase):
         errors, _ = self.svc.validate(GuiRequest(car_id='207', fn_front=(-1.5, 3.5)))
         self.assertTrue(any('natural frequency front' in e for e in errors), errors)
 
+        errors, _ = self.svc.validate(GuiRequest(car_id='207', compression_range=(60, 40)))
+        self.assertTrue(any('Damping compression' in e for e in errors), errors)
+
     def test_validate_stability_allows_negatives(self):
         # stability is a signed (low, high) index (−1.00 understeer …
         # +1.00 oversteer), NOT a min/max range: negative readings are
@@ -159,6 +162,7 @@ class TuningServiceTest(unittest.TestCase):
             'df_front_range': (50, 200), 'df_rear_range': (120, 310),
             'height_front_range': (90, 160), 'height_rear_range': (90, 160),
             'fn_front_range': (1.5, 3.5), 'fn_rear_range': (1.5, 3.5),
+            'compression_range': None, 'expansion_range': None,
             'stability': None, 'symptoms': None, 'is_widebody': False,
             'speed_kmh': None, 'is_controller': False,
             'g_forces': (1.04, 1.19, 1.38), 'g_ref_df': (200, 310),

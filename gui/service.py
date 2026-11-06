@@ -43,9 +43,16 @@ _SLIDER_RANGE_FIELDS: Tuple[Tuple[str, str], ...] = (
 # (low_speed, high_speed) index on −1.00 (understeer) … +1.00 (oversteer),
 # not a (min, max) range, so neither the ordering check nor the
 # below-0 check applies (negative readings are valid input).
+# Damper ratio ranges clamp the model-derived damper values; they carry no
+# "No {name} range" DB-fallback warning (unlike _SLIDER_RANGE_FIELDS), so
+# they get the shared ordering/below-0 checks only.
+_DAMPER_RANGE_FIELDS: Tuple[Tuple[str, str], ...] = (
+    ('compression_range', 'Damping compression'),
+    ('expansion_range', 'Damping expansion'),
+)
 _RANGE_FIELDS: Tuple[Tuple[str, str], ...] = _SLIDER_RANGE_FIELDS + (
     ('g_ref_df', 'G-force reference downforce'),
-)
+) + _DAMPER_RANGE_FIELDS
 
 
 class TuningService:
@@ -170,6 +177,8 @@ class TuningService:
             'height_rear_range': req.height_rear,
             'fn_front_range': req.fn_front,
             'fn_rear_range': req.fn_rear,
+            'compression_range': req.compression_range,
+            'expansion_range': req.expansion_range,
             'stability': req.stability,
             'symptoms': req.symptoms,
             'is_widebody': req.is_widebody,

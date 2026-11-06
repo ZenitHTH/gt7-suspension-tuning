@@ -110,7 +110,11 @@ class SetupForm(QWidget):
         self.hr = RangePair('Height rear', kind='int', max_v=400)
         self.fn_f = RangePair('Natural frequency front', kind='float', max_v=10.0)
         self.fn_r = RangePair('Natural frequency rear', kind='float', max_v=10.0)
-        for pair in (self.df_f, self.df_r, self.hf, self.hr, self.fn_f, self.fn_r):
+        # Damper ratio ranges (0-100%); one range clamps both front and rear.
+        self.comp_range_pair = RangePair('Damping compression', kind='int', max_v=100)
+        self.exp_range_pair = RangePair('Damping expansion', kind='int', max_v=100)
+        for pair in (self.df_f, self.df_r, self.hf, self.hr, self.fn_f, self.fn_r,
+                     self.comp_range_pair, self.exp_range_pair):
             rlayout.addWidget(pair)
         r_hint = QLabel('0/0 = use saved/preseeded DB values')
         r_hint.setObjectName('hintLabel')
@@ -438,6 +442,8 @@ class SetupForm(QWidget):
             'df_front': self.df_f, 'df_rear': self.df_r,
             'height_front': self.hf, 'height_rear': self.hr,
             'fn_front': self.fn_f, 'fn_rear': self.fn_r,
+            'damping_comp': self.comp_range_pair,
+            'damping_exp': self.exp_range_pair,
         }
         for key, pair in mapping.items():
             value = ranges.get(key)
@@ -491,7 +497,7 @@ class SetupForm(QWidget):
             spin.setValue(0)
         self.torque_spin.setValue(0.0)
         for pair in (self.df_f, self.df_r, self.hf, self.hr,
-                     self.fn_f, self.fn_r):
+                     self.fn_f, self.fn_r, self.comp_range_pair, self.exp_range_pair):
             pair.set_value(None)
 
     # ------------------------------------------------------------- actions
@@ -505,6 +511,8 @@ class SetupForm(QWidget):
             'df_front': self.df_f.value(), 'df_rear': self.df_r.value(),
             'height_front': self.hf.value(), 'height_rear': self.hr.value(),
             'fn_front': self.fn_f.value(), 'fn_rear': self.fn_r.value(),
+            'damping_comp': self.comp_range_pair.value(),
+            'damping_exp': self.exp_range_pair.value(),
         }
         non_empty = {k: v for k, v in pairs.items() if v is not None}
         if not non_empty:
@@ -543,6 +551,8 @@ class SetupForm(QWidget):
             height_rear=self.hr.value(),
             fn_front=self.fn_f.value(),
             fn_rear=self.fn_r.value(),
+            compression_range=self.comp_range_pair.value(),
+            expansion_range=self.exp_range_pair.value(),
         )
         if not self.mass_use_db.isChecked():
             req.custom_mass = self.mass_spin.value()

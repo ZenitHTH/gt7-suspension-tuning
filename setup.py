@@ -107,7 +107,7 @@ def _prepare_setup_inputs(
     ranges: Tuple
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """Organize raw setup inputs and slider boundaries."""
-    keys = ['df_front', 'df_rear', 'height_range', 'height_front', 'height_rear', 'fn_front', 'fn_rear']
+    keys = ['df_front', 'df_rear', 'height_range', 'height_front', 'height_rear', 'fn_front', 'fn_rear', 'compression', 'expansion']
     sliders = resolve_slider_ranges(car, dict(zip(keys, ranges)))
     overrides = {
         'mass': custom_mass, 'power': custom_power, 'torque': custom_torque,
@@ -165,6 +165,8 @@ def build_setup(
     height_rear_range: Optional[Tuple[int, int]] = None,
     fn_front_range: Optional[Tuple[float, float]] = None,
     fn_rear_range: Optional[Tuple[float, float]] = None,
+    compression_range: Optional[Tuple[int, int]] = None,
+    expansion_range: Optional[Tuple[int, int]] = None,
     stability: Optional[Tuple[float, float]] = None,
     symptoms: Optional[List[str]] = None,
     is_widebody: bool = False,
@@ -175,7 +177,7 @@ def build_setup(
     solve_objective: Optional[str] = None
 ) -> Dict[str, Any]:
     """Coordinate vehicle parameters and compute setup using modular lib/ calculations."""
-    ranges = (df_front_range, df_rear_range, height_range, height_front_range, height_rear_range, fn_front_range, fn_rear_range)
+    ranges = (df_front_range, df_rear_range, height_range, height_front_range, height_rear_range, fn_front_range, fn_rear_range, compression_range, expansion_range)
     sliders, overrides = _prepare_setup_inputs(car, custom_mass, custom_power, custom_torque, custom_drivetrain, custom_balance, ranges)
     veh, trk, out_car = init_vehicle_and_track_specs(car, track, tire, mode, overrides, is_widebody)
     tire_switched_from: Optional[str] = None

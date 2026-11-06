@@ -29,6 +29,8 @@ class GuiRequest:
     height_rear: Optional[Tuple[int, int]] = None
     fn_front: Optional[Tuple[float, float]] = None
     fn_rear: Optional[Tuple[float, float]] = None
+    compression_range: Optional[Tuple[int, int]] = None   # Damping compression (min, max)
+    expansion_range: Optional[Tuple[int, int]] = None     # Damping expansion (min, max)
     custom_mass: Optional[int] = None
     custom_power: Optional[int] = None
     custom_torque: Optional[float] = None

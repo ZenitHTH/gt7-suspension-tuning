@@ -31,8 +31,9 @@ echo [2/3] Building GT7Tuner (a few minutes; console shows progress)...
 ".venv\Scripts\python.exe" -m PyInstaller --noconfirm --clean --windowed ^
   --name GT7Tuner ^
   --paths . ^
+  --paths scripts ^
   --add-data "data;data" ^
-  --hidden-import scripts.gt7_db ^
+  --hidden-import gt7_constants ^
   --hidden-import setup ^
   gui\__main__.py
 if errorlevel 1 goto :fail

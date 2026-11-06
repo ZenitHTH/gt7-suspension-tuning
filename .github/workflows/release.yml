@@ -94,7 +94,7 @@ jobs:
       - name: Build GT7Tuner (PyInstaller)
         # Single line on purpose: Windows runners default to PowerShell, where
         # cmd-style ^ continuations are a parse error.
-        run: python -m PyInstaller --noconfirm --clean --windowed --name GT7Tuner --paths . --add-data "data;data" --hidden-import scripts.gt7_db --hidden-import setup gui\__main__.py
+        run: python -m PyInstaller --noconfirm --clean --windowed --name GT7Tuner --paths . --paths scripts --add-data "data;data" --hidden-import gt7_constants --hidden-import setup gui\__main__.py
 
       - name: Package Windows build
         shell: pwsh
@@ -130,7 +130,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Build GT7Tuner (PyInstaller)
-        run: python -m PyInstaller --noconfirm --clean --windowed --name GT7Tuner --paths . --add-data "data:data" --hidden-import scripts.gt7_db --hidden-import setup gui/__main__.py
+        run: python -m PyInstaller --noconfirm --clean --windowed --name GT7Tuner --paths . --paths scripts --add-data "data:data" --hidden-import gt7_constants --hidden-import setup gui/__main__.py
 
       - name: Package macOS build
         run: ditto -c -k --sequesterRsrc --keepParent dist/GT7Tuner "GT7Tuner-macOS-v${VERSION}.zip"

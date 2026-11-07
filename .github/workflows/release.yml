@@ -191,14 +191,30 @@ jobs:
           pip install pyinstaller
           pip install -r requirements.txt
 
-      - name: Build GT7Tuner (PyInstaller AppImage)
-        # --target AppImage (PyInstaller >= 6.5) runs linuxdeploy + appimagetool
-        # automatically; it bundles the Qt/X11 runtime into the image, so the
-        # result runs on stock x86_64 distros (glibc-based; no ARM).
-        run: python -m PyInstaller --noconfirm --clean --windowed --target AppImage --name GT7Tuner --paths . --paths scripts --add-data "data:data" --hidden-import gt7_constants --hidden-import setup gui/__main__.py
+      - name: Build GT7Tuner (PyInstaller)
+        run: python -m PyInstaller --noconfirm --clean --windowed --name GT7Tuner --paths . --paths scripts --add-data "data:data" --hidden-import gt7_constants --hidden-import setup gui/__main__.py
+
+      - name: Package AppImage (linuxdeploy)
+        # PyInstaller has no AppImage target; linuxdeploy turns the onedir
+        # build into an AppImage and bundles all NEEDED system libs (Qt/X11
+        # runtime), so the result runs on stock glibc x86_64 distros.
+        run: |
+          wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage -O linuxdeploy-x86_64.AppImage
+          chmod +x linuxdeploy-x86_64.AppImage
+          mkdir appdir
+          cp -r dist/GT7Tuner/. appdir/
+          cat > appdir/GT7Tuner.desktop <<'EOF'
+          [Desktop Entry]
+          Name=GT7 Suspension Tuner
+          Comment=Race-engineering suspension auto-tuner for Gran Turismo 7
+          Exec=GT7Tuner
+          Type=Application
+          Categories=Utility;
+          EOF
+          ./linuxdeploy-x86_64.AppImage --appdir appdir/
 
       - name: Package Linux build
-        run: zip -j "GT7Tuner-Linux-v${VERSION}.zip" dist/GT7Tuner/*.AppImage
+        run: zip -j "GT7Tuner-Linux-v${VERSION}.zip" GT7Tuner-x86_64.AppImage
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4

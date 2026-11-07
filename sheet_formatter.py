@@ -69,11 +69,17 @@ def _format_trail_sim_lines(sim: Dict[str, Any]) -> List[str]:
 def _format_equilibrium_lines(eq: Dict[str, Any]) -> List[str]:
     """Format suspension equilibrium proof lines."""
     status = '✅ ผ่าน (Compliance Pass)' if eq['trail_braking_feasible'] else '⚠️ เสี่ยง Bump Stop (Compliance Warn)'
-    return [
+    lines = [
         f"• สมดุลฟิสิกส์ Trail-Braking & ทอร์กส่งกำลัง (Equilibrium Proof): {status}",
         f"  ↳ แรงบิดกดท้าย (Acceleration Squat): {eq['acceleration_squat_rear_mm']} มม. | หน้าลอย (Lift): {eq['acceleration_lift_front_mm']} มม. | Rake ตอนกดคันเร่ง: {eq['dynamic_rake_accel_mm']} มม.",
         f"  ↳ ระยะยุบเหลือขณะ Trail-Braking: {eq['min_dynamic_clearance_mm']} มม. (ยุบรวม {eq['total_trail_compression_front_mm']} มม. | Rake ตอนเบรกเลี้ยว: {eq['dynamic_rake_brake_mm']} มม.)"
     ]
+    if not eq['trail_braking_feasible']:
+        lines.append(
+            "  ↳ ⚠️ = ขีดจำกั ด Stroke ท่ีความสูงสูงสุดของชวง — Solver ใช้อยู่แล้้วท่ีความสูงปลอดภัยสูงสุด — ใช้อย่างเดิมได้ (ไม่ใช่ตำหนิ Setup) — Stroke limit at max ride height in range; solver already used the highest safe height — use as-is, treat as pace limit. (Trail-Braking line above = separate high-speed-braking simulation.)"
+        )
+    return lines
+
 
 
 def _format_simulation_proofs(telem: Dict[str, Any]) -> List[str]:
@@ -110,11 +116,26 @@ def _format_grip_check_lines(gc: Dict[str, Any]) -> List[str]:
     mu_label = f"μ={gc['mu_ref']}"
     if gc.get('map_headroom') is not None:
         mu_label += f" (map {gc['map_headroom']}x)"
-    return [
+    lines = [
         f"• การตรวจสอบขีดจำกั ดการยิ่ ดเกาะยาง (Tire Grip Limit Check) ที่ {g_label} {mu_label}: {status}",
         f"  ↳ แรงกด Fz (N): หน้ านอก {fz['front_outside']} | หน้ าใน {fz['front_inside']} | หลังนอก {fz['rear_outside']} | หลังใน {fz['rear_inside']} (ถ่ ่ายเทด้ านนอก +{gc['transfer_front_n']} N หน้ า)",
         f"  ↳ Headroom (μ/limit): หน้ า {mg['front']}x | หลัง {mg['rear']}x | นอยสุด {mg['min']}x → สมดูลเลี้ ยว: {bal} (K={gc['understeer_gradient']})"
     ]
+    if gc['status'] == 'info':
+        lines.append(
+            "  \u21b3 \u2139\ufe0f = Reference only, use as-is \u2014 \u0e04\u0e32\u0e22\u0e15\u0e48\u0e27\u0e21\u0e48\u0e14\u0e35\u0e22\u0e4c\u0e17\u0e35\u0e48\u0e16\u0e47\u0e2d\u0e07\u0e40\u0e15\u0e37\u0e2d\u0e01\u0e08\u0e31\u0e19 \u2014 run a 60/120/240 km/h G telemetry pass to calibrate"
+        )
+    elif gc['status'] == 'warn':
+        if gc.get('map_headroom') is not None and gc['map_headroom'] < 0.95:
+            lines.append(
+                "  \u21b3 \u26a0\ufe0f = Check tire compound selection and G-calibration data \u2014 measured anchor exceeds the selected compound's friction map \u2014 \u0e15\u0e23\u0e14 Compound/G-calibration"
+            )
+        if mg['min'] < 1.0:
+            g_max = mg['min'] * gc['ay_check_g']
+            lines.append(
+                f"  \u21b3 \u26a0\ufe0f = Pace limit, NOT a setup fault \u2014 setup is optimal within slider ranges; suspension cannot add tire friction. Use as-is, lift/turn in below ~{g_max:.2f}G. Levers: lower entry speed \u2192 stickier tire \u2192 more downforce (aero cap) \u2014 \u0e02\u0e35\u0e40\u0e2b\u0e25\u0e32\u0e04\u0e01 Pace \u0e02\u0e2d\u0e19\u0e22\u0e32\u0e07"
+            )
+    return lines
 
 
 def _format_damper_alignment_rows(params: Dict[str, Any]) -> List[str]:

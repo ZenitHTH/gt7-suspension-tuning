@@ -128,7 +128,7 @@ class MainWindow(QMainWindow):
         if r.error is None:
             n = len(r.warnings)
             if n:
-                self._set_status(f'{n} warning(s)', 'warn')
+                self._set_status(f'{n} input warning(s) — check ranges/calibration', 'warn')
             else:
                 self._set_status('OK', 'ok')
         else:

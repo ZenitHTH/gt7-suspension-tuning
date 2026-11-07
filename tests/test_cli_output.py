@@ -138,5 +138,60 @@ class TestCLIOutput(unittest.TestCase):
             base_res['telemetry']['tire_wear_analysis']['front_wear_factor']
         )
 
+class TestWarningAdvisories(unittest.TestCase):
+    """Warning lines must carry actionable advice: setup-safe vs pace-limit vs data-issue."""
+
+    def _gc(self, status='pass', mg_min=1.25, map_headroom=None):
+        return {
+            'status': status,
+            'handling_balance': 'neutral',
+            'corner_fz_n': {'front_outside': 4000, 'front_inside': 3800,
+                            'rear_outside': 4600, 'rear_inside': 4300},
+            'transfer_front_n': 350,
+            'margins': {'front': 1.25, 'rear': 1.30, 'min': mg_min},
+            'ay_check_g': 1.59, 'aero_g': 0.0, 'mu_ref': 1.55,
+            'map_headroom': map_headroom, 'understeer_gradient': 0.02,
+            'ay_fric_g': 1.59,
+        }
+
+    def test_grip_pace_warn_explains_not_setup_fault(self):
+        from sheet_formatter import _format_grip_check_lines
+        sheet = '\n'.join(_format_grip_check_lines(self._gc('warn', mg_min=0.87)))
+        self.assertIn('Pace limit, NOT a setup fault', sheet)
+        self.assertIn('cannot add tire friction', sheet)
+        self.assertIn(f'~{0.87 * 1.59:.2f}G', sheet)
+        self.assertNotIn('Check tire compound', sheet)
+
+    def test_grip_map_warn_is_data_check_not_pace(self):
+        from sheet_formatter import _format_grip_check_lines
+        sheet = '\n'.join(_format_grip_check_lines(
+            self._gc('warn', mg_min=1.05, map_headroom=0.90)))
+        self.assertIn('Check tire compound', sheet)
+        self.assertNotIn('Pace limit', sheet)
+
+    def test_grip_pass_and_info_advisories(self):
+        from sheet_formatter import _format_grip_check_lines
+        p = '\n'.join(_format_grip_check_lines(self._gc('pass')))
+        for needle in ('Pace limit', 'Reference only', 'Check tire compound'):
+            self.assertNotIn(needle, p)
+        i = '\n'.join(_format_grip_check_lines(self._gc('info', mg_min=0.95)))
+        self.assertIn('Reference only', i)
+        self.assertNotIn('Pace limit', i)
+
+    def test_equilibrium_warn_explains_pace_limit(self):
+        from sheet_formatter import _format_equilibrium_lines
+        eq = {'trail_braking_feasible': False, 'acceleration_squat_rear_mm': 4,
+              'acceleration_lift_front_mm': 2, 'dynamic_rake_accel_mm': 2,
+              'min_dynamic_clearance_mm': 0,
+              'total_trail_compression_front_mm': 60,
+              'dynamic_rake_brake_mm': 3}
+        warn = '\n'.join(_format_equilibrium_lines(eq))
+        self.assertIn('treat as pace limit', warn)
+        self.assertIn('highest safe height', warn)
+        ok = dict(eq, trail_braking_feasible=True, min_dynamic_clearance_mm=12)
+        self.assertNotIn('treat as pace limit',
+                         '\n'.join(_format_equilibrium_lines(ok)))
+
+
 if __name__ == '__main__':
     unittest.main()

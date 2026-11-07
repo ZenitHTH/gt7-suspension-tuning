@@ -198,23 +198,35 @@ jobs:
         # PyInstaller has no AppImage target; linuxdeploy turns the onedir
         # build into an AppImage and bundles all NEEDED system libs (Qt/X11
         # runtime), so the result runs on stock glibc x86_64 distros.
+        # AppDir must follow the standard layout (AppRun + usr/...), the
+        # flat layout is ignored.
         run: |
           wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage -O linuxdeploy-x86_64.AppImage
           chmod +x linuxdeploy-x86_64.AppImage
-          mkdir appdir
-          cp -r dist/GT7Tuner/. appdir/
-          cat > appdir/GT7Tuner.desktop <<'EOF'
+          mkdir -p appdir/usr/bin appdir/usr/share/applications
+          cp -r dist/GT7Tuner/. appdir/usr/bin/
+          cat > appdir/AppRun <<'EOF'
+          #!/bin/sh
+          APPDIR="$(dirname "$(readlink -f "$0")")"
+          exec "$APPDIR/usr/bin/GT7Tuner" "$@"
+          EOF
+          chmod +x appdir/AppRun
+          cat > appdir/usr/share/applications/GT7Tuner.desktop <<'EOF'
           [Desktop Entry]
-          Name=GT7 Suspension Tuner
-          Comment=Race-engineering suspension auto-tuner for Gran Turismo 7
+          Name=GT7Tuner
+          Comment=GT7 Suspension Tuner - race-engineering auto-tuner
           Exec=GT7Tuner
           Type=Application
           Categories=Utility;
           EOF
           ./linuxdeploy-x86_64.AppImage --appdir appdir/
+          ls -lh *.AppImage
 
       - name: Package Linux build
-        run: zip -j "GT7Tuner-Linux-v${VERSION}.zip" GT7Tuner-x86_64.AppImage
+        run: |
+          APPIMAGE="$(ls -t *.AppImage | grep -v linuxdeploy | head -n 1)"
+          echo "Bundling ${APPIMAGE}"
+          zip -j "GT7Tuner-Linux-v${VERSION}.zip" "$APPIMAGE"
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4

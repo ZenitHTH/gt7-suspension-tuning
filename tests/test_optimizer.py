@@ -216,6 +216,45 @@ class TestReverseOptimizer(unittest.TestCase):
         self.assertFalse(res_grid.trail_simulation['bottoming_or_fender_hit'])
 
 
+    def test_solve_runs_full_bounce_on_winner(self):
+        """The solver's refinement pass runs the real RK4 kangaroo sim on the
+        winner — bounce_index/bounce_check must be filled, consistent."""
+        req = SolverRequest(
+            veh=self.veh, trk=self.trk, baseline_params=self.params,
+            telem=self.telem, sliders=self.sliders, g_model=self.g_model,
+            objective='balanced', speed_kmh=240.0
+        )
+        res = solve_optimal_setup(req)
+        self.assertIsNotNone(res.bounce_index)
+        self.assertTrue(0 <= res.bounce_index <= 100)
+        self.assertEqual(res.bounce_check['index'], res.bounce_index)
+
+    def test_full_sim_prefers_clean_over_kangaroo_candidate(self):
+        """Equal objective scores -> the ACTUAL simulation must pick the
+        non-kangarooing setup (stiff/underdamped hops hard on extreme road)."""
+        from lib.optimizer import SolverResult, _refine_full_sim
+        trk_rough = TrackSpec.from_dict({'bumpiness': 'extreme'},
+                                        mode='endurance', tire='RM')
+        g = {'g_60': 1.4, 'g_120': 1.5, 'g_240': 1.7}
+        stiff = {'natural_frequency_hz': {'front': 2.6, 'rear': 2.7},
+                 'damping_compression_pct': {'front': 8, 'rear': 8},
+                 'damping_expansion_pct': {'front': 8, 'rear': 8},
+                 'ride_height_mm': {'front': 120, 'rear': 130}}
+        soft = {'natural_frequency_hz': {'front': 1.3, 'rear': 1.4},
+                'damping_compression_pct': {'front': 80, 'rear': 80},
+                'damping_expansion_pct': {'front': 80, 'rear': 80},
+                'ride_height_mm': {'front': 120, 'rear': 130}}
+        r_stiff = SolverResult(stiff, g, {}, {}, {}, {}, 1.5)
+        r_soft = SolverResult(soft, g, {}, {}, {}, {}, 1.5)
+        req = SolverRequest(
+            veh=self.veh, trk=trk_rough, baseline_params=self.params,
+            telem=self.telem, sliders=self.sliders, g_model=self.g_model,
+            objective='balanced', speed_kmh=240.0
+        )
+        winner, _ = _refine_full_sim(req, [(r_stiff, {}), (r_soft, {})], r_stiff, {})
+        self.assertGreater(r_stiff.bounce_index, r_soft.bounce_index)
+        self.assertIs(winner, r_soft)
+
     def test_score_penalizes_sub_1x_grip_margin(self):
         """Objective score must penalize candidates whose tire margin < 1.0x."""
         import unittest.mock as mock

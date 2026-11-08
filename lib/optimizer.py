@@ -8,13 +8,13 @@ under aerodynamic load and high-speed trail braking constraints.
 from dataclasses import dataclass
 import copy
 import math
-from typing import Dict, Tuple, Any, Optional
+from typing import Dict, List, Tuple, Any, Optional
 
 from lib.calibrator import GForceModel, predict_g_at_downforce, build_df_g_profile
 from lib.equilibrium import simulate_high_speed_trail_braking, solve_suspension_equilibrium
 from lib.tire_wear import calculate_tire_wear_index
 from lib.grip import calculate_grip_check
-from lib.bounce import bounce_risk
+from lib.bounce import bounce_risk, bounce_report
 
 
 @dataclass
@@ -40,6 +40,8 @@ class SolverResult:
     tire_wear: Dict[str, Any]
     objective_score: float
     grip_check: Optional[Dict] = None
+    bounce_index: Optional[int] = None      # full RK4 kangaroo index (0-100)
+    bounce_check: Optional[Dict] = None     # full kangaroo report (final winner)
 
 
 def _resolve_df_ranges(sliders: Dict[str, Any], df: Dict[str, Any]) -> Tuple[Tuple[int, int], Tuple[int, int]]:
@@ -283,15 +285,57 @@ def _refine(req: SolverRequest, best: SolverResult, best_sim: Dict[str, Any],
     return best_neighbor
 
 
+# Full-simulation refinement: how many top grid candidates get the real
+# RK4 kangaroo simulation (each ~4 corners x ~23 s of 1 ms integration).
+_FULL_SIM_TOP_N = 5
+
+
+def _bounce_index(req: SolverRequest, result: SolverResult) -> int:
+    """Full RK4 kangaroo index for one candidate (0 without a track)."""
+    if req.trk is None:
+        return 0
+    g = result.g_prediction or {'g_240': 0.0}
+    result.bounce_check = bounce_report(
+        req.veh, req.trk, result.parameters, g,
+        req.telem.get('lltd_pct', 50.0) / 100.0)
+    return result.bounce_check['index']
+
+
+def _refine_full_sim(req: SolverRequest, pool: List[Tuple[SolverResult, Dict[str, Any]]],
+                     best: SolverResult, best_sim: Dict[str, Any]
+                     ) -> Tuple[SolverResult, Dict[str, Any]]:
+    """Re-rank the top grid candidates by the ACTUAL kangaroo index.
+
+    Grid ranking uses the cheap analytical bounce_risk proxy; the full
+    simulation only runs on the top-N candidates plus the current winner.
+    Winner = max(objective_score - 0.15 * index/100) — a 0.15 swing,
+    same magnitude as the proxy, but backed by the real integration."""
+    if req.trk is None:
+        return best, best_sim
+    ordered = sorted(pool, key=lambda t: t[0].objective_score, reverse=True)
+    candidates = ordered[:_FULL_SIM_TOP_N]
+    if all(r is not best for r, _ in candidates):  # winner came from _refine neighbors
+        candidates.append((best, best_sim))
+    for result, _sim in candidates:
+        if result.bounce_index is None:
+            result.bounce_index = _bounce_index(req, result)
+        result._final_score = result.objective_score - 0.15 * (result.bounce_index / 100.0)
+    winner = max(candidates, key=lambda t: t[0]._final_score)
+    return winner[0], winner[1]
+
+
 def solve_optimal_setup(request: SolverRequest) -> SolverResult:
     """Solve multi-variable suspension parameters satisfying aero and clearance constraints."""
     bounds = _resolve_height_bounds(request)
     best, best_sim, best_meta = None, None, None
+    pool = []
     for span, fn_delta, camber_tuple in _candidate_grid(request):
         result, sim = _run_candidate(request, span, fn_delta, camber_tuple, bounds)
+        pool.append((result, sim))
         if best is None or _better(result, best, sim, best_sim):
             best, best_sim, best_meta = result, sim, (span, fn_delta, camber_tuple)
     refined = _refine(request, best, best_sim, best_meta, bounds)
     if refined is not None:
         best, best_sim, best_meta = refined
+    best, best_sim = _refine_full_sim(request, pool, best, best_sim)
     return best

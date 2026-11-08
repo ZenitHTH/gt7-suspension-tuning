@@ -26,7 +26,8 @@ def _build_telemetry_dict(
     params: Dict[str, Any],
     g_model: Any = None,
     mu_map: Optional[float] = None,
-    trk: Any = None
+    trk: Any = None,
+    sol_bounce: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
     """Format derived physical telemetry dictionary."""
     sim, eq_proof, tire_wear, g_pred, g_prof = sim_pack
@@ -54,9 +55,12 @@ def _build_telemetry_dict(
         'dynamic_g_force': g_pred,
         'downforce_g_profile': g_prof,
         'grip_check': grip_check,
-        'bounce_check': (lib.bounce_report(veh, trk, params, lat_g,
-                                           telem.get('lltd_pct', 50.0) / 100.0)
-                         if trk is not None else None)
+        # The solver's full-simulation refinement already ran the kangaroo
+        # report on the winner — reuse it instead of simulating twice.
+        'bounce_check': (sol_bounce if sol_bounce is not None
+                         else (lib.bounce_report(veh, trk, params, g_pred or {'g_240': lat_g},
+                                                 telem.get('lltd_pct', 50.0) / 100.0)
+                              if trk is not None else None))
     }
 
 
@@ -139,17 +143,17 @@ def _resolve_profile_ranges(sliders: Dict[str, Any], params: Dict[str, Any]) -> 
 def _solve_or_simulate_dynamics(
     req: lib.SolverRequest,
     solve_obj: Optional[str]
-) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
+) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any], Optional[Dict[str, Any]]]:
     """Solve reverse setup or run baseline simulations."""
     if solve_obj:
         sol = lib.solve_optimal_setup(req)
-        return sol.parameters, sol.trail_simulation, sol.equilibrium_proof, sol.tire_wear, sol.g_prediction, sol.df_g_profile
+        return sol.parameters, sol.trail_simulation, sol.equilibrium_proof, sol.tire_wear, sol.g_prediction, sol.df_g_profile, sol.bounce_check
     sim, eq, wear, _ = run_trail_simulations(req.veh, req.trk, req.baseline_params, req.telem, req.sliders, req.speed_kmh, req.veh.is_widebody)
     df = (req.baseline_params['downforce']['front'], req.baseline_params['downforce']['rear']) if req.baseline_params.get('downforce') else (0, 0)
     g_pred = lib.predict_g_at_downforce(req.g_model, df)
     df_ranges = _resolve_profile_ranges(req.sliders, req.baseline_params)
     g_prof = lib.build_df_g_profile(req.g_model, df_ranges, df)
-    return req.baseline_params, sim, eq, wear, g_pred, g_prof
+    return req.baseline_params, sim, eq, wear, g_pred, g_prof, None
 
 
 def build_setup(
@@ -202,14 +206,14 @@ def build_setup(
     g_cfg = lib.GForceCalibrationInput(g_forces, calib_ref_df, telem['mu'], veh.front_weight_ratio, veh.mass_kg)
     g_model = lib.calibrate_g_model(g_cfg)
     solver_req = lib.SolverRequest(veh, trk, params, telem, sliders, g_model, solve_objective or 'balanced', (), sim_spd)
-    params, sim, eq, wear, g_pred, g_prof = _solve_or_simulate_dynamics(solver_req, solve_objective)
+    params, sim, eq, wear, g_pred, g_prof, sol_bounce = _solve_or_simulate_dynamics(solver_req, solve_objective)
 
     params['endurance_notes'] = _apply_setup_notes(
         veh, trk, tire, params, telem, sim, eq, sim_spd, stability, symptoms, is_widebody, is_controller
     )
     params['quick_trims'] = lib.build_quick_trims(params, drivetrain=veh.drivetrain, is_endurance=trk.is_endurance, power_hp=veh.power_hp, mass_kg=veh.mass_kg)
     telem_dict = _build_telemetry_dict(veh, telem, (sim, eq, wear, g_pred, g_prof), params, g_model,
-                                       mu_map=lib.get_tire_mu(tire), trk=trk)
+                                       mu_map=lib.get_tire_mu(tire), trk=trk, sol_bounce=sol_bounce)
     if tire_switched_from:
         telem_dict['tire_switched_from'] = tire_switched_from
     return _assemble_final_result(out_car, (track, tire, mode), telem_dict, params)

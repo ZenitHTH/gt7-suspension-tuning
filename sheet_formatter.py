@@ -94,6 +94,8 @@ def _format_simulation_proofs(telem: Dict[str, Any]) -> List[str]:
         lines.append(f"• การวิเคราะห์การสึกหรอของยาง (Tire Wear Index): หน้า {tw['front_wear_factor']}x | หลัง {tw['rear_wear_factor']}x (สัดส่วนความสึกหรอ หลัง/หน้า: {tw['relative_rear_bias']})")
     if telem.get('grip_check'):
         lines.extend(_format_grip_check_lines(telem['grip_check']))
+    if telem.get('bounce_check'):
+        lines.extend(_format_bounce_check_lines(telem['bounce_check']))
     return lines
 
 
@@ -135,6 +137,31 @@ def _format_grip_check_lines(gc: Dict[str, Any]) -> List[str]:
             lines.append(
                 f"  \u21b3 \u26a0\ufe0f = Pace limit, NOT a setup fault \u2014 setup is optimal within slider ranges; suspension cannot add tire friction. Use as-is, lift/turn in below ~{g_max:.2f}G. Levers: lower entry speed \u2192 stickier tire \u2192 more downforce (aero cap) \u2014 \u0e02\u0e35\u0e40\u0e2b\u0e25\u0e32\u0e04\u0e01 Pace \u0e02\u0e2d\u0e19\u0e22\u0e32\u0e07"
             )
+    return lines
+
+
+def _format_bounce_check_lines(bc: Dict[str, Any]) -> List[str]:
+    """Format the kangarooing (wheel hop / body bounce) simulation lines."""
+    level = {'low': 'ต่ำ (Low)', 'moderate': 'ปานกลาง (Moderate)', 'high': 'สูง (High)'}[bc['level']]
+    dirt = ' | ผิวทราย/ดิน (Dirt surface)' if bc.get('is_dirt') else ''
+    s = bc['scenarios']
+    rr, co, ld = s['rough_road'], s['cornering'], s.get('landing')
+    sym = lambda st: '⚠️' if st != 'pass' else '✅'
+    lines = [
+        f"• การจำลอง Kangarooing/ล้อดัก-ตัวรถเด้ง (Wheel Hop & Body Bounce) ที่ {bc['speed_kmh']} km/h{dirt}: ระดับ {level} — Index {bc['index']}/100",
+        f"  ↳ ถนนขรุขระ (Rough Road, {bc['bumpiness']}): {sym(rr['status'])} ล้อหลุดพื้นรวม {rr['hop_ms']} ms | ตัวรถเด้ง ±{rr['bounce_amp_mm']:.0f} mm (ζ หน้า/หลัง {bc['zeta']['front']}/{bc['zeta']['rear']})",
+        f"  ↳ แล้งเหวี่ยงหนัก {co['ay_g']}G (Hard Corner): {sym(co['status'])} ล้อในรับแรงกดเหลือ {co['inside_fz_pct']['front']}% หน้า / {co['inside_fz_pct']['rear']}% หลัง | Bottoming {co['bottom_pct']:.0f}%",
+    ]
+    if ld is not None:
+        lines.append(
+            f"  ↳ ลงจากเนิน (Crest Landing @ {ld['impact_v_ms']:.1f} m/s): {sym(ld['status'])} Bottoming {ld['bottom_pct']:.0f}% (เส้นทางชัน — เพิ่มระยะยุบ/ลดความแข็งสปริง หากเด้งแรง)"
+        )
+    else:
+        lines.append("  ↳ ลงจากเนิน (Crest Landing): — (สนามเรียบ ไม่มีการจำลอง)")
+    if bc['level'] != 'low':
+        lines.append(
+            "  ↳ ⚠️ Kangarooing = ล้อหลุดพื้นซ้ำๆ — แก้ด้วย: ลด Natural Freq (สปริงนิ่มลง) | ลด Damping เล็กน้อย | เพิ่ม Body Height — soften springs / slowen damping / +ride height. On dirt: slow the pace (suspension cannot grip a loose surface)"
+        )
     return lines
 
 

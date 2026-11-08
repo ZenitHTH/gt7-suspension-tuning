@@ -25,7 +25,8 @@ def _build_telemetry_dict(
     sim_pack: Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any]],
     params: Dict[str, Any],
     g_model: Any = None,
-    mu_map: Optional[float] = None
+    mu_map: Optional[float] = None,
+    trk: Any = None
 ) -> Dict[str, Any]:
     """Format derived physical telemetry dictionary."""
     sim, eq_proof, tire_wear, g_pred, g_prof = sim_pack
@@ -52,7 +53,10 @@ def _build_telemetry_dict(
         'tire_wear_analysis': tire_wear,
         'dynamic_g_force': g_pred,
         'downforce_g_profile': g_prof,
-        'grip_check': grip_check
+        'grip_check': grip_check,
+        'bounce_check': (lib.bounce_report(veh, trk, params, lat_g,
+                                           telem.get('lltd_pct', 50.0) / 100.0)
+                         if trk is not None else None)
     }
 
 
@@ -205,7 +209,7 @@ def build_setup(
     )
     params['quick_trims'] = lib.build_quick_trims(params, drivetrain=veh.drivetrain, is_endurance=trk.is_endurance, power_hp=veh.power_hp, mass_kg=veh.mass_kg)
     telem_dict = _build_telemetry_dict(veh, telem, (sim, eq, wear, g_pred, g_prof), params, g_model,
-                                       mu_map=lib.get_tire_mu(tire))
+                                       mu_map=lib.get_tire_mu(tire), trk=trk)
     if tire_switched_from:
         telem_dict['tire_switched_from'] = tire_switched_from
     return _assemble_final_result(out_car, (track, tire, mode), telem_dict, params)

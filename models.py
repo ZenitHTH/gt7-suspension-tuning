@@ -176,7 +176,7 @@ class TrackSpec:
             downforce_demand=str(t.get('downforce_demand') or 'medium'),
             longest_straight_m=float(t.get('longest_straight_m') or 0.0),
             is_oval=_is_track_oval(t_name_lower),
-            is_dirt=(mode == 'dirt') or (str(t.get('category') or '') == 'dirt'),
+            is_dirt=(mode == 'dirt') or ('dirt' in str(t.get('category') or '').lower()),
             is_wet=(mode == 'wet'),
             is_endurance=_is_track_endurance(mode, tire, t_name_lower)
         )

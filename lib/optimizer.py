@@ -14,6 +14,7 @@ from lib.calibrator import GForceModel, predict_g_at_downforce, build_df_g_profi
 from lib.equilibrium import simulate_high_speed_trail_braking, solve_suspension_equilibrium
 from lib.tire_wear import calculate_tire_wear_index
 from lib.grip import calculate_grip_check
+from lib.bounce import bounce_risk
 
 
 @dataclass
@@ -183,12 +184,15 @@ def _eval_wear(req: SolverRequest, params: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _calculate_score(objective: str, g_240: float, front_wear: float,
-                     grip_min_margin: Optional[float] = None) -> float:
+                     grip_min_margin: Optional[float] = None,
+                     bounce_risk: bool = False) -> float:
     """Evaluate scalar objective score for optimal setup comparison."""
     weights = {'max_grip': g_240, 'min_tire_wear': -front_wear}
     score = weights.get(objective, g_240 - 0.25 * front_wear)
     if grip_min_margin is not None and grip_min_margin < 1.0:
         score -= 0.20 * (1.0 - grip_min_margin)
+    if bounce_risk:
+        score -= 0.15  # kangaroo-prone candidate: underdamped + unloaded inside wheel
     return round(score, 3)
 
 
@@ -207,8 +211,9 @@ def _evaluate(req: SolverRequest, params: Dict[str, Any], sim: Dict[str, Any],
                                    aero_g=aero_g, mu_is_measured=req.g_model.is_calibrated)
     df_ranges = _resolve_df_ranges(req.sliders, params.get('downforce') or {})
     df_profile = build_df_g_profile(req.g_model, df_ranges, active_df)
+    bounce = bounce_risk(req.veh, req.trk, params, g_check)
     score = _calculate_score(req.objective, g_pred['g_240'], tw['front_wear_factor'],
-                             g_check['margins']['min'])
+                             g_check['margins']['min'], bounce_risk=bounce)
     return SolverResult(params, g_pred, df_profile, sim, eq, tw, score, g_check)
 
 

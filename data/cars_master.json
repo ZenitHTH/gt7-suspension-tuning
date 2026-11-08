@@ -20364,7 +20364,41 @@
         "donor_car": "Mazda RX-7 Spirit R Type A (FD) '02"
       }
     ],
-    "is_donor_for": []
+    "is_donor_for": [],
+    "slider_ranges": {
+      "df_front": [
+        0,
+        100
+      ],
+      "df_rear": [
+        50,
+        300
+      ],
+      "height_front": [
+        90,
+        195
+      ],
+      "height_rear": [
+        50,
+        195
+      ],
+      "fn_front": [
+        1.25,
+        3.25
+      ],
+      "fn_rear": [
+        1.25,
+        3.25
+      ],
+      "damping_comp": [
+        20,
+        40
+      ],
+      "damping_exp": [
+        30,
+        60
+      ]
+    }
   },
   {
     "id": "3474",

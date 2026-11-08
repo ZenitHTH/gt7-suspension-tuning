@@ -116,7 +116,7 @@ class SetupForm(QWidget):
         for pair in (self.df_f, self.df_r, self.hf, self.hr, self.fn_f, self.fn_r,
                      self.comp_range_pair, self.exp_range_pair):
             rlayout.addWidget(pair)
-        r_hint = QLabel('0/0 = use saved/preseeded DB values')
+        r_hint = QLabel('0/0 = use saved DB values (enter min and max to override)')
         r_hint.setObjectName('hintLabel')
         rlayout.addWidget(r_hint)
         self.save_ranges_btn = QPushButton('Save ranges to DB')
@@ -315,7 +315,7 @@ class SetupForm(QWidget):
             layout.addWidget(check)
 
         stab_row = QHBoxLayout()
-        stab_hint = QLabel('Stability (low / high speed)  − understeer · + oversteer')
+        stab_hint = QLabel('Stability (low / high speed): −1.00 understeer … +1.00 oversteer')
         stab_hint.setObjectName('hintLabel')
         stab_row.addWidget(stab_hint)
         self.stab_low_spin = QDoubleSpinBox(decimals=2)

@@ -124,7 +124,7 @@ class TuningService:
 
         for field, name in _SLIDER_RANGE_FIELDS:
             if getattr(req, field) is None:
-                warnings.append(f'No {name} range — using saved/preseeded DB values')
+                warnings.append(f'No {name} range — using saved DB values (enter min and max to override)')
 
         for field, name in _RANGE_FIELDS:
             value = getattr(req, field)
@@ -133,21 +133,21 @@ class TuningService:
             try:
                 lo, hi = value
             except (TypeError, ValueError):
-                errors.append(f'{name} range must be a (min, max) pair')
+                errors.append(f'{name} range: enter two numbers, min and max (e.g. 50 and 200)')
                 continue
             if lo > hi:
-                errors.append(f'{name} range: min ({lo}) > max ({hi})')
+                errors.append(f'{name} range: min ({lo}) > max ({hi}) — enter min ≤ max')
             if lo < 0 or hi < 0:
-                errors.append(f'{name} range: value below 0 ({min(lo, hi)})')
+                errors.append(f'{name} range: value below 0 ({min(lo, hi)}) — use 0 or greater')
 
         if req.solve_objective is not None and req.g_forces is None:
-            warnings.append('Solver needs G-force calibration; solve will be skipped')
+            warnings.append('Solver needs G-force calibration — enter the 60/120/240 km/h G values; solve will be skipped')
 
         if req.custom_balance is not None and abs(sum(req.custom_balance) - 100) > 1:
-            warnings.append(f'Balance front+rear = {sum(req.custom_balance)} (expected 100)')
+            warnings.append(f'Balance front+rear = {sum(req.custom_balance)} (expected 100) — enter front+rear totaling 100 (e.g. 55 + 45)')
 
         if req.g_forces is not None and req.g_ref_df is None:
-            warnings.append('G-forces without reference downforce; profile anchored at current DF')
+            warnings.append('G-forces without reference downforce — enter the DF (front/rear) running when measuring G; profile anchored at current DF')
 
         return errors, warnings
 

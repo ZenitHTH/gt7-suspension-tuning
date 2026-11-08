@@ -14944,7 +14944,41 @@
         "donor_car": "Toyota GR Supra RZ '20"
       }
     ],
-    "is_donor_for": []
+    "is_donor_for": [],
+    "slider_ranges": {
+      "df_front": [
+        50,
+        200
+      ],
+      "df_rear": [
+        100,
+        300
+      ],
+      "height_front": [
+        100,
+        180
+      ],
+      "height_rear": [
+        105,
+        170
+      ],
+      "fn_front": [
+        1.25,
+        3.25
+      ],
+      "fn_rear": [
+        1.25,
+        3.25
+      ],
+      "damping_comp": [
+        20,
+        40
+      ],
+      "damping_exp": [
+        30,
+        60
+      ]
+    }
   },
   {
     "id": "3345",
@@ -20379,7 +20413,7 @@
         195
       ],
       "height_rear": [
-        50,
+        90,
         195
       ],
       "fn_front": [
@@ -21592,7 +21626,41 @@
         "donor_car": "Ford Focus Gr.B Rally Car"
       }
     ],
-    "is_donor_for": []
+    "is_donor_for": [],
+    "slider_ranges": {
+      "df_front": [
+        50,
+        200
+      ],
+      "df_rear": [
+        100,
+        250
+      ],
+      "height_front": [
+        100,
+        200
+      ],
+      "height_rear": [
+        120,
+        220
+      ],
+      "fn_front": [
+        1.5,
+        3.5
+      ],
+      "fn_rear": [
+        1.5,
+        3.5
+      ],
+      "damping_comp": [
+        20,
+        40
+      ],
+      "damping_exp": [
+        30,
+        60
+      ]
+    }
   },
   {
     "id": "3483",
@@ -23938,7 +24006,41 @@
         "target_id": "3481",
         "target_car": "Toyota GR86 RZ '21"
       }
-    ]
+    ],
+    "slider_ranges": {
+      "df_front": [
+        350,
+        450
+      ],
+      "df_rear": [
+        500,
+        700
+      ],
+      "height_front": [
+        55,
+        80
+      ],
+      "height_rear": [
+        60,
+        90
+      ],
+      "fn_front": [
+        3.0,
+        5.0
+      ],
+      "fn_rear": [
+        3.0,
+        5.0
+      ],
+      "damping_comp": [
+        20,
+        40
+      ],
+      "damping_exp": [
+        30,
+        60
+      ]
+    }
   },
   {
     "id": "3540",
@@ -27161,7 +27263,41 @@
     "stock_pp": 735.54,
     "performance_by_tire": {},
     "swaps_available": [],
-    "is_donor_for": []
+    "is_donor_for": [],
+    "slider_ranges": {
+      "df_front": [
+        350,
+        450
+      ],
+      "df_rear": [
+        500,
+        700
+      ],
+      "height_front": [
+        55,
+        80
+      ],
+      "height_rear": [
+        60,
+        90
+      ],
+      "fn_front": [
+        3.0,
+        5.0
+      ],
+      "fn_rear": [
+        3.0,
+        5.0
+      ],
+      "damping_comp": [
+        20,
+        40
+      ],
+      "damping_exp": [
+        30,
+        60
+      ]
+    }
   },
   {
     "id": "3592",

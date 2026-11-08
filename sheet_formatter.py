@@ -146,12 +146,21 @@ def _format_bounce_check_lines(bc: Dict[str, Any]) -> List[str]:
     dirt = ' | ผิวทราย/ดิน (Dirt surface)' if bc.get('is_dirt') else ''
     s = bc['scenarios']
     rr, co, ld = s['rough_road'], s['cornering'], s.get('landing')
+    ba = s.get('brake_accel')
     sym = lambda st: '⚠️' if st != 'pass' else '✅'
     lines = [
-        f"• การจำลอง Kangarooing/ล้อดัก-ตัวรถเด้ง (Wheel Hop & Body Bounce) ที่ {bc['speed_kmh']} km/h{dirt}: ระดับ {level} — Index {bc['index']}/100",
-        f"  ↳ ถนนขรุขระ (Rough Road, {bc['bumpiness']}): {sym(rr['status'])} ล้อหลุดพื้นรวม {rr['hop_ms']} ms | ตัวรถเด้ง ±{rr['bounce_amp_mm']:.0f} mm (ζ หน้า/หลัง {bc['zeta']['front']}/{bc['zeta']['rear']})",
-        f"  ↳ แล้งเหวี่ยงหนัก {co['ay_g']}G (Hard Corner): {sym(co['status'])} ล้อในรับแรงกดเหลือ {co['inside_fz_pct']['front']}% หน้า / {co['inside_fz_pct']['rear']}% หลัง | Bottoming {co['bottom_pct']:.0f}%",
+        f"• การจำลอง Kangarooing/ล้อดัก-ตัวรถเด้ง (Wheel Hop & Body Bounce) ที่ 60/120/240 km/h (Corner) | 180 km/h (Rough Road) | 0.9g (Brake/Accel){dirt}: ระดับ {level} — Index {bc['index']}/100",
+        f"  ↳ ถนนขรุขระ (Rough Road, {bc['bumpiness']} @ 180 km/h): {sym(rr['status'])} ล้อหลุดพื้นรวม {rr['hop_ms'] / 1000.0:.2f} s | ตัวรถเด้ง ±{rr['bounce_amp_mm']:.0f} mm (ζ หน้า/หลัง {bc['zeta']['front']}/{bc['zeta']['rear']})",
+        f"  ↳ แล้งเหวี่ยงหนัก {co['ay_g']}G ที่ {co['speed_kmh']} km/h (Hard Corner, worst): {sym(co['status'])} ล้อด้านใน(ซ้าย) รับแรงกดเหลือ {co['inside_fz_pct']['front']}% ล้อหน้า / {co['inside_fz_pct']['rear']}% ล้อหลัง | Bottoming {co['bottom_pct']:.0f}%",
     ]
+    if len(co.get('by_speed', [])) > 1:
+        parts = [f"{e['speed_kmh']} km/h = {e['ay_g']:.2f}G → ด้านใน(ซ้าย) {e['inside_fz_pct']['front']}/{e['inside_fz_pct']['rear']}% (หลุด {e['hop_ms'] / 1000.0:.2f} s)"
+                 for e in co['by_speed']]
+        lines.append(f"  ↳ แล้งเหวี่ยงตามความเร็ว (Cornering by Speed): {' | '.join(parts)}")
+    if ba is not None:
+        lines.append(
+            f"  ↳ เบรกหนัก/ออกตัวแรง (Hard Brake/Accel, 0.9g): {sym(ba['status'])} ล้อหลังหลุด {ba['brake_rear_hop_ms'] / 1000.0:.2f} s (เบรก) | ล้อหน้าหลุด {ba['accel_front_hop_ms'] / 1000.0:.2f} s (ออกตัว)"
+        )
     if ld is not None:
         lines.append(
             f"  ↳ ลงจากเนิน (Crest Landing @ {ld['impact_v_ms']:.1f} m/s): {sym(ld['status'])} Bottoming {ld['bottom_pct']:.0f}% (เส้นทางชัน — เพิ่มระยะยุบ/ลดความแข็งสปริง หากเด้งแรง)"

@@ -53,6 +53,34 @@ class TestBounceReport(unittest.TestCase):
         self.assertLess(co['inside_fz_pct']['rear'], co['inside_fz_pct']['front'])
         self.assertGreater(co['ay_g'], 1.0)
 
+    def test_cornering_by_speed_uses_g_profile(self):
+        veh, trk = _veh(), _track(bumpiness='medium')
+        rep = bounce_report(veh, trk, _params(), {'g_60': 1.0, 'g_120': 1.1, 'g_240': 1.3})
+        co = rep['scenarios']['cornering']
+        self.assertEqual([e['speed_kmh'] for e in co['by_speed']], [60, 120, 240])
+        # Higher G unloads the inside wheels more -> more wheel hop.
+        self.assertGreaterEqual(co['by_speed'][-1]['hop_ms'], co['by_speed'][0]['hop_ms'])
+        self.assertGreater(co['by_speed'][0]['inside_fz_pct']['front'],
+                           co['by_speed'][-1]['inside_fz_pct']['front'])
+        # Top-level cornering fields are the worst case (highest speed).
+        self.assertEqual(co['speed_kmh'], 240)
+        self.assertEqual(co['ay_g'], 1.3)
+
+    def test_brake_accel_unloads_lifting_axles(self):
+        # Longitudinal transfer: rear loses load on brake, front loses on
+        # accel. Same stiff/underdamped setup on an extreme road: the
+        # less-loaded axle must hop at least as much as the more-loaded one.
+        veh, trk = _veh(), _track(bumpiness='extreme')
+        rep = bounce_report(veh, trk, _params(fn_f=2.2, fn_r=2.4, comp=8, exp=8), 1.2)
+        ba = rep['scenarios']['brake_accel']
+        self.assertGreater(ba['brake_rear_hop_ms'], 0)
+        self.assertGreaterEqual(ba['brake_rear_hop_ms'], ba['accel_front_hop_ms'])
+        # A soft, well-damped setup on a smooth track stays clean.
+        calm = bounce_report(_veh(), _track(bumpiness='low'),
+                             _params(fn_f=1.2, fn_r=1.3, comp=80, exp=80), 1.2)
+        self.assertEqual(calm['scenarios']['brake_accel']['status'], 'pass')
+        self.assertEqual(calm['scenarios']['brake_accel']['brake_rear_hop_ms'], 0)
+
     def test_landing_scenario_on_mountain_track(self):
         # Fishermans Ranch: 145 m elevation -> h_eff 0.48 m -> v ~3.1 m/s
         rep = bounce_report(_veh(), _track(elev=145.0), _params(), 1.2)
@@ -128,6 +156,8 @@ class TestBounceSheetLines(unittest.TestCase):
         self.assertIn('Kangarooing', text)
         self.assertIn('Rough Road', text)
         self.assertIn('Hard Corner', text)
+        self.assertIn('ด้านใน(ซ้าย)', text)  # cornering hop = inside (left) wheels
+        self.assertIn('Hard Brake/Accel', text)
         self.assertIn('Crest Landing', text)
         self.assertIn('Dirt surface', text)
         self.assertIn(f"{rep['index']}/100", text)

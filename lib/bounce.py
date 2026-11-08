@@ -135,16 +135,22 @@ def bounce_risk(veh: Any, trk: Any, params: Dict[str, Any],
             or fz['rear_inside'] < 0.25 * static['rear'] / 2.0)
 
 
-def bounce_report(veh: Any, trk: Any, params: Dict[str, Any], ay_g: float,
-                  lltd_frac: float = 0.5) -> Dict[str, Any]:
+def bounce_report(veh: Any, trk: Any, params: Dict[str, Any],
+                  g_profile: Any, lltd_frac: float = 0.5) -> Dict[str, Any]:
     """Full kangaroo simulation of one setup on one track. All three
-    scenarios, per corner, plus a 0-100 kangaroo index."""
-    ay_g = max(0.05, float(ay_g))
+    scenarios, per corner, plus a 0-100 kangaroo index.
+    g_profile: the calibrated model's cornering G by speed
+    {'g_60','g_120','g_240'} (or a legacy scalar = g at 240 km/h).
+    Cornering is simulated at every provided speed's G; the top-level
+    cornering fields are the worst case (highest speed); the per-speed
+    breakdown is in scenarios['cornering']['by_speed']."""
+    if isinstance(g_profile, (int, float)):
+        g_profile = {'g_240': float(g_profile)}
     lltd_frac = min(1.0, max(0.0, float(lltd_frac)))
     is_dirt = bool(getattr(trk, 'is_dirt', False))
     bumpiness = getattr(trk, 'bumpiness', 'medium') or 'medium'
     elev = float(getattr(trk, 'elevation_diff_m', 0.0) or 0.0)
-    speed_kmh = 180.0
+    speed_kmh = 180.0   # rough-road scenario speed (G-independent)
     v_mps = speed_kmh / 3.6
     amp_m = BUMPINESS_AMPLITUDE_M.get(bumpiness, 0.006)
 
@@ -152,10 +158,7 @@ def bounce_report(veh: Any, trk: Any, params: Dict[str, Any], ay_g: float,
     wf = veh.front_weight_ratio
     fz_f = m * G * wf / 2.0
     fz_r = m * G * (1.0 - wf) / 2.0
-    ay = ay_g * G
-    total_transfer = m * ay * veh.hcg_m / max(1.0, veh.track_width_m)
-    d_f = total_transfer * lltd_frac
-    d_r = total_transfer - d_f
+    transfer_per_g = m * G * veh.hcg_m / max(1.0, veh.track_width_m)
 
     def avail_m(ax: str) -> float:
         rh = params.get('ride_height_mm', {}).get(ax, 100)
@@ -171,16 +174,45 @@ def bounce_report(veh: Any, trk: Any, params: Dict[str, Any], ay_g: float,
     s1_amp = max(s1['front']['bounce_amp_mm'], s1['rear']['bounce_amp_mm'])
 
     # Scenario 2: sustained corner — same road input, inside wheels unload.
-    s2_f = _integrate(_quarter_car(veh, 'front', params, max(0.0, fz_f - d_f / 2.0), is_dirt),
-                      avail_m('front'), road_fn, 4.0)
-    s2_r = _integrate(_quarter_car(veh, 'rear', params, max(0.0, fz_r - d_r / 2.0), is_dirt),
-                      avail_m('rear'), road_fn, 4.0)
-    s2_hop = s2_f['hop_ms'] + s2_r['hop_ms']
-    s2_bottom = max(s2_f['bottom_pct'], s2_r['bottom_pct'])
-    inside_fz_pct = {
-        'front': round(max(0.0, fz_f - d_f / 2.0) / max(1.0, fz_f) * 100.0),
-        'rear': round(max(0.0, fz_r - d_r / 2.0) / max(1.0, fz_r) * 100.0)
-    }
+    # Simulated at every provided speed's G (G grows with speed via aero).
+    s2_entries = []
+    for key, spd in (('g_60', 60), ('g_120', 120), ('g_240', 240)):
+        if key not in g_profile:
+            continue
+        ay_g = max(0.05, float(g_profile[key]))
+        d_f = transfer_per_g * ay_g * lltd_frac
+        d_r = transfer_per_g * ay_g - d_f
+        sf = _integrate(_quarter_car(veh, 'front', params, max(0.0, fz_f - d_f / 2.0), is_dirt),
+                        avail_m('front'), road_fn, 4.0)
+        sr = _integrate(_quarter_car(veh, 'rear', params, max(0.0, fz_r - d_r / 2.0), is_dirt),
+                        avail_m('rear'), road_fn, 4.0)
+        s2_entries.append({'speed_kmh': spd, 'ay_g': round(ay_g, 2),
+                           'hop_ms': sf['hop_ms'] + sr['hop_ms'],
+                           'bottom_pct': max(sf['bottom_pct'], sr['bottom_pct']),
+                           'inside_fz_pct': {
+                               'front': round(max(0.0, fz_f - d_f / 2.0) / max(1.0, fz_f) * 100.0),
+                               'rear': round(max(0.0, fz_r - d_r / 2.0) / max(1.0, fz_r) * 100.0)}})
+    if not s2_entries:  # defensive: fall back to a nominal G
+        s2_entries = [{'speed_kmh': 240, 'ay_g': 0.5, 'hop_ms': 0, 'bottom_pct': 0.0,
+                       'inside_fz_pct': {'front': 100.0, 'rear': 100.0}}]
+    s2_worst = s2_entries[-1]                       # highest speed = worst case
+    s2_hop = max(e['hop_ms'] for e in s2_entries)
+    s2_bottom = max(e['bottom_pct'] for e in s2_entries)
+    inside_fz_pct = s2_worst['inside_fz_pct']
+
+    # Scenario: hard brake / hard acceleration — longitudinal load transfer
+    # unloads the lifting axle (rear on brake, front on accel) — this is the
+    # front/rear heave flavour of kangarooing (the cornering scenario is
+    # the left/right flavour: inside wheels). ΔFz = m·a·hcg/L, a ≈ 0.9 g.
+    LONG_ACC_G = 0.9
+    long_trans = (m * G * LONG_ACC_G * veh.hcg_m
+                  / max(1.0, getattr(veh, 'wheelbase_m', 2.5)) / 2.0)
+    sb = _integrate(_quarter_car(veh, 'rear', params, max(0.0, fz_r - long_trans), is_dirt),
+                    avail_m('rear'), road_fn, 2.0)
+    sa = _integrate(_quarter_car(veh, 'front', params, max(0.0, fz_f - long_trans), is_dirt),
+                    avail_m('front'), road_fn, 2.0)
+    s4 = {'status': 'warn' if (sb['hop_ms'] > 50.0 or sa['hop_ms'] > 50.0) else 'pass',
+          'brake_rear_hop_ms': sb['hop_ms'], 'accel_front_hop_ms': sa['hop_ms']}
 
     # Scenario 3: crest-to-valley landing. Elevation-driven landing speed;
     # skipped on flat tracks (elev < 5 m).
@@ -207,10 +239,12 @@ def bounce_report(veh: Any, trk: Any, params: Dict[str, Any], ay_g: float,
     # Log-scaled index: 0 = no bounce signature, 100 = constant wheel hop.
     # Base 10 for any warning scenario; each hop term saturates via log10.
     raw = 0.0
-    if s1_hop > 0.0 or s2_hop > 0.0 or (s3 is not None and s3['bottom_pct'] > 10.0):
+    s4_hop = max(s4['brake_rear_hop_ms'], s4['accel_front_hop_ms'])
+    if s1_hop > 0.0 or s2_hop > 0.0 or s4_hop > 0.0 or (s3 is not None and s3['bottom_pct'] > 10.0):
         raw = 10.0
     raw += 30.0 * min(1.0, math.log10(1.0 + s1_hop / 50.0) / 1.5)
     raw += 25.0 * min(1.0, math.log10(1.0 + s2_hop / 100.0) / 1.7)
+    raw += 10.0 * min(1.0, math.log10(1.0 + s4_hop / 50.0) / 1.5)
     if s2_bottom > 10.0:
         raw += 10.0
     if s3 is not None:
@@ -228,8 +262,11 @@ def bounce_report(veh: Any, trk: Any, params: Dict[str, Any], ay_g: float,
             'rough_road': {'status': 'warn' if s1_hop > 0.0 else 'pass',
                            'hop_ms': s1_hop, 'bounce_amp_mm': s1_amp},
             'cornering': {'status': 'warn' if (s2_hop > 50.0 or s2_bottom > 10.0) else 'pass',
-                          'ay_g': round(ay_g, 2), 'hop_ms': s2_hop,
-                          'bottom_pct': s2_bottom, 'inside_fz_pct': inside_fz_pct},
+                          'speed_kmh': s2_worst['speed_kmh'],
+                          'ay_g': s2_worst['ay_g'], 'hop_ms': s2_hop,
+                          'bottom_pct': s2_bottom, 'inside_fz_pct': inside_fz_pct,
+                          'by_speed': s2_entries},
+            'brake_accel': s4,
             'landing': (None if s3 is None
                         else {'status': 'warn' if s3['bottom_pct'] > 10.0 else 'pass',
                               **s3})

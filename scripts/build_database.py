@@ -428,6 +428,10 @@ def build_database():
             # In-town street asphalt: slower traffic, low downforce demand.
             bumpiness = 'medium'
             downforce_demand = 'low'
+        elif 'panorama' in name_l:
+            # Mount Panorama: bumpy cambered mountain road (The Dipper).
+            bumpiness = 'high'
+            downforce_demand = 'medium'
         elif 'daytona' in name_l or 'route x' in name_l or 'monza' in name_l:
             bumpiness = 'low'
             downforce_demand = 'low'
@@ -446,8 +450,21 @@ def build_database():
         elif category == 'city' and 'tokyo' not in name_l:
             grip_modifier = 0.95
         elif 'sainte-croix' in name_l:
-            # Original (fictional) circuit built like public roads: user-
-            # reported noticeably slipperier than modern closed-circuit tarmac.
+            # Original circuit built like public roads: smooth low-abrasion
+            # tarmac (user-verified). Layout A's suspension bridge uses a
+            # distinct even-lower-friction surface.
+            grip_modifier = 0.90 if 'sainte-croix - a' in name_l else 0.95
+        elif 'grand valley' in name_l and 'highway 1' in name_l:
+            # Coastal public highway: marine air + fine sand on the tarmac.
+            grip_modifier = 0.90
+        elif 'laguna' in name_l:
+            # Dry sandy hillsides deposit dust across the asphalt.
+            grip_modifier = 0.95
+        elif 'big willow' in name_l:
+            # Desert tarmac exposed to surrounding dirt/sand.
+            grip_modifier = 0.95
+        elif 'panorama' in name_l:
+            # Bumpy cambered mountain road, low-grip road markings.
             grip_modifier = 0.95
 
         entry = {

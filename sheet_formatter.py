@@ -279,8 +279,8 @@ def _format_surface_line(track: Optional[Dict[str, Any]]) -> List[str]:
     """Road-surface note: per-surface grip feel (GT7) + roughness.
 
     Shown only when the surface departs from clean modern asphalt: a grip
-    modifier (city asphalt looser, snow/dirt far less) or high/extreme
-    bumpiness (discontinuous tarmac e.g. Tokyo Expressway).
+    modifier (low-abrasion/dusty tarmac looser, snow/dirt far less) or
+    high/extreme bumpiness (discontinuous tarmac e.g. Tokyo Expressway).
     """
     if not track:
         return []
@@ -291,7 +291,7 @@ def _format_surface_line(track: Optional[Dict[str, Any]]) -> List[str]:
     if gm < 0.8:
         surf = 'loose snow/dirt'
     elif gm < 1.0:
-        surf = 'in-town asphalt (loose)'
+        surf = 'loose/low-abrasion asphalt'
     else:
         surf = 'modern asphalt'
     grip = f'×{gm:.2f}' if gm != 1.0 else '×1.00'

@@ -77,7 +77,8 @@
     "rain_supported": false,
     "is_oval": false,
     "bumpiness": "medium",
-    "downforce_demand": "medium"
+    "downforce_demand": "medium",
+    "grip_modifier": 0.95
   },
   {
     "id": "51",
@@ -124,8 +125,9 @@
     "num_corners": 23,
     "rain_supported": false,
     "is_oval": false,
-    "bumpiness": "medium",
-    "downforce_demand": "medium"
+    "bumpiness": "high",
+    "downforce_demand": "medium",
+    "grip_modifier": 0.95
   },
   {
     "id": "119",
@@ -157,7 +159,8 @@
     "rain_supported": false,
     "is_oval": false,
     "bumpiness": "medium",
-    "downforce_demand": "medium"
+    "downforce_demand": "medium",
+    "grip_modifier": 0.95
   },
   {
     "id": "123",
@@ -1060,7 +1063,7 @@
     "is_oval": false,
     "bumpiness": "medium",
     "downforce_demand": "medium",
-    "grip_modifier": 0.95
+    "grip_modifier": 0.9
   },
   {
     "id": "826",
@@ -1077,7 +1080,7 @@
     "is_oval": false,
     "bumpiness": "medium",
     "downforce_demand": "medium",
-    "grip_modifier": 0.95
+    "grip_modifier": 0.9
   },
   {
     "id": "827",
@@ -1738,7 +1741,8 @@
     "rain_supported": false,
     "is_oval": false,
     "bumpiness": "medium",
-    "downforce_demand": "medium"
+    "downforce_demand": "medium",
+    "grip_modifier": 0.9
   },
   {
     "id": "1293",
@@ -1754,7 +1758,8 @@
     "rain_supported": false,
     "is_oval": false,
     "bumpiness": "medium",
-    "downforce_demand": "medium"
+    "downforce_demand": "medium",
+    "grip_modifier": 0.9
   },
   {
     "id": "1299",

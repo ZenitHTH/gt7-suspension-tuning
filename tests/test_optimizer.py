@@ -338,12 +338,38 @@ class TestSurfaceGripModifier(unittest.TestCase):
             self.assertEqual(t.get('bumpiness'), 'high')
             self.assertNotIn('grip_modifier', t)
         # Sainte-Croix: original circuit built like public roads - user-
-        # reported slipperier surface, seeded like in-town asphalt.
+        # verified slipperier surface. Layout A's suspension bridge is an
+        # even lower-friction surface.
         sc = [t for n, t in by_name.items() if 'sainte-croix' in n.lower()]
         self.assertEqual(len(sc), 6)
         for t in sc:
             self.assertEqual(t.get('category'), 'original')
-            self.assertAlmostEqual(t.get('grip_modifier'), 0.95)
+            self.assertAlmostEqual(t.get('grip_modifier'),
+                                   0.90 if 'sainte-croix - a' in t['name'].lower() else 0.95)
+        # Low-grip asphalt circuits (user-verified surface report):
+        # Grand Valley Highway 1 (coastal highway + fine sand, 0.90) - the
+        # South layouts are NOT described and stay untouched.
+        for n in ('Grand Valley - Highway 1', 'Grand Valley - Highway 1 Reverse'):
+            self.assertAlmostEqual(by_name[n].get('grip_modifier'), 0.90)
+        for n in ('Grand Valley - South', 'Grand Valley - South Reverse'):
+            self.assertNotIn('grip_modifier', by_name[n])
+        for n in ('WeatherTech Raceway Laguna Seca',
+                  'Willow Springs International Raceway: Big Willow'):
+            self.assertAlmostEqual(by_name[n].get('grip_modifier'), 0.95)
+        # Willow siblings (streets/infield) are not dust-exposed: untouched.
+        for n in ('Willow Springs International Raceway: Streets of Willow Springs',
+                  'Willow Springs International Raceway: Horse Thief Mile'):
+            self.assertNotIn('grip_modifier', by_name[n])
+        # Mount Panorama: bumpy cambered mountain road + low-grip markings.
+        pano = by_name['Mount Panorama Motor Racing Circuit']
+        self.assertAlmostEqual(pano.get('grip_modifier'), 0.95)
+        self.assertEqual(pano.get('bumpiness'), 'high')
+        # Geometry-based slippery feel (Autopolis off-camber, crests at
+        # Brands Hatch / Road Atlanta) is NOT a surface effect: no modifier.
+        for n in ('Autopolis International Racing Course',
+                  'Brands Hatch Grand Prix Circuit',
+                  'Michelin Raceway Road Atlanta'):
+            self.assertNotIn('grip_modifier', by_name[n])
         # Loose snow/dirt tracks carry the surface discount.
         dirt = [t for t in tracks if 'dirt' in str(t.get('category', '')) or 'snow' in str(t.get('category', ''))]
         self.assertGreaterEqual(len(dirt), 10)

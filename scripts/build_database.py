@@ -420,6 +420,12 @@ def build_database():
             bumpiness = 'low'
             downforce_demand = 'high'
         elif 'tokyo' in name_l:
+            # Tokyo Expressway: discontinuous highway tarmac -> frequent
+            # short wheel hops, even though the modern surface keeps full grip.
+            bumpiness = 'high'
+            downforce_demand = 'low'
+        elif category == 'city':
+            # In-town street asphalt: slower traffic, low downforce demand.
             bumpiness = 'medium'
             downforce_demand = 'low'
         elif 'daytona' in name_l or 'route x' in name_l or 'monza' in name_l:
@@ -429,7 +435,18 @@ def build_database():
             bumpiness = 'extreme'
             downforce_demand = 'none'
 
-        master_tracks.append({
+        # Per-surface grip seed for the tire-map mu fallback only: a measured
+        # in-game anchor (G@60 calibrated on the circuit) already encodes the
+        # surface and is never rescaled, so only the map path is modified.
+        # Snow/dirt runs far looser; in-town street asphalt looser than the
+        # modern closed circuits. Tokyo Expressway keeps full grip (1.0).
+        grip_modifier = None
+        if category in ('dirt', 'snow_dirt') or 'snow' in name_l or 'dirt' in name_l:
+            grip_modifier = 0.65
+        elif category == 'city' and 'tokyo' not in name_l:
+            grip_modifier = 0.95
+
+        entry = {
             'id': crs.get('ID'),
             'name': crs_name,
             'base_circuit': base_info.get('Name', crs_name),
@@ -444,7 +461,10 @@ def build_database():
             'is_oval': is_oval,
             'bumpiness': bumpiness,
             'downforce_demand': downforce_demand
-        })
+        }
+        if grip_modifier is not None:
+            entry['grip_modifier'] = grip_modifier
+        master_tracks.append(entry)
 
     # Write output
     with open(os.path.join(DATA_DIR, 'cars_master.json'), 'w', encoding='utf-8') as f:

@@ -121,3 +121,8 @@ ID,Name,Base,Country,Category,Length,LongestStraight,ElevationDiff,Altitude,MinT
 2002,Eiger Nordwand Reverse,39,16,original,2436,250,90,2016,?,?,?,?,?,?,2,1,?,0,11,1
 2003,Yas Marina Circuit,40,21,circuit,5281,1233,11,2,0,0,0,0,0,0,1,0,?,0,16,1
 2004,Circuit Gilles-Villeneuve,41,14,circuit,4361,1173,5,13,?,?,?,?,?,?,1,0,?,0,14,1
+2010,New York,42,3,city,4500,800,15,10,0,0,0,0,0,0,1,0,?,0,17,0
+2011,San Francisco,43,3,city,4700,600,45,50,0,0,0,0,0,0,1,0,?,0,19,0
+2012,Rome,44,7,city,4500,700,20,20,0,0,0,0,0,0,1,0,?,0,19,0
+2013,Dubai,45,21,city,4500,900,5,30,0,0,0,0,0,0,1,0,?,0,19,1
+2014,Paris,46,6,city,4600,700,25,35,0,0,0,0,0,0,1,0,?,0,19,0

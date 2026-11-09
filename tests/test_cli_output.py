@@ -193,5 +193,61 @@ class TestWarningAdvisories(unittest.TestCase):
                          '\n'.join(_format_equilibrium_lines(ok)))
 
 
+class TestSurfaceLine(unittest.TestCase):
+    """Road-surface sheet line: per-surface grip feel + roughness."""
+
+    def _sheet_with_track(self, track):
+        mock_setup = {
+            'car': {'name': 'Test FR', 'drivetrain': 'FR', 'mass_kg': 1300, 'balance': {'ratio_str': '54:46'}},
+            'track': track,
+            'tire_compound': 'RM',
+            'setup_mode': 'GRIP',
+            'telemetry': {'ay_est': 1.5, 'mu': 1.5, 'tot_s': 1100, 'c_f': 280, 'c_r': 270, 'fr_ratio': 1.05, 'lltd_pct': 48.0, 'pitch_transfer_pct': 18.0, 'is_no_aero': False},
+            'parameters': {
+                'ride_height_mm': {'front': 95, 'rear': 105},
+                'natural_frequency_hz': {'front': 2.6, 'rear': 2.8},
+                'anti_roll_bar': {'front': 4, 'rear': 6},
+                'damping_compression_pct': {'front': 30, 'rear': 32},
+                'damping_expansion_pct': {'front': 48, 'rear': 50},
+                'camber_deg': {'front': -2.2, 'rear': -1.2},
+                'toe_angle': {'front': '0.00', 'rear': 'In 0.10'},
+                'downforce': {'front': 100, 'rear': 200},
+                'lsd_rear': {'init': 6, 'accel': 24, 'brake': 14},
+                'brake_bias': 2,
+                'transmission_top_speed_kmh': 280
+            }
+        }
+        return format_setup_sheet(mock_setup)
+
+    def test_clean_circuit_omits_surface_line(self):
+        sheet = self._sheet_with_track({'name': 'Suzuka', 'category': 'circuit', 'bumpiness': 'medium'})
+        self.assertNotIn('Road Surface', sheet)
+
+    def test_tokyo_expressway_discontinuous_note(self):
+        sheet = self._sheet_with_track({
+            'name': 'Tokyo Expressway - Central Clockwise',
+            'category': 'city', 'bumpiness': 'high'
+        })
+        self.assertIn('Road Surface', sheet)
+        self.assertIn('modern asphalt', sheet)
+        self.assertIn('discontinuous', sheet)
+
+    def test_city_loose_grip_modifier(self):
+        sheet = self._sheet_with_track({
+            'name': 'In-Town Circuit', 'category': 'city',
+            'bumpiness': 'medium', 'grip_modifier': 0.95
+        })
+        self.assertIn('Road Surface', sheet)
+        self.assertIn('×0.95', sheet)
+
+    def test_snow_dirt_surface(self):
+        sheet = self._sheet_with_track({
+            'name': 'Lake Louise Long Track', 'category': 'snow_dirt',
+            'bumpiness': 'medium', 'grip_modifier': 0.65
+        })
+        self.assertIn('loose snow/dirt', sheet)
+        self.assertIn('×0.65', sheet)
+
+
 if __name__ == '__main__':
     unittest.main()

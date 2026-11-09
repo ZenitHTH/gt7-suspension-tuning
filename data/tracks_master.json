@@ -300,7 +300,7 @@
     "num_corners": 13,
     "rain_supported": true,
     "is_oval": false,
-    "bumpiness": "medium",
+    "bumpiness": "high",
     "downforce_demand": "low"
   },
   {
@@ -317,7 +317,8 @@
     "rain_supported": false,
     "is_oval": false,
     "bumpiness": "medium",
-    "downforce_demand": "medium"
+    "downforce_demand": "medium",
+    "grip_modifier": 0.65
   },
   {
     "id": "354",
@@ -396,7 +397,7 @@
     "num_corners": 13,
     "rain_supported": true,
     "is_oval": false,
-    "bumpiness": "medium",
+    "bumpiness": "high",
     "downforce_demand": "low"
   },
   {
@@ -412,7 +413,7 @@
     "num_corners": 17,
     "rain_supported": false,
     "is_oval": false,
-    "bumpiness": "medium",
+    "bumpiness": "high",
     "downforce_demand": "low"
   },
   {
@@ -461,7 +462,8 @@
     "rain_supported": false,
     "is_oval": false,
     "bumpiness": "extreme",
-    "downforce_demand": "none"
+    "downforce_demand": "none",
+    "grip_modifier": 0.65
   },
   {
     "id": "376",
@@ -541,7 +543,8 @@
     "rain_supported": false,
     "is_oval": false,
     "bumpiness": "medium",
-    "downforce_demand": "medium"
+    "downforce_demand": "medium",
+    "grip_modifier": 0.65
   },
   {
     "id": "444",
@@ -588,7 +591,7 @@
     "num_corners": 14,
     "rain_supported": true,
     "is_oval": false,
-    "bumpiness": "medium",
+    "bumpiness": "high",
     "downforce_demand": "low"
   },
   {
@@ -604,7 +607,7 @@
     "num_corners": 13,
     "rain_supported": true,
     "is_oval": false,
-    "bumpiness": "medium",
+    "bumpiness": "high",
     "downforce_demand": "low"
   },
   {
@@ -637,7 +640,8 @@
     "rain_supported": false,
     "is_oval": false,
     "bumpiness": "extreme",
-    "downforce_demand": "none"
+    "downforce_demand": "none",
+    "grip_modifier": 0.65
   },
   {
     "id": "454",
@@ -749,7 +753,8 @@
     "rain_supported": false,
     "is_oval": false,
     "bumpiness": "extreme",
-    "downforce_demand": "none"
+    "downforce_demand": "none",
+    "grip_modifier": 0.65
   },
   {
     "id": "600",
@@ -765,7 +770,8 @@
     "rain_supported": false,
     "is_oval": false,
     "bumpiness": "extreme",
-    "downforce_demand": "none"
+    "downforce_demand": "none",
+    "grip_modifier": 0.65
   },
   {
     "id": "601",
@@ -1340,7 +1346,7 @@
     "num_corners": 16,
     "rain_supported": false,
     "is_oval": false,
-    "bumpiness": "medium",
+    "bumpiness": "high",
     "downforce_demand": "low"
   },
   {
@@ -1677,7 +1683,8 @@
     "rain_supported": false,
     "is_oval": false,
     "bumpiness": "medium",
-    "downforce_demand": "medium"
+    "downforce_demand": "medium",
+    "grip_modifier": 0.65
   },
   {
     "id": "1247",
@@ -1805,7 +1812,8 @@
     "rain_supported": false,
     "is_oval": false,
     "bumpiness": "medium",
-    "downforce_demand": "medium"
+    "downforce_demand": "medium",
+    "grip_modifier": 0.65
   },
   {
     "id": "1308",
@@ -1821,7 +1829,8 @@
     "rain_supported": false,
     "is_oval": false,
     "bumpiness": "medium",
-    "downforce_demand": "medium"
+    "downforce_demand": "medium",
+    "grip_modifier": 0.65
   },
   {
     "id": "1309",
@@ -1837,7 +1846,8 @@
     "rain_supported": false,
     "is_oval": false,
     "bumpiness": "medium",
-    "downforce_demand": "medium"
+    "downforce_demand": "medium",
+    "grip_modifier": 0.65
   },
   {
     "id": "1316",
@@ -1853,7 +1863,8 @@
     "rain_supported": false,
     "is_oval": false,
     "bumpiness": "medium",
-    "downforce_demand": "medium"
+    "downforce_demand": "medium",
+    "grip_modifier": 0.65
   },
   {
     "id": "1317",
@@ -1869,7 +1880,8 @@
     "rain_supported": false,
     "is_oval": false,
     "bumpiness": "medium",
-    "downforce_demand": "medium"
+    "downforce_demand": "medium",
+    "grip_modifier": 0.65
   },
   {
     "id": "1318",
@@ -1885,7 +1897,8 @@
     "rain_supported": false,
     "is_oval": false,
     "bumpiness": "medium",
-    "downforce_demand": "medium"
+    "downforce_demand": "medium",
+    "grip_modifier": 0.65
   },
   {
     "id": "2001",

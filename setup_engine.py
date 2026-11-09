@@ -182,7 +182,14 @@ def compute_baseline_suspension(
     is_widebody: bool, is_controller: bool, g_forces: Optional[Tuple[float, float, float]] = None
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """Compute complete baseline physical suspension parameters and telemetry."""
-    mu = round(float(g_forces[0]), 2) if g_forces else lib.get_tire_mu(tire)
+    # Surface-aware friction: a measured in-game anchor (g_forces) is already
+    # calibrated on THIS circuit, so it encodes the surface as-is. The
+    # tire-map fallback must instead carry the track's grip_modifier
+    # (city asphalt looser, snow/dirt far less, Tokyo Expressway modern tarmac).
+    if g_forces:
+        mu = round(float(g_forces[0]), 2)
+    else:
+        mu = round(lib.get_tire_mu(tire) * trk.grip_modifier, 3)
     bump_mult = 0.90 if trk.bumpiness == 'high' else (1.05 if trk.bumpiness == 'low' else 1.00)
     ay_est = (float(g_forces[1]) if g_forces else mu) * bump_mult
     sprung = lib.calculate_sprung_mass(veh.mass_kg, veh.front_weight_ratio, veh.group)

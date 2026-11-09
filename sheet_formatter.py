@@ -4,7 +4,7 @@ GT7 Setup Sheet Formatter
 Renders dual English/Thai setup sheets and formatted physical telemetry.
 """
 
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 
 def _format_header(car: Dict[str, Any], track: Any, tire: str, mode: str) -> List[str]:
@@ -275,6 +275,33 @@ def _format_notes_and_quick_trims(params: Dict[str, Any]) -> List[str]:
     return lines
 
 
+def _format_surface_line(track: Optional[Dict[str, Any]]) -> List[str]:
+    """Road-surface note: per-surface grip feel (GT7) + roughness.
+
+    Shown only when the surface departs from clean modern asphalt: a grip
+    modifier (city asphalt looser, snow/dirt far less) or high/extreme
+    bumpiness (discontinuous tarmac e.g. Tokyo Expressway).
+    """
+    if not track:
+        return []
+    gm = float(track.get('grip_modifier', 1.0) or 1.0)
+    bump = str(track.get('bumpiness') or 'medium')
+    if gm == 1.0 and bump not in ('high', 'extreme'):
+        return []
+    if gm < 0.8:
+        surf = 'loose snow/dirt'
+    elif gm < 1.0:
+        surf = 'in-town asphalt (loose)'
+    else:
+        surf = 'modern asphalt'
+    grip = f'×{gm:.2f}' if gm != 1.0 else '×1.00'
+    return [
+        f"• ผิวถนน (Road Surface): {surf} — grip {grip} (ใช้เมื่อไม่มีค่า G วัดจริง / when using tire map) | ความขรุขระ: {bump}"
+        + (' | ถนนไม่ต่อเนื่อง — คาดว่าล้อจะหลุดสั้นๆ บ่อย (discontinuous surface, expect frequent short wheel hop)'
+           if bump in ('high', 'extreme') and gm >= 1.0 else '')
+    ]
+
+
 def format_setup_sheet(setup_dict: Dict[str, Any]) -> str:
     """Format setup into dual English/Thai GT7 tuning sheet."""
     car, params = setup_dict['car'], setup_dict['parameters']
@@ -288,6 +315,7 @@ def format_setup_sheet(setup_dict: Dict[str, Any]) -> str:
         )
     sections = [
         header,
+        _format_surface_line(track),
         _format_telemetry(telem),
         _format_simulation_proofs(telem),
         _format_suspension_table(params),

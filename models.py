@@ -156,6 +156,12 @@ class TrackSpec:
     is_dirt: bool = False
     is_wet: bool = False
     is_endurance: bool = False
+    # Per-surface grip multiplier applied to the TIRE-MAP mu when no measured
+    # in-game anchor is provided. GT7's latest updates give surfaces their own
+    # friction feel (city asphalt runs looser than modern closed circuits;
+    # loose snow/dirt far less). A measured anchor (G@60 calibrated on the
+    # actual circuit) already encodes the surface, so it is never rescaled.
+    grip_modifier: float = 1.0
 
     @classmethod
     def from_dict(
@@ -178,5 +184,6 @@ class TrackSpec:
             is_oval=_is_track_oval(t_name_lower),
             is_dirt=(mode == 'dirt') or ('dirt' in str(t.get('category') or '').lower()),
             is_wet=(mode == 'wet'),
-            is_endurance=_is_track_endurance(mode, tire, t_name_lower)
+            is_endurance=_is_track_endurance(mode, tire, t_name_lower),
+            grip_modifier=min(1.2, max(0.3, float(t.get('grip_modifier', 1.0))))
         )

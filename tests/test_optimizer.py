@@ -277,5 +277,72 @@ class TestReverseOptimizer(unittest.TestCase):
         self.assertEqual(res.grip_check['margins']['min'], 0.85)
 
 
+class TestSurfaceGripModifier(unittest.TestCase):
+    """Per-surface grip (GT7 city/loose-surface friction feel) in the baseline mu."""
+
+    def setUp(self):
+        from lib.wheels import get_tire_mu
+        car = {
+            'id': '3466', 'name': "Ford Sierra RS 500 Cosworth '87",
+            'drivetrain': 'FR', 'mass_kg': 989, 'power_hp': 359, 'torque_nm': 368.9,
+            'balance': {'front_pct': 56, 'rear_pct': 44}
+        }
+        explicit = {
+            'df_front': (50, 200), 'df_rear': (100, 250),
+            'height_front': (100, 200), 'height_rear': (120, 220),
+            'fn_front': (1.50, 3.50), 'fn_rear': (1.50, 3.50),
+            'height_range': None
+        }
+        self.sliders = resolve_slider_ranges(car, explicit)
+        self.veh = VehicleSpec.from_dict(car, custom_overrides={}, is_widebody=True)
+        self.map_mu = get_tire_mu('RM')
+
+    def _baseline(self, trk_dict, g_forces=None):
+        trk = TrackSpec.from_dict(trk_dict, mode='grip', tire='RM')
+        _, telem = compute_baseline_suspension(
+            self.veh, trk, 'RM', self.sliders, True, False, g_forces=g_forces
+        )
+        return telem
+
+    def test_fallback_mu_scaled_by_surface(self):
+        # No measured anchor -> tire-map mu carries the surface modifier.
+        city = self._baseline({'name': 'Tokyo City X', 'category': 'city', 'grip_modifier': 0.95})
+        self.assertAlmostEqual(city['mu'], round(self.map_mu * 0.95, 3), places=3)
+        # Clean circuit: modifier 1.0 (default) leaves the map value alone.
+        clean = self._baseline({'name': 'Suzuka', 'category': 'circuit'})
+        self.assertAlmostEqual(clean['mu'], self.map_mu, places=3)
+        # Loose snow/dirt: big discount.
+        dirt = self._baseline({'name': 'Lake Louise', 'category': 'snow_dirt', 'grip_modifier': 0.65})
+        self.assertAlmostEqual(dirt['mu'], round(self.map_mu * 0.65, 3), places=3)
+        # Brake/accel anchor (fallback path) scales with the same mu.
+        self.assertAlmostEqual(dirt['mu_braking'], round(self.map_mu * 0.65, 3), places=3)
+
+    def test_measured_anchor_not_rescaled(self):
+        # A G@60 anchor measured ON the circuit already encodes the surface.
+        telem = self._baseline(
+            {'name': 'Lake Louise', 'category': 'snow_dirt', 'grip_modifier': 0.65},
+            g_forces=(1.46, 1.59, 1.75)
+        )
+        self.assertEqual(telem['mu'], 1.46)
+        self.assertEqual(telem['mu_braking'], 1.59)
+
+    def test_track_db_surface_seeding(self):
+        import json
+        tracks = json.load(open('data/tracks_master.json'))
+        by_name = {t.get('name', ''): t for t in tracks}
+        # Tokyo Expressway variants: discontinuous tarmac -> high bumpiness,
+        # modern highway surface -> no grip discount (modifier stays 1.0).
+        te = [t for n, t in by_name.items() if 'tokyo expressway' in n.lower()]
+        self.assertGreaterEqual(len(te), 6)
+        for t in te:
+            self.assertEqual(t.get('bumpiness'), 'high')
+            self.assertNotIn('grip_modifier', t)
+        # Loose snow/dirt tracks carry the surface discount.
+        dirt = [t for t in tracks if 'dirt' in str(t.get('category', '')) or 'snow' in str(t.get('category', ''))]
+        self.assertGreaterEqual(len(dirt), 10)
+        for t in dirt:
+            self.assertAlmostEqual(t.get('grip_modifier'), 0.65)
+
+
 if __name__ == '__main__':
     unittest.main()

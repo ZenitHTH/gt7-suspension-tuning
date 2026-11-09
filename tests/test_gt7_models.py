@@ -66,5 +66,14 @@ class TestGT7Models(unittest.TestCase):
         self.assertFalse(track.is_dirt)
         self.assertTrue(track.is_endurance)
 
+    def test_track_spec_grip_modifier(self):
+        # Per-surface grip multiplier: read from dict, sane default, clamped.
+        self.assertAlmostEqual(TrackSpec.from_dict({'name': 'X', 'grip_modifier': 0.95}).grip_modifier, 0.95)
+        self.assertAlmostEqual(TrackSpec.from_dict({'name': 'X', 'grip_modifier': 0.65}).grip_modifier, 0.65)
+        self.assertAlmostEqual(TrackSpec.from_dict({'name': 'X'}).grip_modifier, 1.0)
+        self.assertAlmostEqual(TrackSpec.from_dict({'grip_modifier': 0.1}).grip_modifier, 0.3)
+        self.assertAlmostEqual(TrackSpec.from_dict({'grip_modifier': 2.0}).grip_modifier, 1.2)
+        self.assertAlmostEqual(TrackSpec().grip_modifier, 1.0)
+
 if __name__ == '__main__':
     unittest.main()

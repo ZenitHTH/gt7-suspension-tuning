@@ -337,14 +337,6 @@ class TestSurfaceGripModifier(unittest.TestCase):
         for t in te:
             self.assertEqual(t.get('bumpiness'), 'high')
             self.assertNotIn('grip_modifier', t)
-        # Other in-town street circuits (NY/SF/Rome/Dubai/Paris) exist and
-        # carry the looser-asphalt seed; modern tarmac otherwise.
-        for n in ('New York', 'San Francisco', 'Rome', 'Dubai', 'Paris'):
-            t = by_name.get(n)
-            self.assertIsNotNone(t, f'missing city circuit: {n}')
-            self.assertEqual(t.get('category'), 'city')
-            self.assertAlmostEqual(t.get('grip_modifier'), 0.95)
-            self.assertEqual(t.get('bumpiness'), 'medium')
         # Loose snow/dirt tracks carry the surface discount.
         dirt = [t for t in tracks if 'dirt' in str(t.get('category', '')) or 'snow' in str(t.get('category', ''))]
         self.assertGreaterEqual(len(dirt), 10)

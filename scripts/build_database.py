@@ -445,6 +445,10 @@ def build_database():
             grip_modifier = 0.65
         elif category == 'city' and 'tokyo' not in name_l:
             grip_modifier = 0.95
+        elif 'sainte-croix' in name_l:
+            # Original (fictional) circuit built like public roads: user-
+            # reported noticeably slipperier than modern closed-circuit tarmac.
+            grip_modifier = 0.95
 
         entry = {
             'id': crs.get('ID'),

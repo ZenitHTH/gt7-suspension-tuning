@@ -337,6 +337,13 @@ class TestSurfaceGripModifier(unittest.TestCase):
         for t in te:
             self.assertEqual(t.get('bumpiness'), 'high')
             self.assertNotIn('grip_modifier', t)
+        # Sainte-Croix: original circuit built like public roads - user-
+        # reported slipperier surface, seeded like in-town asphalt.
+        sc = [t for n, t in by_name.items() if 'sainte-croix' in n.lower()]
+        self.assertEqual(len(sc), 6)
+        for t in sc:
+            self.assertEqual(t.get('category'), 'original')
+            self.assertAlmostEqual(t.get('grip_modifier'), 0.95)
         # Loose snow/dirt tracks carry the surface discount.
         dirt = [t for t in tracks if 'dirt' in str(t.get('category', '')) or 'snow' in str(t.get('category', ''))]
         self.assertGreaterEqual(len(dirt), 10)

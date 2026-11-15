@@ -138,6 +138,31 @@ class TestCLIOutput(unittest.TestCase):
             base_res['telemetry']['tire_wear_analysis']['front_wear_factor']
         )
 
+    def test_cli_comp_and_exp_range_parsed_saved_and_clamped(self):
+        from unittest import mock
+        from cli import (
+            build_argument_parser,
+            _extract_setup_kwargs,
+            _save_slider_ranges_if_requested,
+        )
+        parser = build_argument_parser()
+        args = parser.parse_args([
+            'Suzuki Jimny', '--comp-range', '25', '40', '--exp-range', '30', '60', '--save-sliders'
+        ])
+        car = {'id': '9999', 'name': 'Test Jimny', 'drivetrain': 'AWD', 'mass_kg': 1030}
+        kwargs = _extract_setup_kwargs(args, car, None)
+        self.assertEqual(kwargs['compression_range'], (25, 40))
+        self.assertEqual(kwargs['expansion_range'], (30, 60))
+        with mock.patch('cli.save_car_sliders', return_value={'damping_comp': [25, 40], 'damping_exp': [30, 60]}) as m_save:
+            _save_slider_ranges_if_requested(args, car)
+        m_save.assert_called_once_with('9999', {'damping_comp': [25, 40], 'damping_exp': [30, 60]})
+        res = build_setup(**kwargs)
+        for ax in ('front', 'rear'):
+            self.assertLessEqual(res['parameters']['damping_compression_pct'][ax], 40)
+            self.assertGreaterEqual(res['parameters']['damping_compression_pct'][ax], 25)
+            self.assertLessEqual(res['parameters']['damping_expansion_pct'][ax], 60)
+            self.assertGreaterEqual(res['parameters']['damping_expansion_pct'][ax], 30)
+
 class TestWarningAdvisories(unittest.TestCase):
     """Warning lines must carry actionable advice: setup-safe vs pace-limit vs data-issue."""
 

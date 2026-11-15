@@ -50,6 +50,8 @@ def _add_slider_range_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument('--height-rear', type=int, nargs=2, metavar=('MIN', 'MAX'))
     parser.add_argument('--fn-front', type=float, nargs=2, metavar=('MIN', 'MAX'))
     parser.add_argument('--fn-rear', type=float, nargs=2, metavar=('MIN', 'MAX'))
+    parser.add_argument('--comp-range', type=int, nargs=2, metavar=('MIN', 'MAX'))
+    parser.add_argument('--exp-range', type=int, nargs=2, metavar=('MIN', 'MAX'))
     parser.add_argument('--save-sliders', action='store_true')
 
 
@@ -88,8 +90,17 @@ def _save_slider_ranges_if_requested(args: argparse.Namespace, car_data: Dict[st
     """Save provided slider range flags to the database if requested."""
     if not (args.save_sliders and car_data.get('id')):
         return
-    keys = ['df_front', 'df_rear', 'height_range', 'height_front', 'height_rear', 'fn_front', 'fn_rear']
-    new_sliders = {k: list(getattr(args, k)) for k in keys if getattr(args, k, None)}
+    key_map = {
+        'df_front': 'df_front', 'df_rear': 'df_rear',
+        'height_range': 'height_range', 'height_front': 'height_front', 'height_rear': 'height_rear',
+        'fn_front': 'fn_front', 'fn_rear': 'fn_rear',
+        'comp_range': 'damping_comp', 'exp_range': 'damping_exp',
+    }
+    new_sliders = {
+        db_key: list(getattr(args, arg_key))
+        for arg_key, db_key in key_map.items()
+        if getattr(args, arg_key, None)
+    }
     save_car_sliders(str(car_data['id']), new_sliders)
 
 
@@ -106,7 +117,10 @@ def _extract_setup_kwargs(
         'mode': args.mode, 'df_front_range': args.df_front, 'df_rear_range': args.df_rear,
         'height_range': args.height_range, 'height_front_range': args.height_front,
         'height_rear_range': args.height_rear, 'fn_front_range': args.fn_front,
-        'fn_rear_range': args.fn_rear, 'stability': args.stability, 'symptoms': args.symptom,
+        'fn_rear_range': args.fn_rear,
+        'compression_range': tuple(args.comp_range) if args.comp_range else None,
+        'expansion_range': tuple(args.exp_range) if args.exp_range else None,
+        'stability': args.stability, 'symptoms': args.symptom,
         'is_widebody': args.widebody, 'speed_kmh': args.speed, 'is_controller': args.controller,
         'g_forces': tuple(args.g_forces) if args.g_forces else None,
         'g_ref_df': tuple(args.g_ref_df) if args.g_ref_df else None,

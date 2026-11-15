@@ -72,10 +72,13 @@ class TestReverseOptimizer(unittest.TestCase):
         # so its winner may match max_grip's downforce (equal G) — it may not
         # exceed it.
         self.assertGreaterEqual(res_grip.g_prediction['g_240'], res_wear.g_prediction['g_240'])
-        # Grid semantics: max_grip does not penalize wear, so its winner can tie
-        # min_tire_wear on wear (both may pick the soft-fn/neutral-camber setup).
-        # Invariant: min_tire_wear winner never wears MORE than max_grip winner.
-        self.assertLessEqual(
+        # min_tire_wear flattens negative camber (numerically greater than max_grip)
+        # and strictly reduces front tire wear factor.
+        self.assertGreater(
+            res_wear.parameters['camber_deg']['front'],
+            res_grip.parameters['camber_deg']['front']
+        )
+        self.assertLess(
             res_wear.tire_wear['front_wear_factor'],
             res_grip.tire_wear['front_wear_factor']
         )
@@ -328,7 +331,8 @@ class TestSurfaceGripModifier(unittest.TestCase):
 
     def test_track_db_surface_seeding(self):
         import json
-        tracks = json.load(open('data/tracks_master.json'))
+        with open('data/tracks_master.json', encoding='utf-8') as f:
+            tracks = json.load(f)
         by_name = {t.get('name', ''): t for t in tracks}
         # Tokyo Expressway variants: discontinuous tarmac -> high bumpiness,
         # modern highway surface -> no grip discount (modifier stays 1.0).

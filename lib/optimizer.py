@@ -231,9 +231,14 @@ def _candidate_grid(req: SolverRequest) -> list:
              if 'downforce' not in locked else [None])
     fn_deltas = ([-0.15, 0.0, 0.15]
                  if 'natural_frequency_hz' not in locked else [None])
-    camber_deltas = ([(0.0, 0.0), (0.4, 0.2)]
-                     if 'camber_deg' not in locked and not req.trk.is_dirt and not req.trk.is_wet
-                     else [(0.0, 0.0)])
+    if 'camber_deg' not in locked and not req.trk.is_dirt and not req.trk.is_wet:
+        camber_deltas = (
+            [(0.0, 0.0), (-0.4, -0.2)]
+            if req.objective == 'min_tire_wear'
+            else [(0.0, 0.0), (0.4, 0.2)]
+        )
+    else:
+        camber_deltas = [(0.0, 0.0)]
     return [(s, f, c) for s in spans for f in fn_deltas for c in camber_deltas]
 
 

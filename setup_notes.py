@@ -49,7 +49,7 @@ def _append_drivetrain_notes(notes: List[str], veh: VehicleSpec, is_controller: 
         notes.append("• [MR/RR Stability] LSD Braking ล็อคแน่น 52-65 (บนสเกล 0-100) ป้องกันอาการท้ายสะบัดหมุน (Snap Oversteer) ขณะแตะเบรกเลี้ยว (Trail-Braking)")
     if veh.group == 'Gr.4' and veh.drivetrain in ['AWD', '4WD', '4x4']:
         notes.append("• [Gr.4 AWD Center Diff] รถแข่ง Gr.4 ขับเคลื่อน 4 ล้อ (AWD/4WD) ล็อค Center Diff จากโรงงาน ไม่สามารถติดตั้งหรือปรับ Torque-Distributing Center Diff ได้ (Fixed Homologation)")
-        notes.append("  ↳ วิธีแก้หน้าดื้อ: ให้คลาย LSD ล้อหน้าให้อ่อน (Accel 14-16 / Braking 18-20), ปรับ ARB หน้าอ่อน/หลังแข็ง (3/7 หรือ 2/8), ปรับสมดุลเบรกไปหลัง (-2), และใช้ Front Toe-Out ช่วยดึงหน้ารถเข้าโค้ง")
+        notes.append("  ↳ วิธีแก้หน้าดื้อ: ให้คลาย LSD ล้อหน้าให้อ่อน (Accel 14-16 / Braking 18-20), ปรับ ARB หน้าอ่อน/หลังแข็ง (3/7 หรือ 2/8), ปรับสมดุลเบรกไปหลัง (+2), และใช้ Front Toe-Out ช่วยดึงหน้ารถเข้าโค้ง")
 
 
 def generate_simulation_notes(

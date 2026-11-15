@@ -76,7 +76,7 @@ def _format_equilibrium_lines(eq: Dict[str, Any]) -> List[str]:
     ]
     if not eq['trail_braking_feasible']:
         lines.append(
-            "  ↳ ⚠️ = ขีดจำกั ด Stroke ท่ีความสูงสูงสุดของชวง — Solver ใช้อยู่แล้้วท่ีความสูงปลอดภัยสูงสุด — ใช้อย่างเดิมได้ (ไม่ใช่ตำหนิ Setup) — Stroke limit at max ride height in range; solver already used the highest safe height — use as-is, treat as pace limit. (Trail-Braking line above = separate high-speed-braking simulation.)"
+            "  ↳ ⚠️ = ขีดจำกัด Stroke ที่ความสูงสูงสุดของช่วง — Solver ใช้อยู่แล้วที่ความสูงปลอดภัยสูงสุด — ใช้อย่างเดิมได้ (ไม่ใช่ตำหนิ Setup) — Stroke limit at max ride height in range; solver already used the highest safe height — use as-is, treat as pace limit. (Trail-Braking line above = separate high-speed-braking simulation.)"
         )
     return lines
 
@@ -109,7 +109,7 @@ def _format_grip_check_lines(gc: Dict[str, Any]) -> List[str]:
         status = '⚠️ เกินค่า Map ของยาง (Exceeds tire map — check compound/data)'
     else:
         status = '⚠️ เกินขีดจำกัด (Beyond Tire Limit)'
-    bal = {'understeer': 'Understeer (หน้ าออกก่ อน)', 'oversteer': 'Oversteer (หลังออกก่ อน)', 'neutral': 'Neutral (สมดูล)'}[gc['handling_balance']]
+    bal = {'understeer': 'Understeer (หน้าออกก่อน)', 'oversteer': 'Oversteer (หลังออกก่อน)', 'neutral': 'Neutral (สมดุล)'}[gc['handling_balance']]
     fz = gc['corner_fz_n']
     mg = gc['margins']
     g_label = f"{gc['ay_check_g']}G"
@@ -119,23 +119,23 @@ def _format_grip_check_lines(gc: Dict[str, Any]) -> List[str]:
     if gc.get('map_headroom') is not None:
         mu_label += f" (map {gc['map_headroom']}x)"
     lines = [
-        f"• การตรวจสอบขีดจำกั ดการยิ่ ดเกาะยาง (Tire Grip Limit Check) ที่ {g_label} {mu_label}: {status}",
-        f"  ↳ แรงกด Fz (N): หน้ านอก {fz['front_outside']} | หน้ าใน {fz['front_inside']} | หลังนอก {fz['rear_outside']} | หลังใน {fz['rear_inside']} (ถ่ ่ายเทด้ านนอก +{gc['transfer_front_n']} N หน้ า)",
-        f"  ↳ Headroom (μ/limit): หน้ า {mg['front']}x | หลัง {mg['rear']}x | นอยสุด {mg['min']}x → สมดูลเลี้ ยว: {bal} (K={gc['understeer_gradient']})"
+        f"• การตรวจสอบขีดจำกัดการยึดเกาะยาง (Tire Grip Limit Check) ที่ {g_label} {mu_label}: {status}",
+        f"  ↳ แรงกด Fz (N): หน้านอก {fz['front_outside']} | หน้าใน {fz['front_inside']} | หลังนอก {fz['rear_outside']} | หลังใน {fz['rear_inside']} (ถ่ายเทด้านนอก +{gc['transfer_front_n']} N หน้า)",
+        f"  ↳ Headroom (μ/limit): หน้า {mg['front']}x | หลัง {mg['rear']}x | น้อยสุด {mg['min']}x → สมดุลเลี้ยว: {bal} (K={gc['understeer_gradient']})"
     ]
     if gc['status'] == 'info':
         lines.append(
-            "  \u21b3 \u2139\ufe0f = Reference only, use as-is \u2014 \u0e04\u0e32\u0e22\u0e15\u0e48\u0e27\u0e21\u0e48\u0e14\u0e35\u0e22\u0e4c\u0e17\u0e35\u0e48\u0e16\u0e47\u0e2d\u0e07\u0e40\u0e15\u0e37\u0e2d\u0e01\u0e08\u0e31\u0e19 \u2014 run a 60/120/240 km/h G telemetry pass to calibrate"
+            "  ↳ ℹ️ = Reference only, use as-is — ค่าอ้างอิงเบื้องต้น (ยังไม่ได้วัด G จริง) — run a 60/120/240 km/h G telemetry pass to calibrate"
         )
     elif gc['status'] == 'warn':
         if gc.get('map_headroom') is not None and gc['map_headroom'] < 0.95:
             lines.append(
-                "  \u21b3 \u26a0\ufe0f = Check tire compound selection and G-calibration data \u2014 measured anchor exceeds the selected compound's friction map \u2014 \u0e15\u0e23\u0e14 Compound/G-calibration"
+                "  ↳ ⚠️ = Check tire compound selection and G-calibration data — measured anchor exceeds the selected compound's friction map — ตรวจ Compound/G-calibration"
             )
         if mg['min'] < 1.0:
             g_max = mg['min'] * gc['ay_check_g']
             lines.append(
-                f"  \u21b3 \u26a0\ufe0f = Pace limit, NOT a setup fault \u2014 setup is optimal within slider ranges; suspension cannot add tire friction. Use as-is, lift/turn in below ~{g_max:.2f}G. Levers: lower entry speed \u2192 stickier tire \u2192 more downforce (aero cap) \u2014 \u0e02\u0e35\u0e40\u0e2b\u0e25\u0e32\u0e04\u0e01 Pace \u0e02\u0e2d\u0e19\u0e22\u0e32\u0e07"
+                f"  ↳ ⚠️ = Pace limit, NOT a setup fault — setup is optimal within slider ranges; suspension cannot add tire friction. Use as-is, lift/turn in below ~{g_max:.2f}G. Levers: lower entry speed → stickier tire → more downforce (aero cap) — ขีดจำกัด Pace ของยาง"
             )
     return lines
 
@@ -151,12 +151,12 @@ def _format_bounce_check_lines(bc: Dict[str, Any]) -> List[str]:
     lines = [
         f"• การจำลอง Kangarooing/ล้อดัก-ตัวรถเด้ง (Wheel Hop & Body Bounce) ที่ 60/120/240 km/h (Corner) | 180 km/h (Rough Road) | 0.9g (Brake/Accel){dirt}: ระดับ {level} — Index {bc['index']}/100",
         f"  ↳ ถนนขรุขระ (Rough Road, {bc['bumpiness']} @ 180 km/h): {sym(rr['status'])} ล้อหลุดพื้นรวม {rr['hop_ms'] / 1000.0:.2f} s | ตัวรถเด้ง ±{rr['bounce_amp_mm']:.0f} mm (ζ หน้า/หลัง {bc['zeta']['front']}/{bc['zeta']['rear']})",
-        f"  ↳ แล้งเหวี่ยงหนัก {co['ay_g']}G ที่ {co['speed_kmh']} km/h (Hard Corner, worst): {sym(co['status'])} ล้อด้านใน(ซ้าย) รับแรงกดเหลือ {co['inside_fz_pct']['front']}% ล้อหน้า / {co['inside_fz_pct']['rear']}% ล้อหลัง | Bottoming {co['bottom_pct']:.0f}%",
+        f"  ↳ แรงเหวี่ยงหนัก {co['ay_g']}G ที่ {co['speed_kmh']} km/h (Hard Corner, worst): {sym(co['status'])} ล้อด้านใน(ซ้าย) รับแรงกดเหลือ {co['inside_fz_pct']['front']}% ล้อหน้า / {co['inside_fz_pct']['rear']}% ล้อหลัง | Bottoming {co['bottom_pct']:.0f}%",
     ]
     if len(co.get('by_speed', [])) > 1:
         parts = [f"{e['speed_kmh']} km/h = {e['ay_g']:.2f}G → ด้านใน(ซ้าย) {e['inside_fz_pct']['front']}/{e['inside_fz_pct']['rear']}% (หลุด {e['hop_ms'] / 1000.0:.2f} s)"
                  for e in co['by_speed']]
-        lines.append(f"  ↳ แล้งเหวี่ยงตามความเร็ว (Cornering by Speed): {' | '.join(parts)}")
+        lines.append(f"  ↳ แรงเหวี่ยงตามความเร็ว (Cornering by Speed): {' | '.join(parts)}")
     if ba is not None:
         lines.append(
             f"  ↳ เบรกหนัก/ออกตัวแรง (Hard Brake/Accel, 0.9g): {sym(ba['status'])} ล้อหลังหลุด {ba['brake_rear_hop_ms'] / 1000.0:.2f} s (เบรก) | ล้อหน้าหลุด {ba['accel_front_hop_ms'] / 1000.0:.2f} s (ออกตัว)"

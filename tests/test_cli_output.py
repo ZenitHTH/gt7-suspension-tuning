@@ -192,6 +192,50 @@ class TestWarningAdvisories(unittest.TestCase):
         self.assertNotIn('treat as pace limit',
                          '\n'.join(_format_equilibrium_lines(ok)))
 
+    def test_thai_telemetry_lines_have_no_garbled_mojibake(self):
+        from models import VehicleSpec, TrackSpec
+        from setup_notes import generate_chassis_notes
+        from sheet_formatter import (
+            _format_bounce_check_lines,
+            _format_equilibrium_lines,
+            _format_grip_check_lines,
+        )
+        eq = {'trail_braking_feasible': False, 'acceleration_squat_rear_mm': 4,
+              'acceleration_lift_front_mm': 2, 'dynamic_rake_accel_mm': 2,
+              'min_dynamic_clearance_mm': 0,
+              'total_trail_compression_front_mm': 60,
+              'dynamic_rake_brake_mm': 3}
+        bc = {
+            'level': 'moderate', 'index': 45, 'bumpiness': 'medium',
+            'zeta': {'front': 0.55, 'rear': 0.58},
+            'scenarios': {
+                'rough_road': {'status': 'pass', 'hop_ms': 10, 'bounce_amp_mm': 12},
+                'cornering': {
+                    'status': 'warn', 'ay_g': 1.4, 'speed_kmh': 180,
+                    'inside_fz_pct': {'front': 15, 'rear': 20}, 'bottom_pct': 70,
+                    'by_speed': [
+                        {'speed_kmh': 60, 'ay_g': 1.1, 'inside_fz_pct': {'front': 20, 'rear': 25}, 'hop_ms': 0},
+                        {'speed_kmh': 120, 'ay_g': 1.3, 'inside_fz_pct': {'front': 18, 'rear': 22}, 'hop_ms': 0},
+                    ],
+                },
+            },
+        }
+        veh = VehicleSpec.from_dict({'name': 'Test Gr.4 AWD', 'drivetrain': 'AWD', 'group': 'Gr.4'})
+        notes = '\n'.join(generate_chassis_notes(veh, TrackSpec(), 'RH', 2.6, False, False, False))
+        combined = '\n'.join(
+            _format_equilibrium_lines(eq)
+            + _format_grip_check_lines(self._gc('info'))
+            + _format_grip_check_lines(self._gc('warn', mg_min=0.85, map_headroom=0.90))
+            + _format_bounce_check_lines(bc)
+            + [notes]
+        )
+        for bad in ('ขีดจำกั ด', 'หน้ า', 'สมดูล', 'คายต่วม่อดีย์ที่ถ็องเตือกจัน',
+                    'ขีเหลาคก Pace ขอนยาง', 'แล้งเหวี่ยง', 'ปรับสมดุลเบรกไปหลัง (-2)'):
+            self.assertNotIn(bad, combined)
+        for good in ('ขีดจำกัด Stroke', 'ค่าอ้างอิงเบื้องต้น', 'ขีดจำกัด Pace ของยาง',
+                     'แรงเหวี่ยงหนัก', 'ปรับสมดุลเบรกไปหลัง (+2)'):
+            self.assertIn(good, combined)
+
 
 class TestSurfaceLine(unittest.TestCase):
     """Road-surface sheet line: per-surface grip feel + roughness."""

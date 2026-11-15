@@ -52,6 +52,8 @@ class MainWindow(QMainWindow):
 
         central = QWidget()
         root = QVBoxLayout(central)
+        root.setContentsMargins(12, 12, 12, 12)
+        root.setSpacing(10)
 
         self.form = SetupForm(self.service)
         self.results = ResultsView()
@@ -60,8 +62,10 @@ class MainWindow(QMainWindow):
         scroll.setWidget(self.form)
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setMinimumWidth(380)
 
         splitter = QSplitter(Qt.Orientation.Horizontal)
+        splitter.setHandleWidth(6)
         splitter.addWidget(scroll)
         splitter.addWidget(self.results)
         splitter.setStretchFactor(0, 0)

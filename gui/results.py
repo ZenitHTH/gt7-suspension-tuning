@@ -9,6 +9,7 @@ the HTML we set.
 import html
 from typing import Optional
 
+from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -92,6 +93,7 @@ class ResultsView(QWidget):
         self.browser.clear()
         self.warnings_label.setText('')
         self.warnings_label.hide()
+        self.copy_btn.setText('Copy sheet')
         self.copy_btn.setEnabled(True)
 
     # ------------------------------------------------------------- actions
@@ -100,3 +102,12 @@ class ResultsView(QWidget):
         app = QApplication.instance()
         if app is not None:
             app.clipboard().setText(self._raw_sheet)
+        if self._raw_sheet:
+            self.copy_btn.setText('Copied ✓')
+            QTimer.singleShot(1200, self._restore_copy_btn)
+
+    def _restore_copy_btn(self) -> None:
+        try:
+            self.copy_btn.setText('Copy sheet')
+        except RuntimeError:
+            pass

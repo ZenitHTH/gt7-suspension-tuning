@@ -22,7 +22,7 @@ from PyQt6.QtWidgets import (
 )
 
 from db.interface import TRACKS_DB
-from gui.components import RangePair
+from gui.components import RangePair, install_wheel_guard
 from gui.request import (
     DRIVETRAINS,
     MODES,
@@ -53,6 +53,7 @@ class SetupForm(QWidget):
         super().__init__(parent)
         self.service = service
         self._current_car: Optional[Dict[str, Any]] = None
+        self._db_drivetrain_choice: Optional[str] = None
 
         root = QVBoxLayout(self)
 
@@ -132,9 +133,13 @@ class SetupForm(QWidget):
         self.mass_use_db.setChecked(True)
         mass_row = QHBoxLayout()
         mass_row.addWidget(self.mass_use_db)
-        mass_row.addWidget(QLabel('or custom mass (kg)'))
+        mass_lbl = QLabel('or custom mass (kg)')
+        mass_lbl.setObjectName('hintLabel')
+        mass_row.addWidget(mass_lbl, 1)
         self.mass_spin = QSpinBox()
         self.mass_spin.setRange(0, 3000)
+        self.mass_spin.setEnabled(False)
+        self.mass_use_db.toggled.connect(lambda checked: self.mass_spin.setEnabled(not checked))
         mass_row.addWidget(self.mass_spin)
         olayout.addLayout(mass_row)
 
@@ -142,9 +147,13 @@ class SetupForm(QWidget):
         self.power_use_db.setChecked(True)
         power_row = QHBoxLayout()
         power_row.addWidget(self.power_use_db)
-        power_row.addWidget(QLabel('or custom power (hp)'))
+        power_lbl = QLabel('or custom power (hp)')
+        power_lbl.setObjectName('hintLabel')
+        power_row.addWidget(power_lbl, 1)
         self.power_spin = QSpinBox()
         self.power_spin.setRange(0, 3000)
+        self.power_spin.setEnabled(False)
+        self.power_use_db.toggled.connect(lambda checked: self.power_spin.setEnabled(not checked))
         power_row.addWidget(self.power_spin)
         olayout.addLayout(power_row)
 
@@ -152,9 +161,13 @@ class SetupForm(QWidget):
         self.torque_use_db.setChecked(True)
         torque_row = QHBoxLayout()
         torque_row.addWidget(self.torque_use_db)
-        torque_row.addWidget(QLabel('or custom torque (Nm)'))
+        torque_lbl = QLabel('or custom torque (Nm)')
+        torque_lbl.setObjectName('hintLabel')
+        torque_row.addWidget(torque_lbl, 1)
         self.torque_spin = QDoubleSpinBox(decimals=1)
         self.torque_spin.setRange(0.0, 1500.0)
+        self.torque_spin.setEnabled(False)
+        self.torque_use_db.toggled.connect(lambda checked: self.torque_spin.setEnabled(not checked))
         torque_row.addWidget(self.torque_spin)
         olayout.addLayout(torque_row)
 
@@ -162,11 +175,16 @@ class SetupForm(QWidget):
         self.balance_use_db.setChecked(True)
         balance_row = QHBoxLayout()
         balance_row.addWidget(self.balance_use_db)
-        balance_row.addWidget(QLabel('or front % / rear %'))
+        bal_lbl = QLabel('or front % / rear %')
+        bal_lbl.setObjectName('hintLabel')
+        balance_row.addWidget(bal_lbl, 1)
         self.bal_f_spin = QSpinBox()
         self.bal_f_spin.setRange(0, 100)
+        self.bal_f_spin.setEnabled(False)
         self.bal_r_spin = QSpinBox()
         self.bal_r_spin.setRange(0, 100)
+        self.bal_r_spin.setEnabled(False)
+        self.balance_use_db.toggled.connect(self._on_balance_use_db_toggled)
         balance_row.addWidget(self.bal_f_spin)
         balance_row.addWidget(self.bal_r_spin)
         olayout.addLayout(balance_row)
@@ -174,7 +192,7 @@ class SetupForm(QWidget):
         drivetrain_row = QHBoxLayout()
         dt_hint = QLabel('Drivetrain')
         dt_hint.setObjectName('hintLabel')
-        drivetrain_row.addWidget(dt_hint)
+        drivetrain_row.addWidget(dt_hint, 1)
         self.drivetrain_combo = QComboBox()
         for dt in DRIVETRAINS:
             self.drivetrain_combo.addItem(dt, dt)
@@ -194,11 +212,22 @@ class SetupForm(QWidget):
         self.status_label.setWordWrap(True)
         root.addWidget(self.status_label)
 
+        self._install_wheel_guards()
+
         # Initial state: full car list; selecting car 0 prefills the form.
         self._refill_cars('')
         self._refill_tracks('')
 
     # ------------------------------------------------------------------ wiring
+
+    def _install_wheel_guards(self) -> None:
+        for cls in (QSpinBox, QDoubleSpinBox, QComboBox):
+            for widget in self.findChildren(cls):
+                install_wheel_guard(widget)
+
+    def _on_balance_use_db_toggled(self, checked: bool) -> None:
+        self.bal_f_spin.setEnabled(not checked)
+        self.bal_r_spin.setEnabled(not checked)
 
     def _on_car_index_changed(self, _index: int) -> None:
         car_id = self.car_combo.currentData()
@@ -220,7 +249,7 @@ class SetupForm(QWidget):
             row = QHBoxLayout()
             hint = QLabel(text)
             hint.setObjectName('hintLabel')
-            row.addWidget(hint)
+            row.addWidget(hint, 1)
             spin = QDoubleSpinBox(decimals=2)
             spin.setRange(0.0, 9.0)
             spin.setSpecialValueText('')
@@ -232,7 +261,7 @@ class SetupForm(QWidget):
         ref_row = QHBoxLayout()
         ref_hint = QLabel('Ref downforce (front / rear)')
         ref_hint.setObjectName('hintLabel')
-        ref_row.addWidget(ref_hint)
+        ref_row.addWidget(ref_hint, 1)
         # Cap matches the DF range spinboxes (2000): preseeded DB DF ranges
         # reach 1700 (cars 3342/3374/3517), so a 1000 cap would silently
         # clamp the downforce the user was running when measuring the Gs.
@@ -247,7 +276,7 @@ class SetupForm(QWidget):
         solve_row = QHBoxLayout()
         solve_hint = QLabel('Solve')
         solve_hint.setObjectName('hintLabel')
-        solve_row.addWidget(solve_hint)
+        solve_row.addWidget(solve_hint, 1)
         self.solve_combo = QComboBox()
         self.solve_combo.addItem('—', '')
         for objective in SOLVE_OBJECTIVES:
@@ -280,7 +309,7 @@ class SetupForm(QWidget):
         mode_row = QHBoxLayout()
         mode_hint = QLabel('Mode')
         mode_hint.setObjectName('hintLabel')
-        mode_row.addWidget(mode_hint)
+        mode_row.addWidget(mode_hint, 1)
         self.mode_combo = QComboBox()
         for mode in MODES:
             self.mode_combo.addItem(mode, mode)
@@ -290,7 +319,7 @@ class SetupForm(QWidget):
         speed_row = QHBoxLayout()
         speed_hint = QLabel('Speed (km/h)')
         speed_hint.setObjectName('hintLabel')
-        speed_row.addWidget(speed_hint)
+        speed_row.addWidget(speed_hint, 1)
         self.speed_spin = QDoubleSpinBox(decimals=1)
         self.speed_spin.setRange(30.0, 400.0)
         self.speed_spin.setValue(240.0)
@@ -314,10 +343,15 @@ class SetupForm(QWidget):
             self.symptom_checks[key] = check
             layout.addWidget(check)
 
-        stab_row = QHBoxLayout()
         stab_hint = QLabel('Stability (low / high speed): −1.00 understeer … +1.00 oversteer')
         stab_hint.setObjectName('hintLabel')
-        stab_row.addWidget(stab_hint)
+        stab_hint.setWordWrap(True)
+        layout.addWidget(stab_hint)
+
+        stab_row = QHBoxLayout()
+        stab_lbl = QLabel('Low / High')
+        stab_lbl.setObjectName('hintLabel')
+        stab_row.addWidget(stab_lbl, 1)
         self.stab_low_spin = QDoubleSpinBox(decimals=2)
         self.stab_low_spin.setRange(-1.0, 1.0)
         self.stab_low_spin.setSpecialValueText('')
@@ -434,6 +468,7 @@ class SetupForm(QWidget):
         dt = car.get('drivetrain')
         idx = self.drivetrain_combo.findText(dt) if dt else -1
         self.drivetrain_combo.setCurrentIndex(idx if idx >= 0 else 0)
+        self._db_drivetrain_choice = self.drivetrain_combo.currentText()
 
     def _prefill_ranges(self, car: Dict[str, Any]) -> None:
         """Range pairs from get_slider_ranges; missing key → 0/0 (None)."""
@@ -496,6 +531,7 @@ class SetupForm(QWidget):
                      self.bal_f_spin, self.bal_r_spin):
             spin.setValue(0)
         self.torque_spin.setValue(0.0)
+        self._db_drivetrain_choice = self.drivetrain_combo.currentText()
         for pair in (self.df_f, self.df_r, self.hf, self.hr,
                      self.fn_f, self.fn_r, self.comp_range_pair, self.exp_range_pair):
             pair.set_value(None)
@@ -560,7 +596,8 @@ class SetupForm(QWidget):
             req.custom_power = self.power_spin.value()
         if not self.torque_use_db.isChecked():
             req.custom_torque = self.torque_spin.value()
-        req.custom_drivetrain = self.drivetrain_combo.currentText()
+        if self.drivetrain_combo.currentText() != getattr(self, '_db_drivetrain_choice', None):
+            req.custom_drivetrain = self.drivetrain_combo.currentText()
         if not self.balance_use_db.isChecked():
             req.custom_balance = (self.bal_f_spin.value(), self.bal_r_spin.value())
 

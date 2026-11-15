@@ -272,6 +272,36 @@ class SetupFormTest(unittest.TestCase):
         self.assertIn('Save failed', form.status_label.text())
         self.assertTrue(form.status_label.property('error'))
 
+    def test_collect_drivetrain_only_overrides_when_changed_from_db(self):
+        form = _select_car(self.form, '207')  # MR2: DB drivetrain is 'MR'
+        self.assertEqual(form.drivetrain_combo.currentText(), 'MR')
+        self.assertIsNone(form.collect().custom_drivetrain)
+        awd_idx = form.drivetrain_combo.findText('AWD')
+        self.assertGreaterEqual(awd_idx, 0)
+        form.drivetrain_combo.setCurrentIndex(awd_idx)
+        self.assertEqual(form.collect().custom_drivetrain, 'AWD')
+        mr_idx = form.drivetrain_combo.findText('MR')
+        form.drivetrain_combo.setCurrentIndex(mr_idx)
+        self.assertIsNone(form.collect().custom_drivetrain)
+
+    def test_use_db_checkbox_toggles_override_spinbox_enabled_state(self):
+        form = _select_car(self.form, '3440')
+        for spin in (form.mass_spin, form.power_spin, form.torque_spin,
+                     form.bal_f_spin, form.bal_r_spin):
+            self.assertFalse(spin.isEnabled())
+        form.mass_use_db.setChecked(False)
+        self.assertTrue(form.mass_spin.isEnabled())
+        form.power_use_db.setChecked(False)
+        self.assertTrue(form.power_spin.isEnabled())
+        form.torque_use_db.setChecked(False)
+        self.assertTrue(form.torque_spin.isEnabled())
+        form.balance_use_db.setChecked(False)
+        self.assertTrue(form.bal_f_spin.isEnabled())
+        self.assertTrue(form.bal_r_spin.isEnabled())
+        form.balance_use_db.setChecked(True)
+        self.assertFalse(form.bal_f_spin.isEnabled())
+        self.assertFalse(form.bal_r_spin.isEnabled())
+
 
 if __name__ == '__main__':
     unittest.main()

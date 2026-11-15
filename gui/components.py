@@ -6,6 +6,7 @@
 """
 from typing import Optional, Tuple
 
+from PyQt6.QtCore import QEvent, QObject, Qt
 from PyQt6.QtWidgets import (
     QDoubleSpinBox,
     QHBoxLayout,
@@ -13,6 +14,27 @@ from PyQt6.QtWidgets import (
     QSpinBox,
     QWidget,
 )
+
+
+class _WheelGuard(QObject):
+    """Ignore mouse wheel events on inputs unless the widget holds focus."""
+
+    def eventFilter(self, obj: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.Wheel and isinstance(obj, QWidget):
+            if not obj.hasFocus():
+                event.ignore()
+                return True
+        return super().eventFilter(obj, event)
+
+
+def install_wheel_guard(widget: QWidget) -> None:
+    """Prevent accidental mouse-wheel mutations when scrolling a parent panel."""
+    if widget.property('_wheel_guarded'):
+        return
+    widget.setProperty('_wheel_guarded', True)
+    widget.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+    guard = _WheelGuard(widget)
+    widget.installEventFilter(guard)
 
 
 class RangePair(QWidget):
@@ -25,10 +47,11 @@ class RangePair(QWidget):
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(6)
 
         name = QLabel(label)
         name.setObjectName('hintLabel')  # theme: secondary text 12px
-        layout.addWidget(name)
+        layout.addWidget(name, 1)
 
         if kind == 'float':
             self.min_spin = QDoubleSpinBox(decimals=2)
@@ -43,7 +66,14 @@ class RangePair(QWidget):
 
         for spin in (self.min_spin, self.max_spin):
             spin.setMinimum(0)
-            layout.addWidget(spin)
+            spin.setMinimumWidth(76)
+            install_wheel_guard(spin)
+
+        sep = QLabel('–')
+        sep.setObjectName('hintLabel')
+        layout.addWidget(self.min_spin)
+        layout.addWidget(sep)
+        layout.addWidget(self.max_spin)
 
     def value(self) -> Optional[Tuple[float, float]]:
         """(min, max); None when both values are 0."""

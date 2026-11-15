@@ -25,6 +25,7 @@ _ARROW_RGB = (0xFF, 0xFF, 0xFF)
 # --add-data) and is registered via QFontDatabase so it resolves on any OS;
 # the fallback stack covers machines where registration is unavailable.
 _FONT_STACK = ['Noto Sans', 'Segoe UI', 'SF Pro Text', 'Arial']
+_FONTS_REGISTERED = False
 
 
 def _arrow_png(up: bool) -> bytes:
@@ -50,15 +51,17 @@ def _arrow_png(up: bool) -> bytes:
 
 
 def _arrow_paths() -> tuple:
-    """Idempotently write the arrow PNGs to the OS temp dir; return (up, down)."""
+    """Idempotently write the arrow PNGs to the OS temp dir; return POSIX (up, down)."""
     d = os.path.join(tempfile.gettempdir(), 'gt7-suspension-tuner')
     os.makedirs(d, exist_ok=True)
     up = os.path.join(d, 'arrow_up.png')
     down = os.path.join(d, 'arrow_down.png')
     if not (os.path.exists(up) and os.path.exists(down)):
-        open(up, 'wb').write(_arrow_png(True))
-        open(down, 'wb').write(_arrow_png(False))
-    return up, down
+        with open(up, 'wb') as f:
+            f.write(_arrow_png(True))
+        with open(down, 'wb') as f:
+            f.write(_arrow_png(False))
+    return up.replace('\\', '/'), down.replace('\\', '/')
 
 
 QSS = """
@@ -77,11 +80,11 @@ QGroupBox { background: #23262e; border: 1px solid #3a3f4d; border-radius: 8px; 
 QGroupBox::title { subcontrol-origin: margin; left: 12px; padding: 0 4px; color: #ffffff; font-weight: bold; font-size: 13px; }
 QSpinBox, QDoubleSpinBox, QComboBox, QLineEdit { background: #14161a; color: #ffffff; border: 1px solid #3a3f4d; border-radius: 4px; padding: 4px 8px; min-height: 28px; }
 QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus, QLineEdit:focus { border: 2px solid #e5484d; }
-QSpinBox:disabled, QDoubleSpinBox:disabled, QComboBox:disabled, QLineEdit:disabled { color: #ffffff; opacity: 0.5; }
+QSpinBox:disabled, QDoubleSpinBox:disabled, QComboBox:disabled, QLineEdit:disabled { color: #7a8194; background: #181a20; border-color: #2a2e38; }
 QComboBox::drop-down { border: none; }
 QComboBox::down-arrow { image: url("__ARROW_DOWN__"); }
 QComboBox QAbstractItemView { background: #14161a; color: #ffffff; border: 1px solid #3a3f4d; selection-background-color: #e5484d; }
-QSpinBox::line-edit, QDoubleSpinBox::line-edit { background: #14161a; border: none; }
+QSpinBox::line-edit, QDoubleSpinBox::line-edit { background: transparent; border: none; }
 QSpinBox::up-button, QDoubleSpinBox::up-button { subcontrol-origin: border; subcontrol-position: top right; width: 18px; border-left: 1px solid #3a3f4d; background: #1b1d23; }
 QSpinBox::down-button, QDoubleSpinBox::down-button { subcontrol-origin: border; subcontrol-position: bottom right; width: 18px; border-left: 1px solid #3a3f4d; border-top: 1px solid #3a3f4d; background: #1b1d23; }
 QSpinBox::up-arrow, QDoubleSpinBox::up-arrow { image: url("__ARROW_UP__"); }
@@ -103,16 +106,20 @@ QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { width: 0; }
 
 
 def _register_fonts(app: QApplication) -> None:
-    """Register the bundled Noto Sans TTFs so the family resolves on any OS.
+    """Register the bundled Noto Sans TTFs once so the family resolves on any OS.
 
     No-op when a file is missing (e.g. trimmed data dir via GT7_DATA_DIR);
     the fallback stack in `_FONT_STACK` then covers rendering.
     """
+    global _FONTS_REGISTERED
+    if _FONTS_REGISTERED:
+        return
     fonts_dir = os.path.join(db.loader.get_data_dir(), 'fonts')
     for name in ('NotoSans-Regular.ttf', 'NotoSans-Bold.ttf'):
         path = os.path.join(fonts_dir, name)
         if os.path.isfile(path):
             QFontDatabase.addApplicationFont(path)
+    _FONTS_REGISTERED = True
 
 
 def apply(app: QApplication) -> None:

@@ -42,10 +42,9 @@ def make_icon(path: str, size: int = 256) -> str:
 
     bg = (15, 19, 26)
     fg = (96, 165, 250)
-    row = bytearray()
     rows = []
     for y in range(size):
-        row.append(0)  # PNG filter type: None
+        row = bytearray([0])  # PNG filter type: None
         for x in range(size):
             px, py = x + 0.5, y + 0.5
             near = any(_seg_dist(px, py, *s) <= width for s in segs)

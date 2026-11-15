@@ -1,3 +1,4 @@
+import os
 import unittest
 from cli import format_setup_sheet
 from setup import build_setup
@@ -316,6 +317,36 @@ class TestSurfaceLine(unittest.TestCase):
         })
         self.assertIn('loose snow/dirt', sheet)
         self.assertIn('×0.65', sheet)
+
+
+class TestDocsAndRepoHygiene(unittest.TestCase):
+    """Verify SKILL.md brake bias convention, launcher guard, and clean data/ backups."""
+
+    _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    def test_skill_md_uses_positive_rearward_brake_bias(self):
+        skill_path = os.path.join(self._ROOT, 'SKILL.md')
+        with open(skill_path, 'r', encoding='utf-8') as f:
+            lines = f.read().splitlines()
+        text = '\n'.join(lines)
+        self.assertIn('Rearward Brake Bias (`+1` to `+3`)', text)
+        self.assertNotIn('Rearward Brake Bias (`-1` to `-3`)', text)
+        for label in ('FR High-HP / Turbo Sedan', 'Classic American Muscle FR', 'Heavyweight EV AWD'):
+            row = next(line for line in lines if label in line)
+            self.assertTrue(row.endswith('| `+2` |'), f'Expected +2 brake bias for {label}: {row}')
+
+    def test_no_bak_files_in_data_directories(self):
+        for sub in ('data', os.path.join('data', 'csv')):
+            d = os.path.join(self._ROOT, sub)
+            baks = [fn for fn in os.listdir(d) if '.bak' in fn]
+            self.assertEqual(baks, [], f'Unexpected backup files in {sub}: {baks}')
+
+    def test_run_gui_ps1_verifies_pyqt6_even_when_venv_exists(self):
+        ps1_path = os.path.join(self._ROOT, 'run_gui.ps1')
+        with open(ps1_path, 'r', encoding='utf-8') as f:
+            ps1 = f.read()
+        self.assertIn('import PyQt6', ps1)
+        self.assertIn('$LASTEXITCODE', ps1)
 
 
 if __name__ == '__main__':

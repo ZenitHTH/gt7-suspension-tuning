@@ -4,7 +4,7 @@ Set-Location -LiteralPath $PSScriptRoot
 
 $venvPy = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
 if (-not (Test-Path $venvPy)) {
-    Write-Host "First run: creating .venv and installing PyQt6..."
+    Write-Host "First run: creating .venv..."
     $launcher = Get-Command py -ErrorAction SilentlyContinue
     if (-not $launcher) { $launcher = Get-Command python -ErrorAction SilentlyContinue }
     if (-not $launcher) {
@@ -12,9 +12,17 @@ if (-not (Test-Path $venvPy)) {
         exit 1
     }
     & $launcher.Source -m venv (Join-Path $PSScriptRoot ".venv")
-    & $venvPy -m pip install --upgrade pip "PyQt6>=6.7,<7"
     if (-not (Test-Path $venvPy)) {
         Write-Error ".venv creation failed."
+        exit 1
+    }
+}
+& $venvPy -c "import PyQt6" *> $null
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Installing PyQt6..."
+    & $venvPy -m pip install --upgrade pip "PyQt6>=6.7,<7"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "PyQt6 installation failed."
         exit 1
     }
 }

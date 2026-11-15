@@ -192,7 +192,7 @@ When searching online for reference setups:
 > 1. **Zero/Low-Scrub Front Toe (`0.00°` or `Out 0.02°`)**: Never use aggressive toe-out (>0.04°) on endurance runs. Generate trail-brake rotation via unlocked LSD and brake balance, NOT tire scrub.
 > 2. **Mild Front Camber (`-1.8° to -2.0°`)**: Prevents inner shoulder thermal degradation under heavy straight-line braking.
 > 3. **LSD Braking Calibration**: Keep strictly between **`12–16`** (FR, FF, AWD) or **`42–48`** (MR) to rotate chassis effortlessly without scrubbing front tires.
-> 4. **Rearward Brake Bias (`-1` to `-3`)**: Relieves decelerative saturation from front tires, leaving friction capacity for steering.
+> 4. **Rearward Brake Bias (`+1` to `+3`)**: Relieves decelerative saturation from front tires, leaving friction capacity for steering.
 > 5. **Soft Front ARB (`2–3`) vs Stiff Rear (`6–7`)**: Shifts dynamic cornering roll burden to the rear outside tire, protecting front tire shoulders.
 > 6. **Moderate Front Downforce**: Avoid maxing front downforce; keep at 40%–60% of span to prevent carcass overheating on high-speed straights.
 
@@ -571,14 +571,14 @@ graph TD
 | **Kei Car Swapped (300+ HP)** | `95 / 102 mm` | `2.55 / 2.65 Hz` | `4 / 6` | `32% / 48%` | `-2.8° / -1.8°` | `Out 0.06° / In 0.24°` | `6 / 26 / 60` | `-1` |
 | **Ultra-Lightweight / Open-Cockpit (500–750kg)** | `60 / 72 mm` | `2.75 / 2.85 Hz` | `3 / 6` | `32% / 35%` | `-3.0° / -1.6°` | `Out 0.14° / In 0.08°` | `5 / 28 / 30` | `-2` |
 | **FR Lightweight Roadster (50:50)** | `100 / 105 mm` | `2.45 / 2.55 Hz` | `4 / 5` | `30% / 42%` | `-2.4° / -1.6°` | `Out 0.04° / In 0.12°` | `4 / 22 / 30` | `0` |
-| **FR High-HP / Turbo Sedan (57:43)** | `100 / 110 mm` | `2.95 / 2.80 Hz` | `3 / 7` | `32% / 48%` | `-3.0° / -1.5°` | `Out 0.10° / In 0.14°` | `5 / 28 / 58` | `-2` |
-| **Classic American Muscle FR (58:42)** | `98 / 110 mm` | `2.65 / 2.75 Hz` | `2 / 8` | `31% / 42% (F) 33% / 42% (R)` | `-3.2° / -1.4°` | `Out 0.14° / In 0.08°` | `5 / 28 / 26` | `-2` |
+| **FR High-HP / Turbo Sedan (57:43)** | `100 / 110 mm` | `2.95 / 2.80 Hz` | `3 / 7` | `32% / 48%` | `-3.0° / -1.5°` | `Out 0.10° / In 0.14°` | `5 / 28 / 58` | `+2` |
+| **Classic American Muscle FR (58:42)** | `98 / 110 mm` | `2.65 / 2.75 Hz` | `2 / 8` | `31% / 42% (F) 33% / 42% (R)` | `-3.2° / -1.4°` | `Out 0.14° / In 0.08°` | `5 / 28 / 26` | `+2` |
 | **MR Supercar Coupe (42:58)** | `95 / 100 mm` | `2.75 / 2.95 Hz` | `5 / 7` | `32% / 44%` | `-2.6° / -1.8°` | `Out 0.05° / In 0.24°` | `6 / 32 / 56` | `0` |
 | **RR Porsche 911 Coupe (38:62)** | `95 / 102 mm` | `2.60 / 3.05 Hz` | `7 / 5` | `30% / 48%` | `-2.8° / -2.0°` | `Out 0.06° / In 0.30°` | `7 / 36 / 65` | `0` |
 | **4WD Sports / Rally (55:45)** | `100 / 105 mm` | `2.85 / 2.75 Hz` | `3 / 7` | `32% / 45%` | `-2.8° / -1.6°` | `Out 0.08° / In 0.14°` | F:`5/18/22` R:`7/35/48` | `-1` |
 | **High-CG SUV / 4WD (57:43)** | `135 / 142 mm` | `2.50 / 2.65 Hz` | `6 / 8` | `36% / 56%` | `-2.4° / -1.4°` | `Out 0.05° / In 0.22°` | F:`6/20/24` R:`7/35/62` | `-1` |
 | **Pickup Truck / Live Axle (60:40)** | `145 / 155 mm` | `2.30 / 2.10 Hz` | `5 / 6` | `34% / 62%` | `-2.0° / -1.0°` | `Out 0.04° / In 0.25°` | F:`6/20/22` R:`8/42/65` | `0` |
-| **Heavyweight EV AWD (2+ Tons)** | `95 / 100 mm` | `3.10 / 3.00 Hz` | `7 / 5` | `36% / 48%` | `-3.2° / -1.8°` | `Out 0.12° / In 0.25°` | F:`5/18/22` R:`7/36/45` | `-2` |
+| **Heavyweight EV AWD (2+ Tons)** | `95 / 100 mm` | `3.10 / 3.00 Hz` | `7 / 5` | `36% / 48%` | `-3.2° / -1.8°` | `Out 0.12° / In 0.25°` | F:`5/18/22` R:`7/36/45` | `+2` |
 | **Gr.3 / GT Downforce Racecar** | `65 / 70 mm` | `3.40 / 3.60 Hz` | `6 / 8` | `38% / 52%` | `-3.5° / -2.4°` | `Out 0.10° / In 0.20°` | `6 / 32 / 54` | `0` |
 | **Gr.X Red Bull X2019 (46:54 MR)** | `48 / 55 mm` | `5.30 / 5.50 Hz` | `4 / 6` | `33% / 37% (Comp) 48% / 54% (Exp)` | `-3.3° / -2.0°` | `Out 0.04° / In 0.16°` | `6 / 18 / 52` | `0` |
 | **Gr.B 4WD Rally Tarmac Spec** | `90 / 98 mm` | `2.60 / 2.72 Hz` | `3 / 7` | `32% / 34% (Comp) 48% / 50% (Exp)` | `-3.2° / -1.6°` | `Out 0.08° / In 0.12°` | F:`5/14/18` R:`7/28/40` | `-1` |

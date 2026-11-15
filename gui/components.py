@@ -8,12 +8,18 @@ from typing import Optional, Tuple
 
 from PyQt6.QtCore import QEvent, QObject, Qt
 from PyQt6.QtWidgets import (
+    QAbstractSpinBox,
     QDoubleSpinBox,
     QHBoxLayout,
     QLabel,
     QSpinBox,
     QWidget,
 )
+
+PAIR_SPIN_WIDTH = 92
+PAIR_SEP_WIDTH = 16
+PAIR_ROW_SPACING = 4
+INPUT_COL_WIDTH = PAIR_SPIN_WIDTH * 2 + PAIR_SEP_WIDTH + PAIR_ROW_SPACING * 2
 
 
 class _WheelGuard(QObject):
@@ -37,6 +43,22 @@ def install_wheel_guard(widget: QWidget) -> None:
     widget.installEventFilter(guard)
 
 
+def _make_spin_pair(kind: str, max_v: float) -> Tuple[QAbstractSpinBox, QAbstractSpinBox]:
+    """Create aligned min/max spinboxes of uniform width regardless of `kind`."""
+    spins = []
+    for _ in range(2):
+        if kind == 'float':
+            spin: QAbstractSpinBox = QDoubleSpinBox(decimals=2)
+            spin.setRange(0.0, max_v)
+        else:
+            spin = QSpinBox()
+            spin.setRange(0, int(max_v))
+        spin.setFixedWidth(PAIR_SPIN_WIDTH)
+        install_wheel_guard(spin)
+        spins.append(spin)
+    return spins[0], spins[1]
+
+
 class RangePair(QWidget):
     """Label + min/max spinbox pair; owns the (0,0)→None rule from Global Constraints."""
 
@@ -47,30 +69,18 @@ class RangePair(QWidget):
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(6)
+        layout.setSpacing(PAIR_ROW_SPACING)
 
         name = QLabel(label)
-        name.setObjectName('hintLabel')  # theme: secondary text 12px
+        name.setObjectName('hintLabel')
         layout.addWidget(name, 1)
 
-        if kind == 'float':
-            self.min_spin = QDoubleSpinBox(decimals=2)
-            self.max_spin = QDoubleSpinBox(decimals=2)
-            self.min_spin.setMaximum(max_v)
-            self.max_spin.setMaximum(max_v)
-        else:
-            self.min_spin = QSpinBox()
-            self.max_spin = QSpinBox()
-            self.min_spin.setMaximum(int(max_v))
-            self.max_spin.setMaximum(int(max_v))
-
-        for spin in (self.min_spin, self.max_spin):
-            spin.setMinimum(0)
-            spin.setMinimumWidth(76)
-            install_wheel_guard(spin)
-
+        self.min_spin, self.max_spin = _make_spin_pair(kind, max_v)
         sep = QLabel('–')
         sep.setObjectName('hintLabel')
+        sep.setFixedWidth(PAIR_SEP_WIDTH)
+        sep.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
         layout.addWidget(self.min_spin)
         layout.addWidget(sep)
         layout.addWidget(self.max_spin)

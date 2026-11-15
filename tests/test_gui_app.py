@@ -112,6 +112,20 @@ class MainWindowTest(unittest.TestCase):
         self.assertIn('not found', win.results.browser.toPlainText())
         self.assertTrue(win.compute_btn.isEnabled())
 
+    def test_results_placeholder_and_copy_button_state(self):
+        """Empty/cleared ResultsView shows placeholder and disables Copy sheet."""
+        res = self.win.results
+        self.assertFalse(res.copy_btn.isEnabled())
+        self.assertIn('Compute Setup', res.browser.toPlainText())
+
+        res.show_result(GuiResult(sheet='MR2 Sample Sheet'))
+        self.assertTrue(res.copy_btn.isEnabled())
+        self.assertIn('MR2 Sample Sheet', res.browser.toPlainText())
+
+        res.clear()
+        self.assertFalse(res.copy_btn.isEnabled())
+        self.assertIn('Compute Setup', res.browser.toPlainText())
+
     def test_close_during_solve_stops_thread_cleanly(self):
         """Regression (final review): closing the window while a solve runs
         used to destroy the worker QThread while it was still running →

@@ -8,9 +8,11 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
+    QAbstractSpinBox,
     QCheckBox,
     QComboBox,
     QDoubleSpinBox,
+    QGridLayout,
     QGroupBox,
     QHBoxLayout,
     QLabel,
@@ -22,7 +24,14 @@ from PyQt6.QtWidgets import (
 )
 
 from db.interface import TRACKS_DB
-from gui.components import RangePair, install_wheel_guard
+from gui.components import (
+    INPUT_COL_WIDTH,
+    PAIR_ROW_SPACING,
+    PAIR_SEP_WIDTH,
+    PAIR_SPIN_WIDTH,
+    RangePair,
+    install_wheel_guard,
+)
 from gui.request import (
     DRIVETRAINS,
     MODES,
@@ -47,178 +56,94 @@ _SYMPTOM_DISPLAY = {
 
 
 class SetupForm(QWidget):
-    """All input panels; `collect()` → partial `GuiRequest` (Task 4 subset)."""
+    """All input panels; `collect()` → `GuiRequest`."""
 
     def __init__(self, service: TuningService, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
+        self.setObjectName('setupForm')
         self.service = service
         self._current_car: Optional[Dict[str, Any]] = None
         self._db_drivetrain_choice: Optional[str] = None
 
         root = QVBoxLayout(self)
+        root.setContentsMargins(4, 4, 10, 8)
+        root.setSpacing(12)
 
-        # ---- Vehicle group ------------------------------------------------
-        vehicle_group = QGroupBox('Vehicle')
-        vlayout = QVBoxLayout(vehicle_group)
-
-        self.car_search = QLineEdit()
-        self.car_search.setPlaceholderText('Search cars by name, maker or ID')
-        self.car_search.textChanged.connect(self._refill_cars)
-        vlayout.addWidget(self.car_search)
-
-        self.car_combo = QComboBox()
-        self.car_combo.currentIndexChanged[int].connect(self._on_car_index_changed)
-        vlayout.addWidget(self.car_combo)
-
-        swap_row = QHBoxLayout()
-        swap_hint = QLabel('Engine swap')
-        swap_hint.setObjectName('hintLabel')
-        swap_row.addWidget(swap_hint)
-        self.swap_combo = QComboBox()
-        self.swap_combo.currentIndexChanged[int].connect(self._on_swap_index_changed)
-        swap_row.addWidget(self.swap_combo)
-        vlayout.addLayout(swap_row)
-
-        self.db_info_label = QLabel()
-        self.db_info_label.setObjectName('dbInfoLabel')  # theme: secondary 12px
-        self.db_info_label.setWordWrap(True)
-        self.db_info_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        vlayout.addWidget(self.db_info_label)
-
-        root.addWidget(vehicle_group)
-
-        # ---- Tire group ---------------------------------------------------
-        tire_group = QGroupBox('Tire compound')
-        tlayout = QHBoxLayout(tire_group)
-        tire_hint = QLabel('Compound')
-        tire_hint.setObjectName('hintLabel')
-        tlayout.addWidget(tire_hint)
-        self.tire_combo = QComboBox()
-        for compound in TIRE_COMPOUNDS:
-            self.tire_combo.addItem(compound, compound)
-        self.tire_combo.setCurrentIndex(self.tire_combo.findText('SS'))
-        tlayout.addWidget(self.tire_combo)
-        root.addWidget(tire_group)
-
-        # ---- Slider ranges group -----------------------------------------
-        ranges_group = QGroupBox('In-game slider ranges')
-        rlayout = QVBoxLayout(ranges_group)
-        # max_v 2000: preseeded DF ranges in the DB reach 1700 (cars
-        # 3342/3374/3517); the old 1000 cap silently clamped prefills.
-        self.df_f = RangePair('Downforce front', kind='int', max_v=2000)
-        self.df_r = RangePair('Downforce rear', kind='int', max_v=2000)
-        self.hf = RangePair('Height front', kind='int', max_v=400)
-        self.hr = RangePair('Height rear', kind='int', max_v=400)
-        self.fn_f = RangePair('Natural frequency front', kind='float', max_v=10.0)
-        self.fn_r = RangePair('Natural frequency rear', kind='float', max_v=10.0)
-        # Damper ratio ranges (0-100%); one range clamps both front and rear.
-        self.comp_range_pair = RangePair('Damping compression', kind='int', max_v=100)
-        self.exp_range_pair = RangePair('Damping expansion', kind='int', max_v=100)
-        for pair in (self.df_f, self.df_r, self.hf, self.hr, self.fn_f, self.fn_r,
-                     self.comp_range_pair, self.exp_range_pair):
-            rlayout.addWidget(pair)
-        r_hint = QLabel('0/0 = use saved DB values (enter min and max to override)')
-        r_hint.setObjectName('hintLabel')
-        rlayout.addWidget(r_hint)
-        self.save_ranges_btn = QPushButton('Save ranges to DB')
-        self.save_ranges_btn.clicked.connect(self._on_save_ranges)
-        rlayout.addWidget(self.save_ranges_btn)
-        root.addWidget(ranges_group)
-
-        # ---- Overrides group ---------------------------------------------
-        overrides_group = QGroupBox('Build overrides')
-        olayout = QVBoxLayout(overrides_group)
-
-        self.mass_use_db = QCheckBox('Mass (use DB)')
-        self.mass_use_db.setChecked(True)
-        mass_row = QHBoxLayout()
-        mass_row.addWidget(self.mass_use_db)
-        mass_lbl = QLabel('or custom mass (kg)')
-        mass_lbl.setObjectName('hintLabel')
-        mass_row.addWidget(mass_lbl, 1)
-        self.mass_spin = QSpinBox()
-        self.mass_spin.setRange(0, 3000)
-        self.mass_spin.setEnabled(False)
-        self.mass_use_db.toggled.connect(lambda checked: self.mass_spin.setEnabled(not checked))
-        mass_row.addWidget(self.mass_spin)
-        olayout.addLayout(mass_row)
-
-        self.power_use_db = QCheckBox('Power (use DB)')
-        self.power_use_db.setChecked(True)
-        power_row = QHBoxLayout()
-        power_row.addWidget(self.power_use_db)
-        power_lbl = QLabel('or custom power (hp)')
-        power_lbl.setObjectName('hintLabel')
-        power_row.addWidget(power_lbl, 1)
-        self.power_spin = QSpinBox()
-        self.power_spin.setRange(0, 3000)
-        self.power_spin.setEnabled(False)
-        self.power_use_db.toggled.connect(lambda checked: self.power_spin.setEnabled(not checked))
-        power_row.addWidget(self.power_spin)
-        olayout.addLayout(power_row)
-
-        self.torque_use_db = QCheckBox('Torque (use DB)')
-        self.torque_use_db.setChecked(True)
-        torque_row = QHBoxLayout()
-        torque_row.addWidget(self.torque_use_db)
-        torque_lbl = QLabel('or custom torque (Nm)')
-        torque_lbl.setObjectName('hintLabel')
-        torque_row.addWidget(torque_lbl, 1)
-        self.torque_spin = QDoubleSpinBox(decimals=1)
-        self.torque_spin.setRange(0.0, 1500.0)
-        self.torque_spin.setEnabled(False)
-        self.torque_use_db.toggled.connect(lambda checked: self.torque_spin.setEnabled(not checked))
-        torque_row.addWidget(self.torque_spin)
-        olayout.addLayout(torque_row)
-
-        self.balance_use_db = QCheckBox('Weight balance (use DB)')
-        self.balance_use_db.setChecked(True)
-        balance_row = QHBoxLayout()
-        balance_row.addWidget(self.balance_use_db)
-        bal_lbl = QLabel('or front % / rear %')
-        bal_lbl.setObjectName('hintLabel')
-        balance_row.addWidget(bal_lbl, 1)
-        self.bal_f_spin = QSpinBox()
-        self.bal_f_spin.setRange(0, 100)
-        self.bal_f_spin.setEnabled(False)
-        self.bal_r_spin = QSpinBox()
-        self.bal_r_spin.setRange(0, 100)
-        self.bal_r_spin.setEnabled(False)
-        self.balance_use_db.toggled.connect(self._on_balance_use_db_toggled)
-        balance_row.addWidget(self.bal_f_spin)
-        balance_row.addWidget(self.bal_r_spin)
-        olayout.addLayout(balance_row)
-
-        drivetrain_row = QHBoxLayout()
-        dt_hint = QLabel('Drivetrain')
-        dt_hint.setObjectName('hintLabel')
-        drivetrain_row.addWidget(dt_hint, 1)
-        self.drivetrain_combo = QComboBox()
-        for dt in DRIVETRAINS:
-            self.drivetrain_combo.addItem(dt, dt)
-        drivetrain_row.addWidget(self.drivetrain_combo)
-        olayout.addLayout(drivetrain_row)
-
-        root.addWidget(overrides_group)
-
-        # ---- Calibration / Session / Symptoms groups (Task 5) -------------
+        self._build_vehicle_group(root)
+        self._build_tire_group(root)
+        self._build_ranges_group(root)
+        self._build_overrides_group(root)
         self._build_calibration_group(root)
         self._build_session_group(root)
         self._build_symptoms_group(root)
 
-        # ---- Status label --------------------------------------------------
         self.status_label = QLabel()
-        self.status_label.setObjectName('statusLabel')  # theme: ok/warn/error colors
+        self.status_label.setObjectName('statusLabel')
         self.status_label.setWordWrap(True)
         root.addWidget(self.status_label)
+        root.addStretch(1)
 
         self._install_wheel_guards()
-
-        # Initial state: full car list; selecting car 0 prefills the form.
         self._refill_cars('')
         self._refill_tracks('')
 
-    # ------------------------------------------------------------------ wiring
+    # ------------------------------------------------------- layout helpers
+
+    def _make_group(self, title: str) -> Tuple[QGroupBox, QVBoxLayout]:
+        group = QGroupBox(title)
+        layout = QVBoxLayout(group)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(8)
+        return group, layout
+
+    def _add_right_row(self, layout: QVBoxLayout, label_text: str, widget: QWidget) -> None:
+        row = QHBoxLayout()
+        row.setSpacing(8)
+        lbl = QLabel(label_text)
+        lbl.setObjectName('hintLabel')
+        row.addWidget(lbl, 1)
+        widget.setFixedWidth(INPUT_COL_WIDTH)
+        row.addWidget(widget)
+        layout.addLayout(row)
+
+    def _add_pair_row(self, layout: QVBoxLayout, label_text: str,
+                      left: QWidget, right: QWidget, sep_text: str = '/') -> None:
+        row = QHBoxLayout()
+        row.setSpacing(PAIR_ROW_SPACING)
+        lbl = QLabel(label_text)
+        lbl.setObjectName('hintLabel')
+        row.addWidget(lbl, 1)
+        self._append_pair_widgets(row, left, right, sep_text)
+        layout.addLayout(row)
+
+    def _append_pair_widgets(self, row: QHBoxLayout, left: QWidget,
+                             right: QWidget, sep_text: str) -> None:
+        left.setFixedWidth(PAIR_SPIN_WIDTH)
+        right.setFixedWidth(PAIR_SPIN_WIDTH)
+        sep = QLabel(sep_text)
+        sep.setObjectName('hintLabel')
+        sep.setFixedWidth(PAIR_SEP_WIDTH)
+        sep.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        row.addWidget(left)
+        row.addWidget(sep)
+        row.addWidget(right)
+
+    def _add_override_row(self, layout: QVBoxLayout, check_label: str,
+                          spin: QAbstractSpinBox) -> QCheckBox:
+        cb = QCheckBox(check_label)
+        cb.setChecked(True)
+        spin.setEnabled(False)
+        spin.setFixedWidth(INPUT_COL_WIDTH)
+        cb.toggled.connect(lambda checked, s=spin: s.setEnabled(not checked))
+        row = QHBoxLayout()
+        row.setSpacing(8)
+        row.addWidget(cb)
+        row.addStretch(1)
+        row.addWidget(spin)
+        layout.addLayout(row)
+        return cb
+
+    # ------------------------------------------------------- wiring
 
     def _install_wheel_guards(self) -> None:
         for cls in (QSpinBox, QDoubleSpinBox, QComboBox):
@@ -239,129 +164,198 @@ class SetupForm(QWidget):
 
     # ------------------------------------------------------- group builders
 
-    def _build_calibration_group(self, root: QVBoxLayout) -> None:
-        group = QGroupBox('Calibration')
-        layout = QVBoxLayout(group)
+    def _build_vehicle_group(self, root: QVBoxLayout) -> None:
+        group, layout = self._make_group('Vehicle')
+        self.car_search = QLineEdit()
+        self.car_search.setPlaceholderText('Search cars by name, maker or ID')
+        self.car_search.textChanged.connect(self._refill_cars)
+        layout.addWidget(self.car_search)
 
+        self.car_combo = QComboBox()
+        self.car_combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+        self.car_combo.setMinimumContentsLength(18)
+        self.car_combo.currentIndexChanged[int].connect(self._on_car_index_changed)
+        layout.addWidget(self.car_combo)
+
+        self.swap_combo = QComboBox()
+        self.swap_combo.currentIndexChanged[int].connect(self._on_swap_index_changed)
+        self._add_right_row(layout, 'Engine swap', self.swap_combo)
+
+        self.db_info_label = QLabel()
+        self.db_info_label.setObjectName('dbInfoLabel')
+        self.db_info_label.setWordWrap(True)
+        self.db_info_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        layout.addWidget(self.db_info_label)
+        root.addWidget(group)
+
+    def _build_tire_group(self, root: QVBoxLayout) -> None:
+        group, layout = self._make_group('Tire compound')
+        self.tire_combo = QComboBox()
+        for compound in TIRE_COMPOUNDS:
+            self.tire_combo.addItem(compound, compound)
+        self.tire_combo.setCurrentIndex(self.tire_combo.findText('SS'))
+        self._add_right_row(layout, 'Compound', self.tire_combo)
+        root.addWidget(group)
+
+    def _build_ranges_group(self, root: QVBoxLayout) -> None:
+        group, layout = self._make_group('In-game slider ranges')
+        # max_v 2000: preseeded DF ranges in DB reach 1700 (cars 3342/3374/3517).
+        self.df_f = RangePair('Downforce front', kind='int', max_v=2000)
+        self.df_r = RangePair('Downforce rear', kind='int', max_v=2000)
+        self.hf = RangePair('Height front', kind='int', max_v=400)
+        self.hr = RangePair('Height rear', kind='int', max_v=400)
+        self.fn_f = RangePair('Natural frequency front', kind='float', max_v=10.0)
+        self.fn_r = RangePair('Natural frequency rear', kind='float', max_v=10.0)
+        self.comp_range_pair = RangePair('Damping compression', kind='int', max_v=100)
+        self.exp_range_pair = RangePair('Damping expansion', kind='int', max_v=100)
+        for pair in (self.df_f, self.df_r, self.hf, self.hr, self.fn_f, self.fn_r,
+                     self.comp_range_pair, self.exp_range_pair):
+            layout.addWidget(pair)
+        self._append_ranges_footer(layout)
+        root.addWidget(group)
+
+    def _append_ranges_footer(self, layout: QVBoxLayout) -> None:
+        r_hint = QLabel('0/0 = use saved DB values (enter min and max to override)')
+        r_hint.setObjectName('noteLabel')
+        r_hint.setWordWrap(True)
+        layout.addWidget(r_hint)
+
+        btn_row = QHBoxLayout()
+        btn_row.addStretch(1)
+        self.save_ranges_btn = QPushButton('Save ranges to DB')
+        self.save_ranges_btn.setFixedWidth(INPUT_COL_WIDTH)
+        self.save_ranges_btn.clicked.connect(self._on_save_ranges)
+        btn_row.addWidget(self.save_ranges_btn)
+        layout.addLayout(btn_row)
+
+    def _build_overrides_group(self, root: QVBoxLayout) -> None:
+        group, layout = self._make_group('Build overrides')
+        self.mass_spin = QSpinBox()
+        self.mass_spin.setRange(0, 3000)
+        self.mass_use_db = self._add_override_row(layout, 'Use DB mass (kg)', self.mass_spin)
+
+        self.power_spin = QSpinBox()
+        self.power_spin.setRange(0, 3000)
+        self.power_use_db = self._add_override_row(layout, 'Use DB power (hp)', self.power_spin)
+
+        self.torque_spin = QDoubleSpinBox(decimals=1)
+        self.torque_spin.setRange(0.0, 1500.0)
+        self.torque_use_db = self._add_override_row(layout, 'Use DB torque (Nm)', self.torque_spin)
+
+        self._add_balance_override_row(layout)
+        self.drivetrain_combo = QComboBox()
+        for dt in DRIVETRAINS:
+            self.drivetrain_combo.addItem(dt, dt)
+        self._add_right_row(layout, 'Drivetrain', self.drivetrain_combo)
+        root.addWidget(group)
+
+    def _add_balance_override_row(self, layout: QVBoxLayout) -> None:
+        self.balance_use_db = QCheckBox('Use DB balance (F/R %)')
+        self.balance_use_db.setChecked(True)
+        self.bal_f_spin = QSpinBox()
+        self.bal_f_spin.setRange(0, 100)
+        self.bal_f_spin.setEnabled(False)
+        self.bal_r_spin = QSpinBox()
+        self.bal_r_spin.setRange(0, 100)
+        self.bal_r_spin.setEnabled(False)
+        self.balance_use_db.toggled.connect(self._on_balance_use_db_toggled)
+
+        row = QHBoxLayout()
+        row.setSpacing(PAIR_ROW_SPACING)
+        row.addWidget(self.balance_use_db)
+        row.addStretch(1)
+        self._append_pair_widgets(row, self.bal_f_spin, self.bal_r_spin, '/')
+        layout.addLayout(row)
+
+    def _build_calibration_group(self, root: QVBoxLayout) -> None:
+        group, layout = self._make_group('Calibration')
         for attr, text in (('g60_spin', 'G @ 60 km/h'),
                            ('g120_spin', 'G @ 120 km/h'),
                            ('g240_spin', 'G @ 240 km/h')):
-            row = QHBoxLayout()
-            hint = QLabel(text)
-            hint.setObjectName('hintLabel')
-            row.addWidget(hint, 1)
             spin = QDoubleSpinBox(decimals=2)
             spin.setRange(0.0, 9.0)
             spin.setSpecialValueText('')
             setattr(self, attr, spin)
             spin.valueChanged.connect(self._update_solve_gate)
-            row.addWidget(spin)
-            layout.addLayout(row)
+            self._add_right_row(layout, text, spin)
 
-        ref_row = QHBoxLayout()
-        ref_hint = QLabel('Ref downforce (front / rear)')
-        ref_hint.setObjectName('hintLabel')
-        ref_row.addWidget(ref_hint, 1)
-        # Cap matches the DF range spinboxes (2000): preseeded DB DF ranges
-        # reach 1700 (cars 3342/3374/3517), so a 1000 cap would silently
-        # clamp the downforce the user was running when measuring the Gs.
         self.gref_f_spin = QSpinBox()
         self.gref_f_spin.setRange(0, 2000)
         self.gref_r_spin = QSpinBox()
         self.gref_r_spin.setRange(0, 2000)
-        ref_row.addWidget(self.gref_f_spin)
-        ref_row.addWidget(self.gref_r_spin)
-        layout.addLayout(ref_row)
+        self._add_pair_row(layout, 'Ref downforce (F / R)',
+                           self.gref_f_spin, self.gref_r_spin, '/')
 
-        solve_row = QHBoxLayout()
-        solve_hint = QLabel('Solve')
-        solve_hint.setObjectName('hintLabel')
-        solve_row.addWidget(solve_hint, 1)
         self.solve_combo = QComboBox()
         self.solve_combo.addItem('—', '')
         for objective in SOLVE_OBJECTIVES:
             self.solve_combo.addItem(objective, objective)
-        self.solve_combo.setEnabled(False)  # gated on G-force calibration
-        solve_row.addWidget(self.solve_combo)
-        layout.addLayout(solve_row)
+        self.solve_combo.setEnabled(False)
+        self._add_right_row(layout, 'Solve', self.solve_combo)
 
         hint = QLabel('Measure peak lateral G in-game at 60/120/240 km/h '
                       'and the downforce you were running.')
-        hint.setObjectName('hintLabel')
+        hint.setObjectName('noteLabel')
         hint.setWordWrap(True)
         layout.addWidget(hint)
-
         root.addWidget(group)
         self._update_solve_gate()
 
     def _build_session_group(self, root: QVBoxLayout) -> None:
-        group = QGroupBox('Session')
-        layout = QVBoxLayout(group)
-
+        group, layout = self._make_group('Session')
         self.track_search = QLineEdit()
         self.track_search.setPlaceholderText('Search tracks by name')
         self.track_search.textChanged.connect(self._refill_tracks)
         layout.addWidget(self.track_search)
 
         self.track_combo = QComboBox()
+        self.track_combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+        self.track_combo.setMinimumContentsLength(18)
         layout.addWidget(self.track_combo)
 
-        mode_row = QHBoxLayout()
-        mode_hint = QLabel('Mode')
-        mode_hint.setObjectName('hintLabel')
-        mode_row.addWidget(mode_hint, 1)
         self.mode_combo = QComboBox()
         for mode in MODES:
             self.mode_combo.addItem(mode, mode)
-        mode_row.addWidget(self.mode_combo)
-        layout.addLayout(mode_row)
+        self._add_right_row(layout, 'Mode', self.mode_combo)
 
-        speed_row = QHBoxLayout()
-        speed_hint = QLabel('Speed (km/h)')
-        speed_hint.setObjectName('hintLabel')
-        speed_row.addWidget(speed_hint, 1)
         self.speed_spin = QDoubleSpinBox(decimals=1)
         self.speed_spin.setRange(30.0, 400.0)
         self.speed_spin.setValue(240.0)
-        speed_row.addWidget(self.speed_spin)
-        layout.addLayout(speed_row)
+        self._add_right_row(layout, 'Speed (km/h)', self.speed_spin)
 
+        checks_row = QHBoxLayout()
+        checks_row.setSpacing(12)
         self.widebody_check = QCheckBox('Widebody kit')
-        layout.addWidget(self.widebody_check)
         self.controller_check = QCheckBox('Controller driving')
-        layout.addWidget(self.controller_check)
-
+        checks_row.addWidget(self.widebody_check, 1)
+        checks_row.addWidget(self.controller_check, 1)
+        layout.addLayout(checks_row)
         root.addWidget(group)
 
     def _build_symptoms_group(self, root: QVBoxLayout) -> None:
-        group = QGroupBox('Symptoms & stability')
-        layout = QVBoxLayout(group)
-
+        group, layout = self._make_group('Symptoms && stability')
+        grid = QGridLayout()
+        grid.setHorizontalSpacing(14)
+        grid.setVerticalSpacing(6)
         self.symptom_checks: Dict[str, QCheckBox] = {}
-        for key in SYMPTOMS:
+        for idx, key in enumerate(SYMPTOMS):
             check = QCheckBox(_SYMPTOM_DISPLAY[key])
             self.symptom_checks[key] = check
-            layout.addWidget(check)
+            grid.addWidget(check, idx // 2, idx % 2)
+        layout.addLayout(grid)
 
         stab_hint = QLabel('Stability (low / high speed): −1.00 understeer … +1.00 oversteer')
-        stab_hint.setObjectName('hintLabel')
+        stab_hint.setObjectName('noteLabel')
         stab_hint.setWordWrap(True)
         layout.addWidget(stab_hint)
 
-        stab_row = QHBoxLayout()
-        stab_lbl = QLabel('Low / High')
-        stab_lbl.setObjectName('hintLabel')
-        stab_row.addWidget(stab_lbl, 1)
         self.stab_low_spin = QDoubleSpinBox(decimals=2)
         self.stab_low_spin.setRange(-1.0, 1.0)
         self.stab_low_spin.setSpecialValueText('')
         self.stab_high_spin = QDoubleSpinBox(decimals=2)
         self.stab_high_spin.setRange(-1.0, 1.0)
         self.stab_high_spin.setSpecialValueText('')
-        stab_row.addWidget(self.stab_low_spin)
-        stab_row.addWidget(self.stab_high_spin)
-        layout.addLayout(stab_row)
-
+        self._add_pair_row(layout, 'Low / High', self.stab_low_spin, self.stab_high_spin, '/')
         root.addWidget(group)
 
     # ------------------------------------------------------- collect helpers

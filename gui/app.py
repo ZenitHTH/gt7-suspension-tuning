@@ -51,18 +51,24 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('GT7 Suspension Tuner')
 
         central = QWidget()
+        central.setObjectName('centralPane')
         root = QVBoxLayout(central)
-        root.setContentsMargins(12, 12, 12, 12)
-        root.setSpacing(10)
+        root.setContentsMargins(14, 14, 14, 14)
+        root.setSpacing(12)
 
         self.form = SetupForm(self.service)
         self.results = ResultsView()
+        root.addWidget(self._build_splitter(), 1)
+        root.addLayout(self._build_bottom_bar())
+        self.setCentralWidget(central)
 
+    def _build_splitter(self) -> QSplitter:
         scroll = QScrollArea()
         scroll.setWidget(self.form)
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
-        scroll.setMinimumWidth(380)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setMinimumWidth(450)
 
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.setHandleWidth(6)
@@ -70,20 +76,21 @@ class MainWindow(QMainWindow):
         splitter.addWidget(self.results)
         splitter.setStretchFactor(0, 0)
         splitter.setStretchFactor(1, 1)
-        splitter.setSizes([400, 1000])  # design: sheet pane dominates
-        root.addWidget(splitter, 1)
+        splitter.setSizes([470, 870])
+        return splitter
 
+    def _build_bottom_bar(self) -> QHBoxLayout:
         bar = QHBoxLayout()
+        bar.setSpacing(12)
         self.compute_btn = QPushButton('Compute Setup')
-        self.compute_btn.setObjectName('computeButton')  # theme: accent button
+        self.compute_btn.setObjectName('computeButton')
         self.compute_btn.clicked.connect(self._on_compute)
         bar.addWidget(self.compute_btn)
         self.status = QLabel()
         self.status.setObjectName('statusLabel')
+        self.status.setWordWrap(True)
         bar.addWidget(self.status, 1)
-        root.addLayout(bar)
-
-        self.setCentralWidget(central)
+        return bar
 
     # ------------------------------------------------------------- status
 
@@ -155,46 +162,19 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------- close
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        """Only close once the solve thread has *stopped* (bounded wait).
-
-        Destroying the window — and its worker ``QThread`` — while the solve
-        is still running aborts the process (Qt qFatal: ``QThread:
-        Destroyed while thread is still running``). When a solve is in
-        flight: post ``quit()`` to the thread's event loop, then poll
-        (``wait()`` + ``processEvents()``) up to ``_CLOSE_WAIT_S`` —
-        processing events is what delivers the queued ``finished`` /
-        ``thread.finished`` signals and thereby clears ``_in_flight``; only
-        then is the thread provably stopped. If the bound is exceeded the
-        event is ignored: the window stays open until the solve finishes
-        and a subsequent close succeeds. Re-entrancy-safe: a second
-        closeEvent while the first is polling simply ignores again.
-        (Note: with the offscreen platform the `processEvents()` calls can
-        themselves block until the in-flight solve finishes, so the bound
-        is enforced between event-passes; on real platforms the event
-        passes are non-blocking and the bound holds strictly.)
-        """
+        """Only close once the solve thread has *stopped* (bounded wait)."""
         if not self._in_flight:
             event.accept()
             return
-        if self._closing:  # re-entrant close while the first is polling
+        if self._closing:
             event.ignore()
             return
         self._closing = True
         self._set_status('Solve in progress — finishing before close…', 'warn')
         try:
-            deadline = time.monotonic() + _CLOSE_WAIT_S
-            app = QApplication.instance()
-            while self._in_flight and time.monotonic() < deadline:
-                thread = self._thread
-                if thread is not None and thread.isRunning():
-                    thread.quit()  # unblock the loop once worker.run() ends
-                    if thread.wait(50) and app is not None:
-                        app.processEvents()  # deliver the queued finished
-                if app is not None:
-                    app.processEvents()
-                time.sleep(0.005)  # GIL window: let the worker thread run
+            self._wait_for_thread()
             if self._in_flight:
-                event.ignore()  # bound exceeded: keep the window open
+                event.ignore()
             else:
                 self._thread = None
                 self._worker = None
@@ -202,18 +182,26 @@ class MainWindow(QMainWindow):
         finally:
             self._closing = False
 
+    def _wait_for_thread(self) -> None:
+        deadline = time.monotonic() + _CLOSE_WAIT_S
+        app = QApplication.instance()
+        while self._in_flight and time.monotonic() < deadline:
+            thread = self._thread
+            if thread is not None and thread.isRunning():
+                thread.quit()
+                if thread.wait(50) and app is not None:
+                    app.processEvents()
+            if app is not None:
+                app.processEvents()
+            time.sleep(0.005)
+
 
 def main(auto_quit: int = 0) -> int:
-    """Create the app, apply the theme, show the window, run the event loop.
-
-    `auto_quit` (ms): when > 0, schedule app.quit via QTimer.singleShot so the
-    window closes by itself (used by the smoke test; `__main__` passes 0 for
-    normal use, optionally via the GT7_GUI_AUTO_QUIT_MS env var).
-    """
+    """Create the app, apply the theme, show the window, run the event loop."""
     app = QApplication([])
     gui.theme.apply(app)
     win = MainWindow()
-    win.resize(1400, 900)
+    win.resize(1340, 860)
     win.show()
     if auto_quit > 0:
         QTimer.singleShot(auto_quit, app.quit)

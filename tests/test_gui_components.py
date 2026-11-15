@@ -68,6 +68,19 @@ class RangePairTest(unittest.TestCase):
         pair.max_spin.setValue(200)
         self.assertEqual(pair.value(), (0, 200))
 
+    def test_range_pair_uniform_spin_widths(self):
+        # Int and float RangePairs must share identical spinbox widths so columns align.
+        df = RangePair('Downforce', kind='int', max_v=2000)
+        hf = RangePair('Height', kind='int', max_v=400)
+        fn = RangePair('Freq', kind='float', max_v=10.0)
+        widths = {
+            p.min_spin.minimumWidth() for p in (df, hf, fn)
+        } | {
+            p.max_spin.minimumWidth() for p in (df, hf, fn)
+        }
+        self.assertEqual(len(widths), 1)
+        self.assertGreaterEqual(next(iter(widths)), 80)
+
 
 if __name__ == '__main__':
     unittest.main()

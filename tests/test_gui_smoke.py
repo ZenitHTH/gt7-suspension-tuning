@@ -37,7 +37,7 @@ class GuiSmokeTest(unittest.TestCase):
 
     def test_theme_qss_uses_design_tokens(self):
         # Theme guard: key Design Spec token literals must survive any edit.
-        for token in ('#1b1d23', '#e5484d', 'monospace'):
+        for token in ('#1b1d23', '#14161a', '#e5484d', 'monospace'):
             self.assertIn(token, gui.theme.QSS, f'missing design token {token!r}')
         qss_lines = [line for line in gui.theme.QSS.splitlines() if line.strip()]
         self.assertLessEqual(len(qss_lines), 70, 'QSS must stay <= 70 lines')

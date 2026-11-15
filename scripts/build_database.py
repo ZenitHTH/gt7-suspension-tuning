@@ -120,6 +120,41 @@ def fetch_upstream():
         except Exception as e:
             print(f'  ✗ Failed {fname}: {e}')
 
+
+def _load_existing_sliders(existing_cars_path: str) -> Dict[str, Dict[str, Any]]:
+    """Load non-empty saved slider_ranges mapped by car ID from existing master JSON."""
+    if not existing_cars_path or not os.path.exists(existing_cars_path):
+        return {}
+    try:
+        with open(existing_cars_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(data, list):
+        return {}
+    return {
+        str(c['id']): c['slider_ranges']
+        for c in data
+        if isinstance(c, dict) and c.get('id') and isinstance(c.get('slider_ranges'), dict) and c['slider_ranges']
+    }
+
+
+def merge_existing_and_patches(master_cars: List[Dict[str, Any]], existing_cars_path: str) -> List[Dict[str, Any]]:
+    """Preserve saved slider_ranges from existing DB and apply authoritative patch_db corrections."""
+    try:
+        from scripts.patch_db import apply_car_patches
+    except ImportError:
+        from patch_db import apply_car_patches
+
+    saved_sliders = _load_existing_sliders(existing_cars_path)
+    for car in master_cars:
+        cid = str(car.get('id', ''))
+        if cid in saved_sliders:
+            car['slider_ranges'] = saved_sliders[cid]
+    patched_cars, _ = apply_car_patches(master_cars)
+    return patched_cars
+
+
 def build_database():
     """Process, link, and build master JSON databases."""
     print('🔨 Building GT7 Master Databases...')
@@ -487,8 +522,12 @@ def build_database():
             entry['grip_modifier'] = grip_modifier
         master_tracks.append(entry)
 
+    # Merge saved slider_ranges & authoritative patch_db overrides
+    cars_master_path = os.path.join(DATA_DIR, 'cars_master.json')
+    master_cars = merge_existing_and_patches(master_cars, cars_master_path)
+
     # Write output
-    with open(os.path.join(DATA_DIR, 'cars_master.json'), 'w', encoding='utf-8') as f:
+    with open(cars_master_path, 'w', encoding='utf-8') as f:
         json.dump(master_cars, f, indent=2, ensure_ascii=False)
 
     with open(os.path.join(DATA_DIR, 'engine_swaps_master.json'), 'w', encoding='utf-8') as f:

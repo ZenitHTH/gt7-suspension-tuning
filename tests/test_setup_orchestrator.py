@@ -113,6 +113,33 @@ class TestSetupOrchestrator(unittest.TestCase):
         self.assertGreaterEqual(rh['front'], 80)
         self.assertGreaterEqual(rh['rear'], 85)
 
+    def test_build_database_merge_preserves_sliders_and_applies_patches(self):
+        import json
+        import tempfile
+        from scripts.build_database import merge_existing_and_patches
+        master = [
+            {'id': '3342', 'name': 'F1500T-A', 'mass_kg': 540, 'drivetrain': 'MR',
+             'engine': {'power_hp': 1000, 'torque_nm': 658.2},
+             'balance': {'front_pct': 40, 'rear_pct': 60, 'ratio_str': '40:60'}},
+            {'id': '3605', 'name': 'Escudo', 'mass_kg': None, 'drivetrain': '4WD',
+             'engine': {'power_hp': None}},
+            {'id': '9999', 'name': 'Custom Slider Car', 'mass_kg': 1290, 'drivetrain': 'RR',
+             'engine': {'power_hp': 381}},
+        ]
+        existing = [{'id': '9999', 'slider_ranges': {'df_front': [50, 200], 'df_rear': [140, 290]}}]
+        with tempfile.NamedTemporaryFile('w', suffix='.json', delete=False, encoding='utf-8') as f:
+            json.dump(existing, f)
+            tmp_path = f.name
+        try:
+            merged = merge_existing_and_patches(master, tmp_path)
+            by_id = {c['id']: c for c in merged}
+            self.assertEqual(by_id['9999'].get('slider_ranges'), {'df_front': [50, 200], 'df_rear': [140, 290]})
+            self.assertEqual(by_id['3342']['engine']['power_hp'], 986)
+            self.assertEqual(by_id['3605']['mass_kg'], 1030)
+            self.assertEqual(by_id['3605']['engine']['power_hp'], 670)
+        finally:
+            os.remove(tmp_path)
+
 
 if __name__ == '__main__':
     unittest.main()

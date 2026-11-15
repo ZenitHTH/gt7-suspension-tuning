@@ -100,6 +100,19 @@ class TestSetupOrchestrator(unittest.TestCase):
         self.assertEqual(res['telemetry'].get('tire_switched_from'), 'CS')
         self.assertAlmostEqual(res['telemetry']['tire_friction_mu'], 1.00)
 
+    def test_symptom_trim_clamps_split_front_rear_height_ranges(self):
+        car = {'name': 'Low Slider Car', 'mass_kg': 1200, 'drivetrain': 'FR', 'power_hp': 300, 'torque_nm': 350}
+        res = setup.build_setup(
+            car=car, tire='RM',
+            height_front_range=(80, 95), height_rear_range=(85, 100),
+            symptoms=['bottoming', 'curb_hop', 'entry_push']
+        )
+        rh = res['parameters']['ride_height_mm']
+        self.assertLessEqual(rh['front'], 95)
+        self.assertLessEqual(rh['rear'], 100)
+        self.assertGreaterEqual(rh['front'], 80)
+        self.assertGreaterEqual(rh['rear'], 85)
+
 
 if __name__ == '__main__':
     unittest.main()

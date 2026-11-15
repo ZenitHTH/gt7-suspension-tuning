@@ -7,12 +7,8 @@ and dynamic brake balance controller setting.
 
 import math
 from typing import Tuple
-import os
-import sys
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(BASE_DIR, 'scripts'))
-from gt7_constants import TIRE_MU_MAP
+from constants import TIRE_MU_MAP
 
 
 def get_tire_mu(compound: str) -> float:

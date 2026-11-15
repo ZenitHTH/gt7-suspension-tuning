@@ -7,12 +7,8 @@ and solves closed-form suspension equilibrium for optimal clearances and dynamic
 
 import math
 from typing import Dict, Tuple, Optional, Any
-import os
-import sys
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(BASE_DIR, 'scripts'))
-from gt7_constants import STROKE_CLEARANCE_FLOOR_MM
+from constants import STROKE_CLEARANCE_FLOOR_MM
 from lib.formulas import (
     normalize_group,
     calculate_wheel_rate,

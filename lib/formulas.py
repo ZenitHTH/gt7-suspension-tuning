@@ -7,12 +7,8 @@ longitudinal braking pitch dive, lateral cornering roll deflection, and aerodyna
 
 import math
 from typing import Tuple, Optional, Dict
-import os
-import sys
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(BASE_DIR, 'scripts'))
-from gt7_constants import CHASSIS_RATIOS, AERO_REFERENCE_SPEED_KMH
+from constants import CHASSIS_RATIOS, AERO_REFERENCE_SPEED_KMH
 from lib.tire_wear import calculate_tire_wear_index
 
 

@@ -5,12 +5,8 @@ Applies handling symptom adjustments and in-game stability index corrections.
 """
 
 from typing import Dict, Tuple, Optional, Any, List
-import os
-import sys
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(BASE_DIR, 'scripts'))
-from gt7_constants import SLIDER_BOUNDS
+from constants import SLIDER_BOUNDS
 from lib.quick_trims import build_quick_trims
 
 
@@ -120,18 +116,27 @@ def _clamp_suspension_sliders(p: Dict[str, Any]) -> None:
     p['damping_expansion_pct']['rear'] = max(exp_min, min(exp_max, p['damping_expansion_pct']['rear']))
 
 
-def _clamp_ride_height_range(p: Dict[str, Any]) -> None:
-    """Clamp ride height within explicit range string if present."""
-    rh = p.get('ride_height_mm', {})
-    if 'range' not in rh:
-        return
+def _parse_bounds(spec: Any) -> Optional[Tuple[int, int]]:
+    """Parse 'lo-hi' or 'lo-hi mm' bound string into integer (lo, hi)."""
+    if not spec:
+        return None
     try:
-        parts = [int(x) for x in str(rh['range']).split('-')]
-        if len(parts) == 2:
-            rh['front'] = max(parts[0], min(parts[1], rh['front']))
-            rh['rear'] = max(parts[0], min(parts[1], rh['rear']))
-    except Exception:
-        pass
+        cleaned = str(spec).replace('mm', '').strip()
+        parts = [int(x.strip()) for x in cleaned.split('-')]
+        return (parts[0], parts[1]) if len(parts) == 2 else None
+    except (ValueError, TypeError):
+        return None
+
+
+def _clamp_ride_height_range(p: Dict[str, Any]) -> None:
+    """Clamp ride height within unified ('range') or split ('range_f'/'range_r') bounds."""
+    rh = p.get('ride_height_mm', {})
+    f_bounds = _parse_bounds(rh.get('range_f') or rh.get('range'))
+    r_bounds = _parse_bounds(rh.get('range_r') or rh.get('range'))
+    if f_bounds and 'front' in rh:
+        rh['front'] = max(f_bounds[0], min(f_bounds[1], rh['front']))
+    if r_bounds and 'rear' in rh:
+        rh['rear'] = max(r_bounds[0], min(r_bounds[1], rh['rear']))
 
 
 def _clamp_drivetrain_and_brakes(p: Dict[str, Any], drivetrain: str, group: str) -> None:

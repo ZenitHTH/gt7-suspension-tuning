@@ -20,12 +20,15 @@ from PyQt6.QtWidgets import (  # noqa: E402
     QWidget,
 )
 
+from gui.brand_central import BrandCentralDialog  # noqa: E402
 from gui.picker_dialog import (  # noqa: E402
     StepPickerDialog,
     clear_layout,
     make_picker_button,
     picker_stylesheet,
 )
+from gui.service import TuningService  # noqa: E402
+from gui.world_circuits import WorldCircuitsDialog  # noqa: E402
 
 _APP: Optional[QApplication] = None
 
@@ -37,6 +40,36 @@ def _ensure_app() -> QApplication:
         existing = QApplication.instance()
         _APP = existing if isinstance(existing, QApplication) else QApplication([])
     return _APP
+
+
+def _pump(app: QApplication) -> None:
+    """Process pending Qt layout events so widget geometries settle."""
+    for _ in range(3):
+        app.processEvents()
+
+
+def _find_card(page: QWidget, prefix: str) -> QPushButton:
+    """Find first picker button inside `page` whose title equals or starts with `prefix`."""
+    for btn in page.findChildren(QPushButton):
+        lbl = btn.findChild(QLabel, 'pickerCardTitle')
+        if lbl is not None and (lbl.text() == prefix or lbl.text().startswith(prefix)):
+            return btn
+    raise AssertionError(f'No card matching {prefix!r}')
+
+
+def _assert_no_clipped_cards(case: unittest.TestCase, page: QWidget) -> int:
+    """Assert every visible card button and inner label fits its heightForWidth."""
+    buttons = [b for b in page.findChildren(QPushButton) if b.isVisible()]
+    case.assertGreater(len(buttons), 0)
+    for btn in buttons:
+        lbl = btn.findChild(QLabel, 'pickerCardTitle')
+        title = lbl.text() if lbl is not None else btn.objectName()
+        case.assertGreaterEqual(btn.height(), btn.heightForWidth(btn.width()), title)
+        for child_lbl in [c for c in btn.findChildren(QLabel) if c.isVisible()]:
+            case.assertGreaterEqual(
+                child_lbl.height(), child_lbl.heightForWidth(child_lbl.width()), child_lbl.text()
+            )
+    return len(buttons)
 
 
 class _DummyPickerDialog(StepPickerDialog):
@@ -154,6 +187,59 @@ class StepPickerDialogTest(unittest.TestCase):
         qss = picker_stylesheet()
         for token in ('#1b1d23', '#23262e', '#14161a', '#3a3f4d', '#e5484d', '#ffffff', '#9aa3b5'):
             self.assertIn(token, qss)
+
+
+class PickerLayoutRegressionTest(unittest.TestCase):
+    """Reproduction tests for wrapped card clipping and long breadcrumb overflow."""
+
+    def test_brand_central_single_char_search_no_clipped_cards(self) -> None:
+        app = _ensure_app()
+        d = BrandCentralDialog(TuningService())
+        d.resize(780, 560)
+        d.show()
+        _pump(app)
+        d.search_edit.setText('a')
+        _pump(app)
+        count = _assert_no_clipped_cards(self, d.stack.widget(3))
+        self.assertGreaterEqual(count, 500)
+        d.close()
+
+    def test_brand_central_min_size_europe_and_genesis_no_clipping(self) -> None:
+        app = _ensure_app()
+        d = BrandCentralDialog(TuningService())
+        d.resize(620, 440)
+        d.show()
+        _pump(app)
+        _find_card(d.stack.widget(0), 'Europe').click()
+        _pump(app)
+        self.assertGreater(_assert_no_clipped_cards(self, d.stack.widget(1)), 0)
+        d.back_btn.click()
+        _pump(app)
+        _find_card(d.stack.widget(0), 'Asia-Pacific').click()
+        _pump(app)
+        _find_card(d.stack.widget(1), 'Genesis (').click()
+        _pump(app)
+        self.assertGreater(_assert_no_clipped_cards(self, d.stack.widget(2)), 0)
+        _find_card(d.stack.widget(2), 'Genesis X Gran Racer Vision Gran Turismo Concept')
+        d.close()
+
+    def test_world_circuits_long_breadcrumb_preserves_min_width(self) -> None:
+        app = _ensure_app()
+        d = WorldCircuitsDialog(TuningService())
+        d.show()
+        _pump(app)
+        _find_card(d.stack.widget(0), 'Asia-Oceania').click()
+        _pump(app)
+        _find_card(d.stack.widget(1), 'SUGO International Racing Course').click()
+        d.resize(620, 440)
+        _pump(app)
+        self.assertLessEqual(d.minimumSizeHint().width(), 620)
+        self.assertGreaterEqual(d.search_edit.width(), 220)
+        self.assertGreaterEqual(d.back_btn.width(), d.back_btn.minimumSizeHint().width())
+        crumbs = d.breadcrumb_bar.findChildren(QPushButton)
+        self.assertEqual([b.text() for b in crumbs], ['World Circuits', 'Asia-Oceania', 'SUGO International Racing Course'])
+        self.assertEqual(crumbs[-1].toolTip(), 'SUGO International Racing Course')
+        d.close()
 
 
 if __name__ == '__main__':

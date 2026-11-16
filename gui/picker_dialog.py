@@ -3,25 +3,18 @@ from typing import Callable, List, Optional, Sequence, Tuple
 
 from PyQt6.QtCore import QSize, Qt
 from PyQt6.QtWidgets import (
-    QDialog, QFrame, QHBoxLayout, QLabel, QLayout, QLineEdit,
-    QPushButton, QScrollArea, QSizePolicy, QStackedWidget, QVBoxLayout, QWidget,
+    QDialog, QFrame, QHBoxLayout, QLabel, QLayout, QLineEdit, QPushButton, QScrollArea,
+    QSizePolicy, QStackedWidget, QVBoxLayout, QWidget,
 )
 
 _PICKER_QSS = (
-    'QDialog#stepPickerDialog, QWidget#pickerPage, QScrollArea { background: #1b1d23; color: #ffffff; border: none; }\n'
-    'QLineEdit#pickerSearchEdit { background: #14161a; color: #ffffff; border: 1px solid #3a3f4d; border-radius: 5px; padding: 5px 10px; min-height: 28px; }\n'
-    'QLineEdit#pickerSearchEdit:focus { border: 1px solid #e5484d; }\n'
-    'QPushButton#pickerBackBtn { background: #23262e; color: #ffffff; border: 1px solid #3a3f4d; border-radius: 6px; padding: 6px 12px; font-weight: bold; }\n'
-    'QPushButton#pickerBackBtn:disabled { color: #9aa3b5; background: #14161a; border-color: #3a3f4d; }\n'
-    'QPushButton#pickerCrumbBtn, QPushButton#pickerCrumbCurrent { background: transparent; border: none; padding: 4px 6px; font-size: 13px; color: #9aa3b5; }\n'
-    'QPushButton#pickerCrumbBtn:hover { color: #ffffff; text-decoration: underline; }\n'
-    'QPushButton#pickerCrumbCurrent, QLabel#pickerCardTitle, QLabel#pickerCountryLabel { color: #ffffff; font-weight: bold; background: transparent; }\n'
-    'QLabel#pickerCrumbSep, QLabel#pickerCardSubtitle, QLabel#pickerEmptyLabel { color: #9aa3b5; background: transparent; }\n'
-    'QLabel#pickerCrumbSep, QLabel#pickerCardTitle, QLabel#pickerCountryLabel { font-size: 13px; }\n'
-    'QLabel#pickerCardSubtitle { font-size: 11.5px; } QLabel#pickerEmptyLabel { font-size: 13px; padding: 24px; }\n'
-    'QPushButton#pickerCard, QPushButton#pickerContinentCard { background: #23262e; color: #ffffff; border: 1px solid #3a3f4d; border-radius: 8px; padding: 2px; text-align: left; }\n'
-    'QPushButton#pickerBackBtn:hover, QPushButton#pickerCard:hover, QPushButton#pickerContinentCard:hover { border-color: #e5484d; background: #23262e; }\n'
-    'QPushButton#pickerCard:pressed, QPushButton#pickerContinentCard:pressed { background: #14161a; border-color: #e5484d; }\n'
+    'QDialog#stepPickerDialog, QWidget#pickerPage, QWidget#pickerCrumbBar, QScrollArea { background: #1b1d23; color: #ffffff; border: none; }\n'
+    'QLineEdit#pickerSearchEdit { background: #14161a; color: #ffffff; border: 1px solid #3a3f4d; border-radius: 5px; padding: 5px 10px; min-height: 28px; } QLineEdit#pickerSearchEdit:focus { border: 1px solid #e5484d; }\n'
+    'QPushButton#pickerBackBtn { background: #23262e; color: #ffffff; border: 1px solid #3a3f4d; border-radius: 6px; padding: 6px 12px; font-weight: bold; } QPushButton#pickerBackBtn:disabled { color: #9aa3b5; background: #14161a; border-color: #3a3f4d; }\n'
+    'QPushButton#pickerCrumbBtn, QPushButton#pickerCrumbCurrent { background: transparent; border: none; padding: 4px 6px; font-size: 13px; color: #9aa3b5; } QPushButton#pickerCrumbBtn:hover { color: #ffffff; text-decoration: underline; }\n'
+    'QPushButton#pickerCrumbCurrent, QLabel#pickerCardTitle, QLabel#pickerCountryLabel { color: #ffffff; font-weight: bold; background: transparent; font-size: 13px; } QLabel#pickerCrumbSep, QLabel#pickerCardSubtitle, QLabel#pickerEmptyLabel { color: #9aa3b5; background: transparent; }\n'
+    'QLabel#pickerCrumbSep { font-size: 13px; } QLabel#pickerCardSubtitle { font-size: 11.5px; } QLabel#pickerEmptyLabel { font-size: 13px; padding: 24px; } QPushButton#pickerCard, QPushButton#pickerContinentCard { background: #23262e; color: #ffffff; border: 1px solid #3a3f4d; border-radius: 8px; padding: 2px; text-align: left; }\n'
+    'QPushButton#pickerBackBtn:hover, QPushButton#pickerCard:hover, QPushButton#pickerContinentCard:hover { border-color: #e5484d; background: #23262e; } QPushButton#pickerCard:pressed, QPushButton#pickerContinentCard:pressed { background: #14161a; border-color: #e5484d; }\n'
 )
 
 
@@ -58,8 +51,7 @@ class _PickerCardButton(QPushButton):
         return self.layout().heightForWidth(width) if self.layout() is not None else super().heightForWidth(width)
 
 
-def _configure_button(btn: QPushButton, object_name: str,
-                      callback: Optional[Callable[[], None]] = None) -> QPushButton:
+def _configure_button(btn: QPushButton, object_name: str, callback: Optional[Callable[[], None]] = None) -> QPushButton:
     btn.setObjectName(object_name)
     btn.setAutoDefault(False)
     btn.setDefault(False)
@@ -69,11 +61,12 @@ def _configure_button(btn: QPushButton, object_name: str,
     return btn
 
 
-def make_picker_button(title: str, subtitle: str = '',
-                       object_name: str = 'pickerCard') -> QPushButton:
+def make_picker_button(title: str, subtitle: str = '', object_name: str = 'pickerCard') -> QPushButton:
     """Build a pure-text card button with title and optional muted subtitle."""
     btn = _configure_button(_PickerCardButton(), object_name)
-    btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+    policy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+    policy.setHeightForWidth(True)
+    btn.setSizePolicy(policy)
     btn.setAccessibleName(f'{title} — {subtitle}' if subtitle else title)
     box = QVBoxLayout(btn)
     box.setContentsMargins(12, 10, 12, 10)
@@ -86,24 +79,32 @@ def make_picker_button(title: str, subtitle: str = '',
     return btn
 
 
-def _add_scroll_page(stack: QStackedWidget) -> QVBoxLayout:
+def _frameless_scroll(widget: QWidget, v_policy: Qt.ScrollBarPolicy) -> QScrollArea:
     scroll = QScrollArea(widgetResizable=True, frameShape=QFrame.Shape.NoFrame)
     scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-    page = QWidget(objectName='pickerPage')
-    layout = QVBoxLayout(page)
+    scroll.setVerticalScrollBarPolicy(v_policy)
+    scroll.setWidget(widget)
+    return scroll
+
+
+def _add_scroll_page(stack: QStackedWidget) -> QVBoxLayout:
+    outer = QWidget(objectName='pickerPage')
+    inner = QWidget(outer)
+    layout = QVBoxLayout(inner)
     layout.setContentsMargins(4, 4, 8, 4)
     layout.setSpacing(12)
-    layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-    scroll.setWidget(page)
-    stack.addWidget(scroll)
+    outer_box = QVBoxLayout(outer)
+    outer_box.setContentsMargins(0, 0, 0, 0)
+    outer_box.addWidget(inner)
+    outer_box.addStretch(1)
+    stack.addWidget(_frameless_scroll(outer, Qt.ScrollBarPolicy.ScrollBarAsNeeded))
     return layout
 
 
 class StepPickerDialog(QDialog):
     """Shared modal 3-step picker shell with breadcrumbs, Back, and live search."""
 
-    def __init__(self, title: str, root_crumb: str, search_placeholder: str,
-                 parent: Optional[QWidget] = None) -> None:
+    def __init__(self, title: str, root_crumb: str, search_placeholder: str, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent, objectName='stepPickerDialog', windowTitle=title, modal=True)
         self._active_step = 0
         self.resize(780, 560)
@@ -128,11 +129,14 @@ class StepPickerDialog(QDialog):
         header.setSpacing(10)
         self.back_btn = _configure_button(QPushButton('← Back'), 'pickerBackBtn', self._handle_back_clicked)
         header.addWidget(self.back_btn)
-        self.breadcrumb_bar = QWidget()
+        self.breadcrumb_bar = QWidget(objectName='pickerCrumbBar')
         self.breadcrumb_layout = QHBoxLayout(self.breadcrumb_bar)
         self.breadcrumb_layout.setContentsMargins(0, 0, 0, 0)
         self.breadcrumb_layout.setSpacing(4)
-        header.addWidget(self.breadcrumb_bar, 1)
+        crumb_scroll = _frameless_scroll(self.breadcrumb_bar, Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        crumb_scroll.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
+        crumb_scroll.setFixedHeight(self.back_btn.sizeHint().height())
+        header.addWidget(crumb_scroll, 1)
         self.search_edit = QLineEdit(objectName='pickerSearchEdit', placeholderText=search_placeholder)
         self.search_edit.setFixedWidth(230)
         self.search_edit.textChanged.connect(self._handle_search_text)
@@ -147,7 +151,7 @@ class StepPickerDialog(QDialog):
             if idx > 0:
                 self.breadcrumb_layout.addWidget(QLabel('›', objectName='pickerCrumbSep'))
             obj = 'pickerCrumbCurrent' if idx == last_idx else 'pickerCrumbBtn'
-            self.breadcrumb_layout.addWidget(_configure_button(QPushButton(label), obj, callback))
+            self.breadcrumb_layout.addWidget(_configure_button(QPushButton(label, toolTip=label), obj, callback))
         self.breadcrumb_layout.addStretch(1)
 
     def step_container(self, step_index: int) -> QVBoxLayout:

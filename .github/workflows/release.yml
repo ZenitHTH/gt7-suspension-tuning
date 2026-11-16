@@ -40,9 +40,10 @@ jobs:
             VER="${GITHUB_REF_NAME#v}"
           else
             # Auto-increment on every push to main: patch-bump the highest
-            # existing vX.Y.Z tag; when no tags exist yet, fall back to the
-            # VERSION file. (Releases are created by this workflow, so the
-            # tag list is the single source of truth for the next number.)
+            # existing vX.Y.Z tag, or promote to VERSION when VERSION is
+            # explicitly bumped ahead of the next patch (e.g. 0.1.12 -> 0.2.0).
+            file_ver="$(tr -d '[:space:]' < VERSION)"
+            file_ver="${file_ver#v}"
             latest="$(git ls-remote --tags origin \
               | sed -n 's@.*refs/tags/v\([0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}\)$@\1@p' \
               | sort -V | tail -n 1)"
@@ -51,10 +52,16 @@ jobs:
               rest="${latest#*.}"
               minor="${rest%%.*}"
               patch="${rest#*.}"
-              VER="${major}.${minor}.$((patch + 1))"
-              echo "Auto-incrementing from v${latest} -> v${VER}"
+              next_patch="${major}.${minor}.$((patch + 1))"
+              if [[ "$file_ver" != "$latest" ]] && [[ "$(printf '%s\n%s\n' "$file_ver" "$next_patch" | sort -V | tail -n 1)" == "$file_ver" ]]; then
+                VER="$file_ver"
+                echo "Using bumped VERSION ${VER} (overriding next patch v${next_patch})"
+              else
+                VER="$next_patch"
+                echo "Auto-incrementing from v${latest} -> v${VER}"
+              fi
             else
-              VER="$(tr -d '[:space:]' < VERSION)"
+              VER="$file_ver"
             fi
           fi
           VER="${VER#v}"

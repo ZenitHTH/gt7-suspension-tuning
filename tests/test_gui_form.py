@@ -3,6 +3,7 @@ calibration/session/symptoms, collect(), validate()."""
 import os
 import sys
 import unittest
+from typing import Optional
 from unittest import mock
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -11,10 +12,12 @@ sys.path.insert(0, BASE_DIR)
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 os.environ.setdefault('QT_LOGGING_RULES', 'qt.qpa.fonts.warning=false')
 
-from PyQt6.QtWidgets import QApplication  # noqa: E402
+from PyQt6.QtWidgets import QApplication, QDialog  # noqa: E402
 
+from gui.brand_central import BrandCentralDialog  # noqa: E402
 from gui.form import SetupForm  # noqa: E402
 from gui.service import TuningService  # noqa: E402
+from gui.world_circuits import WorldCircuitsDialog  # noqa: E402
 from db.interface import TRACKS_DB  # noqa: E402
 
 
@@ -40,6 +43,19 @@ def _select_car(form: SetupForm, car_id: str) -> SetupForm:
     assert idx >= 0, f'car {car_id!r} not in car_combo'
     form.car_combo.setCurrentIndex(idx)
     return form
+
+
+def _stub_dialog_exec(
+    dialog_cls: type,
+    attr: str,
+    value: Optional[str],
+    result: QDialog.DialogCode,
+):
+    """Patch `dialog_cls.exec` to set `attr = value` and return `result`."""
+    def _exec(dlg) -> int:
+        setattr(dlg, attr, value)
+        return int(result)
+    return mock.patch.object(dialog_cls, 'exec', _exec)
 
 
 class SetupFormTest(unittest.TestCase):
@@ -301,6 +317,58 @@ class SetupFormTest(unittest.TestCase):
         form.balance_use_db.setChecked(True)
         self.assertFalse(form.bal_f_spin.isEnabled())
         self.assertFalse(form.bal_r_spin.isEnabled())
+
+    def test_picker_buttons_present_and_backup_combos_preserved(self):
+        form = self.form
+        self.assertEqual(form.brand_central_btn.text(), 'Brand Central…')
+        self.assertEqual(form.world_circuits_btn.text(), 'World Circuits…')
+        full_cars = form.car_combo.count()
+        self.assertEqual(full_cars, 590)
+        form.car_search.setText('mr2')
+        self.assertLess(form.car_combo.count(), full_cars)
+        self.assertGreaterEqual(form.car_combo.findData('207'), 0)
+        form.car_search.setText('')
+        self.assertEqual(form.car_combo.count(), full_cars)
+        self.assertEqual(form.track_combo.itemText(0), '— (no track)')
+        self.assertEqual(form.track_combo.count(), len(TRACKS_DB) + 1)
+        self.assertFalse(form.select_car_by_id('nonexistent-car'))
+        self.assertFalse(form.select_track_by_id('nonexistent-track'))
+
+    def test_dialog_selection_clears_conflicting_backup_filter(self):
+        form = self.form
+        form.car_search.setText('honda')
+        self.assertLess(form.car_combo.findData('207'), 0)
+        with _stub_dialog_exec(BrandCentralDialog, 'selected_car_id', '207', QDialog.DialogCode.Accepted):
+            form.brand_central_btn.click()
+        self.assertEqual(form.car_search.text(), '')
+        self.assertEqual(form.car_combo.currentData(), '207')
+        self.assertEqual(form.collect().car_id, '207')
+        self.assertIn("MR2 GT-S '97", form.db_info_label.text())
+
+        form.track_search.setText('monza')
+        self.assertLess(form.track_combo.findData('10'), 0)
+        with _stub_dialog_exec(WorldCircuitsDialog, 'selected_track_id', '10', QDialog.DialogCode.Accepted):
+            form.world_circuits_btn.click()
+        self.assertEqual(form.track_search.text(), '')
+        self.assertEqual(form.track_combo.currentData(), '10')
+        self.assertEqual(form.collect().track_id, '10')
+
+    def test_dialog_cancel_preserves_existing_form_state(self):
+        form = _select_car(self.form, '207')
+        form.track_combo.setCurrentIndex(form.track_combo.findData('10'))
+        form.swap_combo.setCurrentIndex(form.swap_combo.findData('1365'))
+        form.power_spin.setValue(630)
+        form.df_f.set_value((50, 200))
+        with _stub_dialog_exec(BrandCentralDialog, 'selected_car_id', None, QDialog.DialogCode.Rejected):
+            form.brand_central_btn.click()
+        with _stub_dialog_exec(WorldCircuitsDialog, 'selected_track_id', '4', QDialog.DialogCode.Rejected):
+            form.world_circuits_btn.click()
+        req = form.collect()
+        self.assertEqual(req.car_id, '207')
+        self.assertEqual(req.track_id, '10')
+        self.assertEqual(req.df_front, (50, 200))
+        self.assertEqual(req.custom_power, 630)
+        self.assertEqual(form.swap_combo.currentData(), '1365')
 
 
 if __name__ == '__main__':

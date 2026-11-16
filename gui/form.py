@@ -4,13 +4,14 @@ Picking a car prefills everything derivable from the DB; `collect()` reads
 all panels into a fully-populated `GuiRequest`; `validate()` runs
 `service.validate()` and renders errors/warnings into the status label.
 """
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QAbstractSpinBox,
     QCheckBox,
     QComboBox,
+    QDialog,
     QDoubleSpinBox,
     QGridLayout,
     QGroupBox,
@@ -24,6 +25,7 @@ from PyQt6.QtWidgets import (
 )
 
 from db.interface import TRACKS_DB
+from gui.brand_central import BrandCentralDialog
 from gui.components import (
     INPUT_COL_WIDTH,
     PAIR_ROW_SPACING,
@@ -41,6 +43,7 @@ from gui.request import (
     GuiRequest,
 )
 from gui.service import TuningService
+from gui.world_circuits import WorldCircuitsDialog
 
 _STATUS_KINDS = ('ok', 'warn', 'error')
 
@@ -95,6 +98,17 @@ class SetupForm(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(8)
         return group, layout
+
+    def _add_picker_button(
+        self,
+        layout: QVBoxLayout,
+        text: str,
+        slot: Callable[[], None],
+    ) -> QPushButton:
+        btn = QPushButton(text)
+        btn.clicked.connect(slot)
+        layout.addWidget(btn)
+        return btn
 
     def _add_right_row(self, layout: QVBoxLayout, label_text: str, widget: QWidget) -> None:
         row = QHBoxLayout()
@@ -166,6 +180,9 @@ class SetupForm(QWidget):
 
     def _build_vehicle_group(self, root: QVBoxLayout) -> None:
         group, layout = self._make_group('Vehicle')
+        self.brand_central_btn = self._add_picker_button(
+            layout, 'Brand Central…', self._on_open_brand_central
+        )
         self.car_search = QLineEdit()
         self.car_search.setPlaceholderText('Search cars by name, maker or ID')
         self.car_search.textChanged.connect(self._refill_cars)
@@ -303,6 +320,9 @@ class SetupForm(QWidget):
 
     def _build_session_group(self, root: QVBoxLayout) -> None:
         group, layout = self._make_group('Session')
+        self.world_circuits_btn = self._add_picker_button(
+            layout, 'World Circuits…', self._on_open_world_circuits
+        )
         self.track_search = QLineEdit()
         self.track_search.setPlaceholderText('Search tracks by name')
         self.track_search.textChanged.connect(self._refill_tracks)
@@ -413,6 +433,54 @@ class SetupForm(QWidget):
         new_id = self.car_combo.currentData()
         if new_id and new_id != (self._current_car or {}).get('id'):
             self.on_car_selected(new_id)
+
+    # ------------------------------------------------------- picker sync
+
+    def _find_or_unfilter_index(
+        self,
+        combo: QComboBox,
+        search: QLineEdit,
+        item_id: str,
+    ) -> Optional[int]:
+        """Return `item_id` index in `combo`, clearing conflicting `search` text."""
+        if not item_id:
+            return None
+        idx = combo.findData(item_id)
+        if idx < 0 and search.text():
+            search.setText('')
+            idx = combo.findData(item_id)
+        return idx if idx >= 0 else None
+
+    def select_car_by_id(self, car_id: str) -> bool:
+        """Select `car_id` in `car_combo`, clearing a conflicting filter first."""
+        idx = self._find_or_unfilter_index(self.car_combo, self.car_search, car_id)
+        if idx is None:
+            return False
+        if self.car_combo.currentIndex() == idx:
+            self.on_car_selected(car_id)
+        else:
+            self.car_combo.setCurrentIndex(idx)
+        return True
+
+    def select_track_by_id(self, track_id: str) -> bool:
+        """Select `track_id` in `track_combo`, clearing a conflicting filter first."""
+        idx = self._find_or_unfilter_index(self.track_combo, self.track_search, track_id)
+        if idx is None:
+            return False
+        self.track_combo.setCurrentIndex(idx)
+        return True
+
+    def _on_open_brand_central(self) -> None:
+        """Open Brand Central picker and sync confirmed car into the form."""
+        dialog = BrandCentralDialog(self.service, self)
+        if dialog.exec() == QDialog.DialogCode.Accepted and dialog.selected_car_id:
+            self.select_car_by_id(dialog.selected_car_id)
+
+    def _on_open_world_circuits(self) -> None:
+        """Open World Circuits picker and sync confirmed track into the form."""
+        dialog = WorldCircuitsDialog(self.service, self)
+        if dialog.exec() == QDialog.DialogCode.Accepted and dialog.selected_track_id:
+            self.select_track_by_id(dialog.selected_track_id)
 
     # ------------------------------------------------------- car prefill
 

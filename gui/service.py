@@ -13,6 +13,20 @@ from typing import Any, Dict, List, Optional, Tuple
 from PyQt6.QtCore import QObject, pyqtSignal
 
 import setup
+from db.catalog import (
+    CarEntry,
+    CircuitSummary,
+    CountryBrands,
+    TrackLayoutEntry,
+    brand_central_continent_counts,
+    list_brands_by_country,
+    list_cars_in_brand,
+    list_circuits_in_continent,
+    list_layouts_for_circuit,
+    search_catalog_cars as _search_catalog_cars,
+    search_catalog_tracks as _search_catalog_tracks,
+    world_circuit_continent_counts,
+)
 from db.interface import (
     TRACKS_DB,
     get_car as _get_car,
@@ -85,6 +99,38 @@ class TuningService:
     def get_track(self, track_id: str) -> Optional[Dict[str, Any]]:
         """Resolve a track by ID or name; None when missing."""
         return _get_track(track_id)
+
+    def brand_central_continents(self) -> Dict[str, Tuple[int, int]]:
+        """Return {continent: (brand_count, car_count)} for Brand Central."""
+        return brand_central_continent_counts()
+
+    def brands_by_country(self, continent: str) -> List[CountryBrands]:
+        """Return country-grouped Brand Central manufacturers in a continent."""
+        return list_brands_by_country(continent)
+
+    def cars_in_brand(self, continent: str, brand: str) -> List[CarEntry]:
+        """Return cars for a Brand Central brand in a continent."""
+        return list_cars_in_brand(continent, brand)
+
+    def search_catalog_cars(self, query: str = '') -> List[CarEntry]:
+        """Search Brand Central cars by text tokens."""
+        return _search_catalog_cars(query)
+
+    def world_circuit_continents(self) -> Dict[str, Tuple[int, int]]:
+        """Return {continent: (circuit_count, layout_count)} for World Circuits."""
+        return world_circuit_continent_counts()
+
+    def circuits_in_continent(self, continent: str) -> List[CircuitSummary]:
+        """Return unique circuits in a World Circuits continent."""
+        return list_circuits_in_continent(continent)
+
+    def layouts_for_circuit(self, continent: str, base_circuit: str) -> List[TrackLayoutEntry]:
+        """Return layouts belonging to a circuit in a continent."""
+        return list_layouts_for_circuit(continent, base_circuit)
+
+    def search_catalog_tracks(self, query: str = '') -> List[TrackLayoutEntry]:
+        """Search World Circuits layouts by text tokens."""
+        return _search_catalog_tracks(query)
 
     def get_swaps(self, car_id: str) -> List[Dict[str, Any]]:
         """Engine swaps a car can receive; [] when the car is missing."""

@@ -506,6 +506,7 @@ def build_database():
             'id': crs.get('ID'),
             'name': crs_name,
             'base_circuit': base_info.get('Name', crs_name),
+            'country': country_csv.get(crs.get('Country', ''), 'Others'),
             'category': category,
             'length_meters': length_m,
             'length_km': round(length_m / 1000.0, 2),
